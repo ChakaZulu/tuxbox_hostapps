@@ -4,7 +4,10 @@ interface
 
 uses
   SysUtils,
-  ComObj, ActiveX, WinGrabEngine_TLB, StdVcl,
+  ComObj,
+  ActiveX,
+  WinGrabEngine_TLB,
+  StdVcl,
   TeFiFo;
 
 type

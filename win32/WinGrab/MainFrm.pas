@@ -1176,10 +1176,10 @@ begin
   try
     _OutputStreamLock.Enter;
     try
-      LResponseInfo.RawHeaders.Values['Server'] := Application.Title;
-      LResponseInfo.RawHeaders.Values['Content-Length'] := IntToStr(High(Integer));
-      LResponseInfo.RawHeaders.Values['Connection'] := 'close';
-      LResponseInfo.RawHeaders.Values['Content-Type'] := 'video/mpeg';
+      LResponseInfo.FHeaders.Values['Server'] := Application.Title;
+      LResponseInfo.FHeaders.Values['Content-Length'] := IntToStr(High(Integer));
+      LResponseInfo.FHeaders.Values['Connection'] := 'close';
+      LResponseInfo.FHeaders.Values['Content-Type'] := 'video/mpeg';
       LResponseInfo.ContentType := 'video/mpeg';
 
       LResponseInfo.FServerSoftware := Application.Title;

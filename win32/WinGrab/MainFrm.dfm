@@ -1,6 +1,6 @@
 object frmMain: TfrmMain
-  Left = 50
-  Top = 134
+  Left = 336
+  Top = 189
   Width = 640
   Height = 512
   Caption = 'frmMain'
@@ -18,6 +18,7 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnHide = FormHide
   OnShow = FormShow
+  PixelsPerInch = 96
   TextHeight = 14
   object TePanel1: TTePanel
     Left = 0
@@ -57,10 +58,10 @@ object frmMain: TfrmMain
       Top = 26
       Width = 622
       Height = 413
-      ActivePage = tbsDbox
+      ActivePage = tbsWelcome
       Align = alClient
       Style = tsFlatButtons
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 0
       OnChange = pclMainChange
       object tbsWelcome: TTabSheet
@@ -1204,12 +1205,7 @@ object frmMain: TfrmMain
   end
   object IdHTTPServer: TIdHTTPServer
     Bindings = <>
-    CommandHandlers = <>
     DefaultPort = 31337
-    Greeting.NumericCode = 0
-    MaxConnectionReply.NumericCode = 0
-    ReplyExceptionCode = 0
-    ReplyUnknownCommand.NumericCode = 0
     ThreadMgr = IdThreadMgrPool
     OnCommandOther = IdHTTPServerCommandOther
     Left = 323

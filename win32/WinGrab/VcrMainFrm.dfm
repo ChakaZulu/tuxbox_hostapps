@@ -1579,9 +1579,9 @@ object frmMain: TfrmMain
               OnClick = btnBrowseVlcClick
             end
             object Label5: TLabel
-              Left = 224
+              Left = 231
               Top = 28
-              Width = 57
+              Width = 50
               Height = 14
               Alignment = taRightJustify
               Caption = 'VLC-Pfad '
@@ -1858,7 +1858,7 @@ object frmMain: TfrmMain
               Left = 290
               Top = 53
               Width = 115
-              Height = 21
+              Height = 14
               Caption = 'Ger'#228'teId f'#252'r CdRecord  '
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1883,7 +1883,7 @@ object frmMain: TfrmMain
             object Label16: TLabel
               Left = 162
               Top = 32
-              Width = 119
+              Width = 112
               Height = 14
               Caption = 'speichere das ISO in ...'
               Font.Charset = ANSI_CHARSET
