@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.2 2005/03/01 00:47:29 mogway Exp $
+   $Id: checkImage.c,v 1.3 2005/03/02 11:20:56 mogway Exp $
 
    Check images for bad magics
 
@@ -33,20 +33,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DPRINT(s, args...)		do { if(debug) printf(s, ## args); } while(0)
+
 #define CHECKOFFSET 131049
 #define CHECKINTERVAL 131072
 
 int debug = 0;
 int bad   = 0;
-int skipuboot = 0x01ffe9;
+int skipuboot = 0;
 
 void usage(char* name)
 {
-	fprintf(stderr, "Usage: %s <imagefile>\n", name);
+    fprintf(stderr, "%s - $Revision: 1.3 $\n",name);
 	fprintf(stderr, "Check images for bad magics\n\n");
+	fprintf(stderr, "Usage: %s [OPTION] <imagefile>\n\n", name);
+	fprintf(stderr, "Options:\n");
+	fprintf(stderr, "-h : display this help\n\n");
 	fprintf(stderr, "-d : enable debug output\n");
-	fprintf(stderr, "-f : u-boot is at first partition (default)\n");
+	fprintf(stderr, "-f : u-boot is at first partition\n");
 	fprintf(stderr, "-l : u-boot is at last partition\n\n");
+	exit(1);
 }
 
 int getsize(int fd)
@@ -66,8 +72,7 @@ void badimage(int fd)
 void badmagic(char* msg)
 {
 	bad=1;
-	if (debug)
-		printf(" <- %s!", msg);
+	DPRINT(" <- %s!", msg);
 }
 
 void printerror(int fd, char* msg)
@@ -94,8 +99,7 @@ void checkimage(char* filename)
 
 	printf("check '%s' for bad magic bytes.\n", basename(filename));
 
-	if (debug)
-		printf("\n");
+	DPRINT("\n");
 
 	while ( pos <= imgsize)
 	{
@@ -106,13 +110,17 @@ void checkimage(char* filename)
 			printerror(fd, "Read on destination failed");
 
 		if (debug)
-			printf("0x%06x | %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x", pos, value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7], value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15], value[16], value[17], value[18], value[19], value[20], value[21], value[22]);
+		{
+			printf("0x%06x | ", pos);
+			printf("%02x %02x %02x %02x %02x ", value[0],  value[1],  value[2],  value[3],  value[4]);
+			printf("%02x %02x %02x %02x %02x ", value[5],  value[6],  value[7],  value[8],  value[9]);
+			printf("%02x %02x %02x %02x %02x ", value[10], value[11], value[12], value[13], value[14]);
+			printf("%02x %02x %02x %02x %02x ", value[15], value[16], value[17], value[18], value[19]);
+			printf("%02x %02x %02x",            value[20], value[21], value[22]);
+		}
 
 		if (pos == skipuboot)
-		{
-			if (debug)
- 				printf(" <- skip u-boot");
-		}
+			DPRINT(" <- skip u-boot");
 		else
 		{
 			if (value[1] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
@@ -125,15 +133,14 @@ void checkimage(char* filename)
  				badmagic("bad magic");
  		}
 
-		if (debug)
- 			printf("\n");
+		DPRINT("\n");
 
 	pos = pos + CHECKINTERVAL;
 	}
 
 	if (bad)
  		badimage(fd);
- 		
+
 	close(fd);
 }
 
@@ -141,33 +148,32 @@ int main(int argc, char *argv[])
 {
 	while (1)
 	{
-		int c;  
-		if ((c = getopt(argc, argv, "dfl")) < 0)
+		int c;
+		if ((c = getopt(argc, argv, "dfhl")) < 0)
 			break;
 		switch (c) {
 			case 'd': debug=1;
-				  break;
+					break;
 
 			case 'f': skipuboot = 0x01ffe9;
-				  break;
+					break;
+
+			case 'h': usage((char*)basename(argv[0]));
+					break;
 
 			case 'l': skipuboot = 0x7dffe9;
-				  break;
+					break;
 		}
 	}
 
 	if(optind > argc-1)
-	{
 		usage((char*)basename(argv[0]));
-		exit(1);
-	}
 
 	char* filename = argv[optind];
 
 	checkimage(filename);
 
-	if (debug)
- 		printf("\n");
+	DPRINT("\n");
 
 	printf("No bad magic bytes found\n");
 	return 0;
