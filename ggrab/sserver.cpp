@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-program: ggrabfe version 0.01 by Axel Buehning <mail at diemade.de>
+program: sserver version 0.02 by Axel Buehning <mail at diemade.de>
 */
 
 #include <stdlib.h>
@@ -23,48 +23,49 @@ program: ggrabfe version 0.01 by Axel Buehning <mail at diemade.de>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <signal.h>
 #ifdef __CYGWIN__
 #include <cygwin/in.h>
 #endif
 #include "sserver.h"
 
-
 #define BUFLEN 10240
 
-void zapto (char *, int onidsid);
 int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata);
 
 int main(int argc, char * argv[])
 {
 	RecordingData recdata;
 	struct sockaddr_in  servaddr;
-	struct sockaddr_in  dbox_addr;
-	socklen_t 	    sock_len;
 	int ListenSocket, ConnectionSocket;
 	u_short Port = 4000;
 	char buf[BUFLEN];
 	int rc;
+	int onidsid, apid, vpid;
 	int pid = 0;
+	time_t t;
 	char * a_arg[50];
 	char a_grabname[256];
-	char a_dboxname[256];
 	char a_vpid[20];
 	char a_apid[20];
+	char a_filename[256];
+	char a_host[256];
 	int	i;
+	struct sockaddr_in cliaddr;
+	socklen_t clilen = sizeof(cliaddr);
 
 	a_arg[0] = a_grabname;
 	a_arg[1] = "-p";
 	a_arg[2] = a_vpid;
 	a_arg[3] = a_apid;
-	a_arg[4] = "-host";
-	a_arg[5] = a_dboxname;
-	a_arg[6] = "-nos";
-
+	a_arg[4] = "-f";
+	a_arg[5] = a_filename;
+	a_arg[6] = "-host";
+	a_arg[7] = a_host;
+	a_arg[8] = "-nos";
 
 	strcpy (a_grabname,argv[0]);
 	if (strrchr(a_grabname,'/')){
@@ -77,9 +78,9 @@ int main(int argc, char * argv[])
 	strcat(a_grabname,".exe");
 #endif
 	for (i = 1; i < argc; i++) {
-		a_arg[i+6]=argv[i];
+		a_arg[i+8]=argv[i];
 	}
-	a_arg[i+6] = 0;
+	a_arg[i+8] = 0;
 	
 	//network-setup
 	ListenSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -93,7 +94,7 @@ int main(int argc, char * argv[])
 	{
 		fprintf(stderr, "bind to port %d failed, RC=%d...\n",Port, rc);
 		if (i == 10) {
-			fprintf(stderr, "Giving up\n");
+			fprintf(stderr, "Giving up\n",i++);
 			exit(1);
 		}
 		fprintf(stderr, "%d. try, wait for 2 s\n",i++);
@@ -107,21 +108,22 @@ int main(int argc, char * argv[])
 	}
 	printf("server startet\n");
 
-
 	do
 	{
-		if((ConnectionSocket = accept(ListenSocket, (sockaddr *)(&dbox_addr), &sock_len)) == -1){
+		memset(&cliaddr, 0, sizeof(cliaddr));
+		if((ConnectionSocket = accept(ListenSocket, (struct sockaddr *) &cliaddr, (socklen_t *) &clilen)) == -1){
 			fprintf(stderr,"accept failed\n");
 			exit(1);
 		}
-
-		strcpy(a_dboxname,inet_ntoa(dbox_addr.sin_addr));
+		strcpy(a_host,inet_ntoa(cliaddr.sin_addr));
+		fprintf(stderr,"request from dbox ip :%s\n",a_host);
 
 		do
 		{
 			rc = recv(ConnectionSocket, buf, BUFLEN, 0);
 			if ((rc > 0))
 			{
+				memset((void *)&recdata, 0, sizeof(recdata));
 				AnalyzeXMLRequest(buf, &recdata);
 
 				switch (recdata.cmd) 
@@ -135,10 +137,29 @@ int main(int argc, char * argv[])
 						fprintf(stderr, "APID        : %x\n", recdata.apid);
 						fprintf(stderr, "VPID        : %x\n", recdata.vpid);
 						fprintf(stderr, "CHANNELNAME : %s\n", recdata.channelname);
+						fprintf(stderr, "EPG TITLE   : %s\n", recdata.epgtitle);
 						fprintf(stderr, "***********************************************************\n");
 						sprintf(a_vpid,"0x%03x",recdata.vpid);	
-						sprintf(a_apid,"0x%03x",recdata.apid);
-						// zapto (a_dboxname, recdata.onidsid); funktioniert noch nicht
+						sprintf(a_apid,"0x%03x",recdata.apid);	
+
+						a_filename[0] = 0x00;
+
+						if (strlen(recdata.channelname) > 0)
+						{
+							strcat(a_filename, recdata.channelname);
+							strcat(a_filename, "_");
+						}
+
+						if (strlen(recdata.epgtitle) > 0)
+						{
+							strcat(a_filename, recdata.epgtitle);
+							strcat(a_filename, "_");
+						}
+
+						t = time (&t);
+						strftime (buf, sizeof(a_filename)-1, "%Y%m%d_%H%M%S", localtime(&t));
+						strcat(a_filename, buf);
+
 						pid = fork();
 						if (pid == -1) {
 							fprintf(stderr, "fork process failed\n");
@@ -146,7 +167,8 @@ int main(int argc, char * argv[])
 						}
 						if (pid == 0) {
 							execv (a_arg[0], a_arg);
-							fprintf(stderr, "execv failed\n");
+							fprintf(stderr,"execv failed");
+							perror("");
 							exit(1);
 						}
 						break;
@@ -155,7 +177,7 @@ int main(int argc, char * argv[])
 							if(kill(pid,SIGINT)) {
 								printf ("ggrab process not killed\n");
 							}
-							waitpid(pid,0,0);
+							sleep(2);
 							fprintf(stderr,"\nStop recording\n");
 						}
 						break;
@@ -229,7 +251,9 @@ int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
     char szonidsid[264]="";
     char szapid[264]="";
     char szvpid[264]="";
+    char szmode[3]="";
     char szchannelname[264]="";
+    char szepgtitle[264]="";
     int hr=false;
 
     if ( (szXML==NULL) || (rdata==NULL) )
@@ -268,7 +292,22 @@ int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
                 }
             }
         }
-
+    if (p1!=NULL)
+        {
+        p2=ParseForString(p1,"<epgtitle>", 1);
+        p3=p2;
+        p1=NULL;
+        if (p2!=NULL)
+            {
+            p1=ParseForString(p2,"</epgtitle>", 0);
+            if (p1!=NULL)
+                {
+                memcpy(szepgtitle,p3,p1-p3);
+                szepgtitle[p1-p3]=0;
+                hr=true;
+                }
+            }
+        }
     if (p1!=NULL)
         {
         p2=ParseForString(p1,"<onidsid>", 1);
@@ -281,6 +320,23 @@ int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
                 {
                 memcpy(szonidsid,p3,p1-p3);
                 szonidsid[p1-p3]=0;
+                hr=true;
+                }
+            }
+        }
+    
+    if (p1!=NULL)
+        {
+        p2=ParseForString(p1,"<mode>", 1);
+        p3=p2;
+        p1=NULL;
+        if (p2!=NULL)
+            {
+            p1=ParseForString(p2,"</mode>", 0);
+            if (p1!=NULL)
+                {
+                memcpy(szmode,p3,p1-p3);
+                szmode[p1-p3]=0;
                 hr=true;
                 }
             }
@@ -312,6 +368,7 @@ int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
         return(hr);
 
     strcpy(rdata->channelname, szchannelname);
+    strcpy(rdata->epgtitle, szepgtitle);
 
     if (strlen(szvpid)>0)
         rdata->vpid=atoi(szvpid);
@@ -333,50 +390,4 @@ int AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
     rdata->onidsid=atol(szonidsid);
 
     return(hr);
-}
-
-
-void zapto(char * p_dboxname, int onidsid) {
-
-	int r;
-	struct hostent * hp = gethostbyname(p_dboxname);
-		
-	struct sockaddr_in adr;
-
-	
-	memset ((char *)&adr, 0, sizeof(struct sockaddr_in));
-				
-   	if (hp == 0) {
-		fprintf(stderr,"unable to lookup hostname");
-		exit(1);
-	}
-		         
-	adr.sin_family = AF_INET;
-	adr.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-	adr.sin_port = htons(80);
-		
-   	if (adr.sin_addr.s_addr == 0) {
-		fprintf(stderr,"unable to lookup hostname");
-		exit(1);
-	}
-		         
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	
-	if (-1 == connect(sock, (sockaddr*)&adr, sizeof(struct sockaddr_in))) {
-		close(sock);
-		fprintf(stderr,"error to connect to socket");
-		exit(1);
-	}
-	
-	char buffer[100];	
-	sprintf(buffer, "GET /control/zapto?%d HTTP/1.0\r\n\r\n",onidsid);
-	
-	write(sock, buffer, strlen(buffer));
-
-	sleep(1);
-	r=read(sock, buffer, 100);
-	buffer[r]=0;
-	fprintf(stderr, buffer);
-	close (sock);
-
 }
