@@ -106,7 +106,7 @@ int isDataAvailable(int socket, unsigned long size)
 
     ret=ioctlsocket(socket, FIONREAD, &avail);
 
-    if (ret!=NULL)
+    if (ret!=0)
         return(FALSE);
 
     if (avail>=size)
