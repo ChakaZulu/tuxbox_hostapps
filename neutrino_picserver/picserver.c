@@ -431,7 +431,7 @@ int main(int argnr, char** argv)
 
 	memset((char *) &si_me, sizeof(si_me), 0);
 	si_me.sin_family = AF_INET;
-	si_me.sin_port = htons(9999);
+	si_me.sin_port = htons(port);
 	si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 	if(bind(s1, (struct sockaddr *) &si_me, sizeof(si_me))==-1)
 		diep("bind");
