@@ -21,6 +21,7 @@
 */
 
 #include <streams.h>
+#include <uuids.h>
 #include <olectl.h>
 #include <initguid.h>
 #include <ks.h>
@@ -36,6 +37,9 @@
 #include "grab.h"
 
 #define USE_DBOX    1
+
+//#define ERROR_NOTIFICATION EC_STREAM_ERROR_STILLPLAYING
+#define ERROR_NOTIFICATION EC_ERRORABORT
 
 const static UCHAR ColorBars100Amp100SatYUV [4][8] = 
 {
@@ -1172,7 +1176,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
 
     if (gfThreadAborted||(!pCDBOXIICapture->m_StartSucceeded))
         {
-        m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
+        m_pFilter->NotifyEvent(ERROR_NOTIFICATION, E_FAIL, 0);
         m_Abort=TRUE;
         }
 
@@ -1181,7 +1185,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
         {
         pms->SetActualDataLength(0);
         Sleep(5);
-        return(NOERROR);
+        return(E_FAIL);
         }
 
     pms->GetPointer(&pData);
@@ -1235,7 +1239,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                         m_Abort=TRUE;
                     if (m_Abort)
                         {
-                        m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
+                        m_pFilter->NotifyEvent(ERROR_NOTIFICATION, E_FAIL, 0);
                         return(NOERROR);
                         }
                     }
@@ -1266,7 +1270,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                         m_Abort=TRUE;
                     if (m_Abort)
                         {
-                        m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
+                        m_pFilter->NotifyEvent(ERROR_NOTIFICATION, E_FAIL, 0);
                         return(NOERROR);
                         }
                     }
@@ -1287,7 +1291,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                         m_Abort=TRUE;
                     if (m_Abort)
                         {
-                        m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
+                        m_pFilter->NotifyEvent(ERROR_NOTIFICATION, E_FAIL, 0);
                         return(NOERROR);
                         }
                     }
