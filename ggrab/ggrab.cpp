@@ -29,7 +29,7 @@ program: ggrab version 0.22 by Peter Menzebach <pm-ggrab at menzebach.de>
 #include <cygwin/in.h>
 #endif
 #include <sys/socket.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include "cbuffer.h"
 #include "tools.h"
 #include "list.h"
