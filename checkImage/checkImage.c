@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.1 2005/02/28 22:41:56 dirch Exp $
+   $Id: checkImage.c,v 1.2 2005/03/01 00:47:29 mogway Exp $
 
    Check images for bad magics
 
@@ -38,12 +38,15 @@
 
 int debug = 0;
 int bad   = 0;
+int skipuboot = 0x01ffe9;
 
 void usage(char* name)
 {
 	fprintf(stderr, "Usage: %s <imagefile>\n", name);
 	fprintf(stderr, "Check images for bad magics\n\n");
-	fprintf(stderr, "-d : enable debug output\n\n");
+	fprintf(stderr, "-d : enable debug output\n");
+	fprintf(stderr, "-f : u-boot is at first partition (default)\n");
+	fprintf(stderr, "-l : u-boot is at last partition\n\n");
 }
 
 int getsize(int fd)
@@ -54,10 +57,10 @@ int getsize(int fd)
 
 void badimage(int fd)
 {
-	printf("\n!!! If you flash this image these bytes cause 'no system' !!!\n\n");
+	printf("!!! If you flash this image these bytes cause 'no system' !!!\n");
 	putchar('\a');
 	close(fd);
-	exit(1);
+	exit(2);
 }
 
 void badmagic(char* msg)
@@ -105,24 +108,32 @@ void checkimage(char* filename)
 		if (debug)
 			printf("0x%06x | %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x", pos, value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7], value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15], value[16], value[17], value[18], value[19], value[20], value[21], value[22]);
 
-		if (value[1] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
-			badmagic("bad magic in flash #1");
+		if (pos == skipuboot)
+		{
+			if (debug)
+ 				printf(" <- skip u-boot");
+		}
+		else
+		{
+			if (value[1] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
+				badmagic("bad magic in flash #1");
 
- 		if (value[0] <= 0xFE && (value[19] >= 0xc0 && value[19] <=0xc4) && ((value[20] &0x0f) == 0x06 || (value[20] &0x0f) == 0x0e))
- 			badmagic("bad magic in flash #2");
+ 			if (value[0] <= 0xFE && (value[19] >= 0xc0 && value[19] <=0xc4) && ((value[20] &0x0f) == 0x06 || (value[20] &0x0f) == 0x0e))
+ 				badmagic("bad magic in flash #2");
 
- 		if (value[11] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
- 			badmagic("bad magic");
+ 			if (value[11] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
+ 				badmagic("bad magic");
+ 		}
 
 		if (debug)
  			printf("\n");
- 			
- 		if (bad)
- 			badimage(fd);
 
 	pos = pos + CHECKINTERVAL;
 	}
 
+	if (bad)
+ 		badimage(fd);
+ 		
 	close(fd);
 }
 
@@ -131,11 +142,17 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 		int c;  
-		if ((c = getopt(argc, argv, "d")) < 0)
+		if ((c = getopt(argc, argv, "dfl")) < 0)
 			break;
 		switch (c) {
 			case 'd': debug=1;
-				break;
+				  break;
+
+			case 'f': skipuboot = 0x01ffe9;
+				  break;
+
+			case 'l': skipuboot = 0x7dffe9;
+				  break;
 		}
 	}
 
@@ -144,7 +161,7 @@ int main(int argc, char *argv[])
 		usage((char*)basename(argv[0]));
 		exit(1);
 	}
-	
+
 	char* filename = argv[optind];
 
 	checkimage(filename);
