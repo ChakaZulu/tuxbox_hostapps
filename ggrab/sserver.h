@@ -21,4 +21,5 @@ typedef struct
     int apid;
     int vpid;
     char    channelname[264];
+    char    epgtitle[264];
     } RecordingData;
