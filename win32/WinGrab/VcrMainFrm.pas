@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.2  2004/07/02 14:24:19  thotto
+// *** empty log message ***
+//
 // Revision 1.1  2004/07/02 14:05:00  thotto
 // initial
 //
@@ -28,8 +31,10 @@ uses
   TeSocket, TeComCtrls, Winsock2, IdThreadMgr, IdThreadMgrPool, TePesMuxerThread,
   IdBaseComponent, IdComponent, IdTCPServer, IdHTTPServer, TeSectionParserThread,
   IdTCPConnection, IdTCPClient, IdHTTP, Sockets, ScktComp, PJDropFiles, JclShell,
-  ShlObj, ShellAPI, TcpGrabThread,
-  IdRawBase, IdRawClient, IdIcmpClient,
+  ShlObj, ShellAPI,
+  IdRawBase,
+  IdRawClient,
+  IdIcmpClient,
   TeRichEdit,
   Variants,
   OleCtrls,
