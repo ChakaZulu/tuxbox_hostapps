@@ -80,6 +80,829 @@ Begin VB.Form frmNgrabSetup
       _ExtentY        =   847
       _Version        =   393216
    End
+   Begin VB.Frame frmD2SPrograms 
+      Appearance      =   0  '2D
+      Caption         =   "Encoding Programme"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   61
+      Top             =   60
+      Width           =   7560
+      Begin VB.TextBox txtDVD2AVI 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   75
+         Top             =   1815
+         Width           =   5250
+      End
+      Begin VB.TextBox txtBeSweet 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   73
+         Top             =   1335
+         Width           =   5250
+      End
+      Begin VB.TextBox txtSimpleResize 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   71
+         Top             =   4800
+         Visible         =   0   'False
+         Width           =   5250
+      End
+      Begin VB.TextBox txtInverse 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   69
+         Top             =   4335
+         Visible         =   0   'False
+         Width           =   5250
+      End
+      Begin VB.TextBox txtMPEG2Dec 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   67
+         Top             =   3825
+         Visible         =   0   'False
+         Width           =   5250
+      End
+      Begin VB.TextBox txtPulldown 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1545
+         TabIndex        =   65
+         Top             =   810
+         Width           =   5250
+      End
+      Begin VB.TextBox txtbbMPEG 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   1560
+         TabIndex        =   63
+         Top             =   345
+         Width           =   5250
+      End
+      Begin NOXButton10.NOXButton cmdbbmpeg 
+         Height          =   330
+         Left            =   6915
+         TabIndex        =   155
+         Top             =   315
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":280A
+         ImageMouseOver  =   "frmNGrabSetup.frx":2DA4
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdPulldown 
+         Height          =   330
+         Left            =   6915
+         TabIndex        =   156
+         Top             =   780
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":333E
+         ImageMouseOver  =   "frmNGrabSetup.frx":38D8
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdMPEG2Dec 
+         Height          =   330
+         Left            =   6930
+         TabIndex        =   157
+         Top             =   3795
+         Visible         =   0   'False
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":3E72
+         ImageMouseOver  =   "frmNGrabSetup.frx":440C
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdInversTelecine 
+         Height          =   330
+         Left            =   6930
+         TabIndex        =   158
+         Top             =   4290
+         Visible         =   0   'False
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":49A6
+         ImageMouseOver  =   "frmNGrabSetup.frx":4F40
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdSimpleResize 
+         Height          =   330
+         Left            =   6930
+         TabIndex        =   159
+         Top             =   4770
+         Visible         =   0   'False
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":54DA
+         ImageMouseOver  =   "frmNGrabSetup.frx":5A74
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdBeSweet 
+         Height          =   330
+         Left            =   6930
+         TabIndex        =   160
+         Top             =   1290
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":600E
+         ImageMouseOver  =   "frmNGrabSetup.frx":65A8
+         Caption         =   ""
+      End
+      Begin NOXButton10.NOXButton cmdDVD2AVI 
+         Height          =   330
+         Left            =   6930
+         TabIndex        =   161
+         Top             =   1770
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":6B42
+         ImageMouseOver  =   "frmNGrabSetup.frx":70DC
+         Caption         =   ""
+      End
+      Begin VB.Label Label32 
+         Caption         =   "DVD2AVI:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   74
+         Top             =   1830
+         Width           =   855
+      End
+      Begin VB.Label Label30 
+         Caption         =   "BeSweet:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   72
+         Top             =   1350
+         Width           =   1095
+      End
+      Begin VB.Label Label29 
+         Caption         =   "SimpleResize:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   70
+         Top             =   4830
+         Visible         =   0   'False
+         Width           =   1215
+      End
+      Begin VB.Label Label28 
+         Caption         =   "Inverse telecine:"
+         Height          =   375
+         Left            =   120
+         TabIndex        =   68
+         Top             =   4350
+         Visible         =   0   'False
+         Width           =   1335
+      End
+      Begin VB.Label Label27 
+         Caption         =   "MPEG2Dec:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   66
+         Top             =   3870
+         Visible         =   0   'False
+         Width           =   975
+      End
+      Begin VB.Label Label26 
+         Caption         =   "PullDown:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   64
+         Top             =   870
+         Width           =   735
+      End
+      Begin VB.Label Label25 
+         Caption         =   "bbMPEG:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   62
+         Top             =   390
+         Width           =   735
+      End
+   End
+   Begin VB.Frame frmNGrabFileExtensions 
+      Appearance      =   0  '2D
+      Caption         =   "Erweiterungen der Grab-Dateien"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   20
+      Top             =   60
+      Width           =   7560
+      Begin VB.TextBox txtLOG 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   2250
+         TabIndex        =   29
+         Top             =   1215
+         Width           =   480
+      End
+      Begin VB.TextBox txtM2A 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   5085
+         TabIndex        =   27
+         Top             =   735
+         Width           =   465
+      End
+      Begin VB.TextBox txtM2V 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   5070
+         TabIndex        =   25
+         Top             =   285
+         Width           =   465
+      End
+      Begin VB.TextBox txtTXT 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   2250
+         TabIndex        =   23
+         Top             =   765
+         Width           =   465
+      End
+      Begin VB.TextBox txtM2P 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   2250
+         TabIndex        =   21
+         Top             =   330
+         Width           =   465
+      End
+      Begin VB.Label Label10 
+         Caption         =   "Log Datei"
+         Height          =   255
+         Left            =   150
+         TabIndex        =   30
+         Top             =   1260
+         Width           =   1935
+      End
+      Begin VB.Label Label9 
+         Caption         =   "Audio PES Datei"
+         Height          =   255
+         Left            =   3270
+         TabIndex        =   28
+         Top             =   735
+         Width           =   1935
+      End
+      Begin VB.Label Label6 
+         Caption         =   "Video PES Datei"
+         Height          =   255
+         Left            =   3270
+         TabIndex        =   26
+         Top             =   330
+         Width           =   1935
+      End
+      Begin VB.Label lblTXT 
+         Caption         =   "EPG Informations Datei"
+         Height          =   255
+         Left            =   135
+         TabIndex        =   24
+         Top             =   780
+         Width           =   1980
+      End
+      Begin VB.Label Label8 
+         Caption         =   "Program Stream Datei"
+         Height          =   255
+         Left            =   135
+         TabIndex        =   22
+         Top             =   360
+         Width           =   2070
+      End
+   End
+   Begin VB.Frame frmWinGrabEngine 
+      Appearance      =   0  '2D
+      Caption         =   "WinGrabEngine"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   12
+      Top             =   60
+      Visible         =   0   'False
+      Width           =   7560
+      Begin VB.OptionButton optStreamingArt 
+         Appearance      =   0  '2D
+         Caption         =   "Audio und Video Pes File"
+         ForeColor       =   &H80000008&
+         Height          =   375
+         Index           =   1
+         Left            =   180
+         TabIndex        =   17
+         Top             =   990
+         Width           =   2655
+      End
+      Begin VB.OptionButton optStreamingArt 
+         Appearance      =   0  '2D
+         Caption         =   "Program Stream File"
+         ForeColor       =   &H80000008&
+         Height          =   375
+         Index           =   0
+         Left            =   180
+         TabIndex        =   16
+         Top             =   645
+         Width           =   2655
+      End
+      Begin VB.TextBox txtExrasOptionenSplitGroesse 
+         Appearance      =   0  '2D
+         Height          =   285
+         Left            =   4980
+         TabIndex        =   13
+         Top             =   360
+         Width           =   795
+      End
+      Begin VB.Label Label5 
+         Caption         =   "Split-Größe funktioniert nur mit ""Program Stream File"", es ist noch ein Bug in der WinGrabEngine.DLL"
+         Height          =   615
+         Left            =   3570
+         TabIndex        =   19
+         Top             =   780
+         Width           =   3375
+      End
+      Begin VB.Label Label4 
+         Caption         =   "Streaming-Typ"
+         Height          =   255
+         Left            =   195
+         TabIndex        =   18
+         Top             =   375
+         Width           =   2055
+      End
+      Begin VB.Label Label3 
+         Caption         =   "MB"
+         Height          =   255
+         Left            =   5850
+         TabIndex        =   15
+         Top             =   405
+         Width           =   495
+      End
+      Begin VB.Label Label1 
+         Caption         =   "Split-Größe (Datei):"
+         Height          =   255
+         Left            =   3570
+         TabIndex        =   14
+         Top             =   390
+         Width           =   2415
+      End
+   End
+   Begin VB.Frame frmD2SAudioSettings 
+      Appearance      =   0  '2D
+      Caption         =   "Encoder Audio Einstellungen"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   42
+      Top             =   60
+      Width           =   7560
+      Begin VB.CheckBox chkAudioDownsample 
+         Caption         =   "Audio Frequenz auf 44.1 samplen"
+         Height          =   375
+         Left            =   3120
+         TabIndex        =   47
+         Top             =   540
+         Width           =   2895
+      End
+      Begin VB.ComboBox comAudioBitrate 
+         Appearance      =   0  '2D
+         Height          =   315
+         Left            =   240
+         TabIndex        =   46
+         Top             =   1320
+         Width           =   2055
+      End
+      Begin VB.ComboBox comAudioMode 
+         Appearance      =   0  '2D
+         Height          =   315
+         Left            =   240
+         TabIndex        =   43
+         Top             =   585
+         Width           =   2055
+      End
+      Begin VB.Label Label14 
+         Caption         =   "Audio Bitrate:"
+         Height          =   255
+         Left            =   240
+         TabIndex        =   45
+         Top             =   1080
+         Width           =   1335
+      End
+      Begin VB.Label Label13 
+         Caption         =   "Audio Modus:"
+         Height          =   255
+         Left            =   240
+         TabIndex        =   44
+         Top             =   360
+         Width           =   1815
+      End
+   End
+   Begin VB.Frame frmD2SSettings 
+      Appearance      =   0  '2D
+      Caption         =   "Allgemeine Encoder Einstellungen"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   35
+      Top             =   60
+      Width           =   7560
+      Begin VB.CheckBox chkNoDelete 
+         Caption         =   "Keine Dateien löschen"
+         Height          =   255
+         Left            =   4860
+         TabIndex        =   41
+         Top             =   1635
+         Width           =   2295
+      End
+      Begin VB.CheckBox chkAutoShutdown 
+         Caption         =   "Automatisch Herunterfahren"
+         Height          =   255
+         Left            =   4860
+         TabIndex        =   40
+         Top             =   1155
+         Width           =   2535
+      End
+      Begin VB.DriveListBox DriveD2S 
+         Appearance      =   0  '2D
+         Height          =   315
+         Left            =   195
+         TabIndex        =   37
+         Top             =   615
+         Width           =   2505
+      End
+      Begin VB.DirListBox DirD2S 
+         Appearance      =   0  '2D
+         Height          =   4365
+         Left            =   180
+         TabIndex        =   36
+         Top             =   1095
+         Width           =   4065
+      End
+      Begin NOXButton10.NOXButton cmdNeuerOrdnerD2S 
+         Height          =   345
+         Left            =   2760
+         TabIndex        =   38
+         Top             =   585
+         Width           =   1440
+         _ExtentX        =   2540
+         _ExtentY        =   609
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":7676
+         ImageMouseOver  =   "frmNGrabSetup.frx":7C10
+         Caption         =   "&Neuer Ordner"
+      End
+      Begin VB.Label Label2 
+         Caption         =   "Ausgabe Verzeichnis:"
+         Height          =   255
+         Index           =   0
+         Left            =   195
+         TabIndex        =   39
+         Top             =   360
+         Width           =   2295
+      End
+   End
+   Begin VB.Frame frmDBoxSettings 
+      Appearance      =   0  '2D
+      Caption         =   "DBox-Einstellungen"
+      ForeColor       =   &H80000008&
+      Height          =   5685
+      Left            =   2850
+      TabIndex        =   0
+      Top             =   75
+      Width           =   7560
+      Begin MSComctlLib.TreeView tvDBoxInfo 
+         Height          =   4260
+         Left            =   165
+         TabIndex        =   163
+         Top             =   1245
+         Width           =   4140
+         _ExtentX        =   7303
+         _ExtentY        =   7514
+         _Version        =   393217
+         Indentation     =   353
+         Style           =   7
+         Appearance      =   0
+         Enabled         =   0   'False
+      End
+      Begin VB.TextBox txtExtrasOptionenPort 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   225
+         Left            =   1830
+         TabIndex        =   2
+         Top             =   840
+         Width           =   2475
+      End
+      Begin VB.TextBox txtdBoxIPAdress 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   225
+         Left            =   1830
+         TabIndex        =   1
+         Top             =   420
+         Width           =   2475
+      End
+      Begin VB.Label lblListenGrab_Port 
+         Caption         =   "Port (Listen-Grab)"
+         Height          =   255
+         Left            =   165
+         TabIndex        =   4
+         Top             =   825
+         Width           =   1575
+      End
+      Begin VB.Label Label7 
+         Caption         =   "IP-Adresse Ihrer dBox"
+         Height          =   255
+         Left            =   165
+         TabIndex        =   3
+         Top             =   420
+         Width           =   1935
+      End
+   End
+   Begin VB.Frame frmNGrabSettings 
+      Appearance      =   0  '2D
+      Caption         =   "Einstellung"
+      ForeColor       =   &H80000008&
+      Height          =   5685
+      Left            =   2850
+      TabIndex        =   6
+      Top             =   75
+      Visible         =   0   'False
+      Width           =   7560
+      Begin VB.CheckBox chkExtrasOptionenSyncTime 
+         Caption         =   "Systemzeit mit der dBox syncronisieren"
+         Height          =   300
+         Left            =   150
+         TabIndex        =   11
+         Top             =   960
+         Width           =   3075
+      End
+      Begin VB.CheckBox chkExtrasOptionenLOG 
+         Caption         =   "LOG speichern"
+         Height          =   240
+         Left            =   150
+         TabIndex        =   10
+         Top             =   645
+         Width           =   3075
+      End
+      Begin VB.CheckBox chkExtrasOptionenEPG 
+         Caption         =   "EPG Information speichern"
+         Height          =   300
+         Left            =   150
+         TabIndex        =   9
+         Top             =   270
+         Width           =   3315
+      End
+   End
+   Begin VB.Frame frmMPEG2Encoder 
+      Appearance      =   0  '2D
+      Caption         =   "MPEG2 Encoder"
+      ForeColor       =   &H80000008&
+      Height          =   5685
+      Left            =   2850
+      TabIndex        =   56
+      Top             =   75
+      Width           =   7560
+      Begin NOXButton10.NOXButton cmdDVD2SVCDEXE 
+         Height          =   330
+         Left            =   5115
+         TabIndex        =   151
+         Top             =   435
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":81AA
+         ImageMouseOver  =   "frmNGrabSetup.frx":8744
+         Caption         =   ""
+      End
+      Begin VB.TextBox txtPVAStrumento 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   120
+         TabIndex        =   94
+         Top             =   1110
+         Width           =   4935
+      End
+      Begin VB.TextBox txtDVD2SVCDEXE 
+         Appearance      =   0  '2D
+         BorderStyle     =   0  'Kein
+         Height          =   255
+         Left            =   120
+         TabIndex        =   59
+         Top             =   495
+         Width           =   4935
+      End
+      Begin VB.CheckBox chkStartEnc 
+         Caption         =   "Encoder nach Grabvorgang starten"
+         Enabled         =   0   'False
+         Height          =   255
+         Left            =   120
+         TabIndex        =   58
+         Top             =   5160
+         Width           =   2895
+      End
+      Begin NOXButton10.NOXButton cmdPVAStrumentoEXE 
+         Height          =   330
+         Left            =   5115
+         TabIndex        =   154
+         Top             =   1050
+         Width           =   405
+         _ExtentX        =   714
+         _ExtentY        =   582
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":8CDE
+         ImageMouseOver  =   "frmNGrabSetup.frx":9278
+         Caption         =   ""
+      End
+      Begin VB.TextBox txtEncCheck 
+         Appearance      =   0  '2D
+         BackColor       =   &H8000000F&
+         BorderStyle     =   0  'Kein
+         Enabled         =   0   'False
+         Height          =   3480
+         Left            =   120
+         MultiLine       =   -1  'True
+         TabIndex        =   60
+         Top             =   1470
+         Width           =   5535
+      End
+      Begin VB.Label Label15 
+         Caption         =   "PVAStrumento Startdatei:"
+         Height          =   255
+         Left            =   120
+         TabIndex        =   95
+         Top             =   840
+         Width           =   1935
+      End
+      Begin VB.Label Label2 
+         Caption         =   "DVD2SVCD Startdatei:"
+         Height          =   255
+         Index           =   1
+         Left            =   120
+         TabIndex        =   57
+         Top             =   240
+         Width           =   1695
+      End
+   End
+   Begin VB.Frame frmNGrabPaths 
+      Appearance      =   0  '2D
+      Caption         =   "Grab Pfad"
+      ForeColor       =   &H80000008&
+      Height          =   5700
+      Left            =   2850
+      TabIndex        =   5
+      Top             =   60
+      Width           =   7560
+      Begin NOXButton10.NOXButton cmdNeuerOrdner 
+         Height          =   345
+         Left            =   2670
+         TabIndex        =   31
+         Top             =   390
+         Width           =   1440
+         _ExtentX        =   2540
+         _ExtentY        =   609
+         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+            Name            =   "MS Sans Serif"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Image           =   "frmNGrabSetup.frx":9812
+         ImageMouseOver  =   "frmNGrabSetup.frx":9DAC
+         Caption         =   "&Neuer Ordner"
+      End
+      Begin VB.DirListBox Dir1 
+         Appearance      =   0  '2D
+         Height          =   4590
+         Left            =   135
+         TabIndex        =   8
+         Top             =   960
+         Width           =   3975
+      End
+      Begin VB.DriveListBox Drive1 
+         Appearance      =   0  '2D
+         Height          =   315
+         Left            =   135
+         TabIndex        =   7
+         Top             =   405
+         Width           =   2445
+      End
+   End
    Begin VB.Frame frmD2SBitrate 
       Appearance      =   0  '2D
       Caption         =   "Bitrate Einstellungen"
@@ -277,9 +1100,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":280A
+         ItemData        =   "frmNGrabSetup.frx":A346
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":2818
+         List            =   "frmNGrabSetup.frx":A354
          TabIndex        =   101
          Top             =   1650
          Width           =   735
@@ -296,9 +1119,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":2826
+         ItemData        =   "frmNGrabSetup.frx":A362
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":2834
+         List            =   "frmNGrabSetup.frx":A370
          TabIndex        =   100
          Top             =   2040
          Width           =   735
@@ -315,9 +1138,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":2842
+         ItemData        =   "frmNGrabSetup.frx":A37E
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":2850
+         List            =   "frmNGrabSetup.frx":A38C
          TabIndex        =   99
          Top             =   2400
          Width           =   735
@@ -334,9 +1157,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":285E
+         ItemData        =   "frmNGrabSetup.frx":A39A
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":286C
+         List            =   "frmNGrabSetup.frx":A3A8
          TabIndex        =   98
          Top             =   2790
          Width           =   735
@@ -353,9 +1176,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":287A
+         ItemData        =   "frmNGrabSetup.frx":A3B6
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":2888
+         List            =   "frmNGrabSetup.frx":A3C4
          TabIndex        =   97
          Top             =   3120
          Width           =   735
@@ -372,9 +1195,9 @@ Begin VB.Form frmNgrabSetup
             SubFormatType   =   1
          EndProperty
          Height          =   315
-         ItemData        =   "frmNGrabSetup.frx":2896
+         ItemData        =   "frmNGrabSetup.frx":A3D2
          Left            =   6000
-         List            =   "frmNGrabSetup.frx":28A4
+         List            =   "frmNGrabSetup.frx":A3E0
          TabIndex        =   96
          Top             =   3480
          Width           =   735
@@ -781,8 +1604,8 @@ Begin VB.Form frmNgrabSetup
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         Image           =   "frmNGrabSetup.frx":28B2
-         ImageMouseOver  =   "frmNGrabSetup.frx":2E4C
+         Image           =   "frmNGrabSetup.frx":A3EE
+         ImageMouseOver  =   "frmNGrabSetup.frx":A988
          Caption         =   ""
       End
       Begin VB.Frame frmD2STMPGSettings 
@@ -912,820 +1735,6 @@ Begin VB.Form frmNgrabSetup
          TabIndex        =   80
          Top             =   960
          Width           =   1695
-      End
-   End
-   Begin VB.Frame frmD2SPrograms 
-      Appearance      =   0  '2D
-      Caption         =   "Encoding Programme"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   61
-      Top             =   60
-      Width           =   7560
-      Begin VB.TextBox txtDVD2AVI 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   75
-         Top             =   3255
-         Width           =   5250
-      End
-      Begin VB.TextBox txtBeSweet 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   73
-         Top             =   2775
-         Width           =   5250
-      End
-      Begin VB.TextBox txtSimpleResize 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   71
-         Top             =   2280
-         Width           =   5250
-      End
-      Begin VB.TextBox txtInverse 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   69
-         Top             =   1815
-         Width           =   5250
-      End
-      Begin VB.TextBox txtMPEG2Dec 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   67
-         Top             =   1305
-         Width           =   5250
-      End
-      Begin VB.TextBox txtPulldown 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1545
-         TabIndex        =   65
-         Top             =   810
-         Width           =   5250
-      End
-      Begin VB.TextBox txtbbMPEG 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   1560
-         TabIndex        =   63
-         Top             =   345
-         Width           =   5250
-      End
-      Begin NOXButton10.NOXButton cmdbbmpeg 
-         Height          =   330
-         Left            =   6915
-         TabIndex        =   155
-         Top             =   315
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":33E6
-         ImageMouseOver  =   "frmNGrabSetup.frx":3980
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdPulldown 
-         Height          =   330
-         Left            =   6915
-         TabIndex        =   156
-         Top             =   780
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":3F1A
-         ImageMouseOver  =   "frmNGrabSetup.frx":44B4
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdMPEG2Dec 
-         Height          =   330
-         Left            =   6930
-         TabIndex        =   157
-         Top             =   1275
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":4A4E
-         ImageMouseOver  =   "frmNGrabSetup.frx":4FE8
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdInversTelecine 
-         Height          =   330
-         Left            =   6930
-         TabIndex        =   158
-         Top             =   1770
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":5582
-         ImageMouseOver  =   "frmNGrabSetup.frx":5B1C
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdSimpleResize 
-         Height          =   330
-         Left            =   6930
-         TabIndex        =   159
-         Top             =   2250
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":60B6
-         ImageMouseOver  =   "frmNGrabSetup.frx":6650
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdBeSweet 
-         Height          =   330
-         Left            =   6930
-         TabIndex        =   160
-         Top             =   2730
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":6BEA
-         ImageMouseOver  =   "frmNGrabSetup.frx":7184
-         Caption         =   ""
-      End
-      Begin NOXButton10.NOXButton cmdDVD2AVI 
-         Height          =   330
-         Left            =   6930
-         TabIndex        =   161
-         Top             =   3210
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":771E
-         ImageMouseOver  =   "frmNGrabSetup.frx":7CB8
-         Caption         =   ""
-      End
-      Begin VB.Label Label32 
-         Caption         =   "DVD2AVI:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   74
-         Top             =   3270
-         Width           =   855
-      End
-      Begin VB.Label Label30 
-         Caption         =   "BeSweet:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   72
-         Top             =   2790
-         Width           =   1095
-      End
-      Begin VB.Label Label29 
-         Caption         =   "SimpleResize:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   70
-         Top             =   2310
-         Width           =   1215
-      End
-      Begin VB.Label Label28 
-         Caption         =   "Inverse telecine:"
-         Height          =   375
-         Left            =   120
-         TabIndex        =   68
-         Top             =   1830
-         Width           =   1335
-      End
-      Begin VB.Label Label27 
-         Caption         =   "MPEG2Dec:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   66
-         Top             =   1350
-         Width           =   975
-      End
-      Begin VB.Label Label26 
-         Caption         =   "PullDown:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   64
-         Top             =   870
-         Width           =   735
-      End
-      Begin VB.Label Label25 
-         Caption         =   "bbMPEG:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   62
-         Top             =   390
-         Width           =   735
-      End
-   End
-   Begin VB.Frame frmNGrabFileExtensions 
-      Appearance      =   0  '2D
-      Caption         =   "Erweiterungen der Grab-Dateien"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   20
-      Top             =   60
-      Width           =   7560
-      Begin VB.TextBox txtLOG 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   2250
-         TabIndex        =   29
-         Top             =   1215
-         Width           =   480
-      End
-      Begin VB.TextBox txtM2A 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   5085
-         TabIndex        =   27
-         Top             =   735
-         Width           =   465
-      End
-      Begin VB.TextBox txtM2V 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   5070
-         TabIndex        =   25
-         Top             =   285
-         Width           =   465
-      End
-      Begin VB.TextBox txtTXT 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   2250
-         TabIndex        =   23
-         Top             =   765
-         Width           =   465
-      End
-      Begin VB.TextBox txtM2P 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   2250
-         TabIndex        =   21
-         Top             =   330
-         Width           =   465
-      End
-      Begin VB.Label Label10 
-         Caption         =   "Log Datei"
-         Height          =   255
-         Left            =   150
-         TabIndex        =   30
-         Top             =   1260
-         Width           =   1935
-      End
-      Begin VB.Label Label9 
-         Caption         =   "Audio PES Datei"
-         Height          =   255
-         Left            =   3270
-         TabIndex        =   28
-         Top             =   735
-         Width           =   1935
-      End
-      Begin VB.Label Label6 
-         Caption         =   "Video PES Datei"
-         Height          =   255
-         Left            =   3270
-         TabIndex        =   26
-         Top             =   330
-         Width           =   1935
-      End
-      Begin VB.Label lblTXT 
-         Caption         =   "EPG Informations Datei"
-         Height          =   255
-         Left            =   135
-         TabIndex        =   24
-         Top             =   780
-         Width           =   1980
-      End
-      Begin VB.Label Label8 
-         Caption         =   "Program Stream Datei"
-         Height          =   255
-         Left            =   135
-         TabIndex        =   22
-         Top             =   360
-         Width           =   2070
-      End
-   End
-   Begin VB.Frame frmWinGrabEngine 
-      Appearance      =   0  '2D
-      Caption         =   "WinGrabEngine"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   12
-      Top             =   60
-      Visible         =   0   'False
-      Width           =   7560
-      Begin VB.OptionButton optStreamingArt 
-         Appearance      =   0  '2D
-         Caption         =   "Audio und Video Pes File"
-         ForeColor       =   &H80000008&
-         Height          =   375
-         Index           =   1
-         Left            =   180
-         TabIndex        =   17
-         Top             =   990
-         Width           =   2655
-      End
-      Begin VB.OptionButton optStreamingArt 
-         Appearance      =   0  '2D
-         Caption         =   "Program Stream File"
-         ForeColor       =   &H80000008&
-         Height          =   375
-         Index           =   0
-         Left            =   180
-         TabIndex        =   16
-         Top             =   645
-         Width           =   2655
-      End
-      Begin VB.TextBox txtExrasOptionenSplitGroesse 
-         Appearance      =   0  '2D
-         Height          =   285
-         Left            =   4980
-         TabIndex        =   13
-         Top             =   360
-         Width           =   795
-      End
-      Begin VB.Label Label5 
-         Caption         =   "Split-Größe funktioniert nur mit ""Program Stream File"", es ist noch ein Bug in der WinGrabEngine.DLL"
-         Height          =   615
-         Left            =   3570
-         TabIndex        =   19
-         Top             =   780
-         Width           =   3375
-      End
-      Begin VB.Label Label4 
-         Caption         =   "Streaming-Typ"
-         Height          =   255
-         Left            =   195
-         TabIndex        =   18
-         Top             =   375
-         Width           =   2055
-      End
-      Begin VB.Label Label3 
-         Caption         =   "MB"
-         Height          =   255
-         Left            =   5850
-         TabIndex        =   15
-         Top             =   405
-         Width           =   495
-      End
-      Begin VB.Label Label1 
-         Caption         =   "Split-Größe (Datei):"
-         Height          =   255
-         Left            =   3570
-         TabIndex        =   14
-         Top             =   390
-         Width           =   2415
-      End
-   End
-   Begin VB.Frame frmD2SAudioSettings 
-      Appearance      =   0  '2D
-      Caption         =   "Encoder Audio Einstellungen"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   42
-      Top             =   60
-      Width           =   7560
-      Begin VB.CheckBox chkAudioDownsample 
-         Caption         =   "Audio Frequenz auf 44.1 samplen"
-         Height          =   375
-         Left            =   3120
-         TabIndex        =   47
-         Top             =   540
-         Width           =   2895
-      End
-      Begin VB.ComboBox comAudioBitrate 
-         Appearance      =   0  '2D
-         Height          =   315
-         Left            =   240
-         TabIndex        =   46
-         Top             =   1320
-         Width           =   2055
-      End
-      Begin VB.ComboBox comAudioMode 
-         Appearance      =   0  '2D
-         Height          =   315
-         Left            =   240
-         TabIndex        =   43
-         Top             =   585
-         Width           =   2055
-      End
-      Begin VB.Label Label14 
-         Caption         =   "Audio Bitrate:"
-         Height          =   255
-         Left            =   240
-         TabIndex        =   45
-         Top             =   1080
-         Width           =   1335
-      End
-      Begin VB.Label Label13 
-         Caption         =   "Audio Modus:"
-         Height          =   255
-         Left            =   240
-         TabIndex        =   44
-         Top             =   360
-         Width           =   1815
-      End
-   End
-   Begin VB.Frame frmD2SSettings 
-      Appearance      =   0  '2D
-      Caption         =   "Allgemeine Encoder Einstellungen"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   35
-      Top             =   60
-      Width           =   7560
-      Begin VB.CheckBox chkNoDelete 
-         Caption         =   "Keine Dateien löschen"
-         Height          =   255
-         Left            =   4860
-         TabIndex        =   41
-         Top             =   1635
-         Width           =   2295
-      End
-      Begin VB.CheckBox chkAutoShutdown 
-         Caption         =   "Automatisch Herunterfahren"
-         Height          =   255
-         Left            =   4860
-         TabIndex        =   40
-         Top             =   1155
-         Width           =   2535
-      End
-      Begin VB.DriveListBox DriveD2S 
-         Appearance      =   0  '2D
-         Height          =   315
-         Left            =   195
-         TabIndex        =   37
-         Top             =   615
-         Width           =   2505
-      End
-      Begin VB.DirListBox DirD2S 
-         Appearance      =   0  '2D
-         Height          =   4365
-         Left            =   180
-         TabIndex        =   36
-         Top             =   1095
-         Width           =   4065
-      End
-      Begin NOXButton10.NOXButton cmdNeuerOrdnerD2S 
-         Height          =   345
-         Left            =   2760
-         TabIndex        =   38
-         Top             =   585
-         Width           =   1440
-         _ExtentX        =   2540
-         _ExtentY        =   609
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":8252
-         ImageMouseOver  =   "frmNGrabSetup.frx":87EC
-         Caption         =   "&Neuer Ordner"
-      End
-      Begin VB.Label Label2 
-         Caption         =   "Ausgabe Verzeichnis:"
-         Height          =   255
-         Index           =   0
-         Left            =   195
-         TabIndex        =   39
-         Top             =   360
-         Width           =   2295
-      End
-   End
-   Begin VB.Frame frmDBoxSettings 
-      Appearance      =   0  '2D
-      Caption         =   "DBox-Einstellungen"
-      ForeColor       =   &H80000008&
-      Height          =   5685
-      Left            =   2850
-      TabIndex        =   0
-      Top             =   75
-      Width           =   7560
-      Begin MSComctlLib.TreeView tvDBoxInfo 
-         Height          =   4260
-         Left            =   165
-         TabIndex        =   163
-         Top             =   1245
-         Width           =   4140
-         _ExtentX        =   7303
-         _ExtentY        =   7514
-         _Version        =   393217
-         Indentation     =   353
-         Style           =   7
-         Appearance      =   0
-         Enabled         =   0   'False
-      End
-      Begin VB.TextBox txtExtrasOptionenPort 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   225
-         Left            =   1830
-         TabIndex        =   2
-         Top             =   840
-         Width           =   2475
-      End
-      Begin VB.TextBox txtdBoxIPAdress 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   225
-         Left            =   1830
-         TabIndex        =   1
-         Top             =   420
-         Width           =   2475
-      End
-      Begin VB.Label lblListenGrab_Port 
-         Caption         =   "Port (Listen-Grab)"
-         Height          =   255
-         Left            =   165
-         TabIndex        =   4
-         Top             =   825
-         Width           =   1575
-      End
-      Begin VB.Label Label7 
-         Caption         =   "IP-Adresse Ihrer dBox"
-         Height          =   255
-         Left            =   165
-         TabIndex        =   3
-         Top             =   420
-         Width           =   1935
-      End
-   End
-   Begin VB.Frame frmNGrabSettings 
-      Appearance      =   0  '2D
-      Caption         =   "Einstellung"
-      ForeColor       =   &H80000008&
-      Height          =   5685
-      Left            =   2850
-      TabIndex        =   6
-      Top             =   75
-      Visible         =   0   'False
-      Width           =   7560
-      Begin VB.CheckBox chkExtrasOptionenSyncTime 
-         Caption         =   "Systemzeit mit der dBox syncronisieren"
-         Height          =   300
-         Left            =   150
-         TabIndex        =   11
-         Top             =   960
-         Width           =   3075
-      End
-      Begin VB.CheckBox chkExtrasOptionenLOG 
-         Caption         =   "LOG speichern"
-         Height          =   240
-         Left            =   150
-         TabIndex        =   10
-         Top             =   645
-         Width           =   3075
-      End
-      Begin VB.CheckBox chkExtrasOptionenEPG 
-         Caption         =   "EPG Information speichern"
-         Height          =   300
-         Left            =   150
-         TabIndex        =   9
-         Top             =   270
-         Width           =   3315
-      End
-   End
-   Begin VB.Frame frmMPEG2Encoder 
-      Appearance      =   0  '2D
-      Caption         =   "MPEG2 Encoder"
-      ForeColor       =   &H80000008&
-      Height          =   5685
-      Left            =   2850
-      TabIndex        =   56
-      Top             =   75
-      Width           =   7560
-      Begin NOXButton10.NOXButton cmdDVD2SVCDEXE 
-         Height          =   330
-         Left            =   5115
-         TabIndex        =   151
-         Top             =   435
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":8D86
-         ImageMouseOver  =   "frmNGrabSetup.frx":9320
-         Caption         =   ""
-      End
-      Begin VB.TextBox txtPVAStrumento 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   120
-         TabIndex        =   94
-         Top             =   1110
-         Width           =   4935
-      End
-      Begin VB.TextBox txtDVD2SVCDEXE 
-         Appearance      =   0  '2D
-         BorderStyle     =   0  'Kein
-         Height          =   255
-         Left            =   120
-         TabIndex        =   59
-         Top             =   495
-         Width           =   4935
-      End
-      Begin VB.CheckBox chkStartEnc 
-         Caption         =   "Encoder nach Grabvorgang starten"
-         Enabled         =   0   'False
-         Height          =   255
-         Left            =   120
-         TabIndex        =   58
-         Top             =   5160
-         Width           =   2895
-      End
-      Begin NOXButton10.NOXButton cmdPVAStrumentoEXE 
-         Height          =   330
-         Left            =   5115
-         TabIndex        =   154
-         Top             =   1050
-         Width           =   405
-         _ExtentX        =   714
-         _ExtentY        =   582
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":98BA
-         ImageMouseOver  =   "frmNGrabSetup.frx":9E54
-         Caption         =   ""
-      End
-      Begin VB.TextBox txtEncCheck 
-         Appearance      =   0  '2D
-         BackColor       =   &H8000000F&
-         BorderStyle     =   0  'Kein
-         Enabled         =   0   'False
-         Height          =   3480
-         Left            =   120
-         MultiLine       =   -1  'True
-         TabIndex        =   60
-         Top             =   1470
-         Width           =   5535
-      End
-      Begin VB.Label Label15 
-         Caption         =   "PVAStrumento Startdatei:"
-         Height          =   255
-         Left            =   120
-         TabIndex        =   95
-         Top             =   840
-         Width           =   1935
-      End
-      Begin VB.Label Label2 
-         Caption         =   "DVD2SVCD Startdatei:"
-         Height          =   255
-         Index           =   1
-         Left            =   120
-         TabIndex        =   57
-         Top             =   240
-         Width           =   1695
-      End
-   End
-   Begin VB.Frame frmNGrabPaths 
-      Appearance      =   0  '2D
-      Caption         =   "Grab Pfad"
-      ForeColor       =   &H80000008&
-      Height          =   5700
-      Left            =   2850
-      TabIndex        =   5
-      Top             =   60
-      Width           =   7560
-      Begin NOXButton10.NOXButton cmdNeuerOrdner 
-         Height          =   345
-         Left            =   2670
-         TabIndex        =   31
-         Top             =   390
-         Width           =   1440
-         _ExtentX        =   2540
-         _ExtentY        =   609
-         BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-            Name            =   "MS Sans Serif"
-            Size            =   8.25
-            Charset         =   0
-            Weight          =   400
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         Image           =   "frmNGrabSetup.frx":A3EE
-         ImageMouseOver  =   "frmNGrabSetup.frx":A988
-         Caption         =   "&Neuer Ordner"
-      End
-      Begin VB.DirListBox Dir1 
-         Appearance      =   0  '2D
-         Height          =   4590
-         Left            =   135
-         TabIndex        =   8
-         Top             =   960
-         Width           =   3975
-      End
-      Begin VB.DriveListBox Drive1 
-         Appearance      =   0  '2D
-         Height          =   315
-         Left            =   135
-         TabIndex        =   7
-         Top             =   405
-         Width           =   2445
       End
    End
 End
@@ -2277,8 +2286,8 @@ Private Sub Form_Load()
         
     'D2S
     'globale Verzeichnisse
-    gsProjectFile = App.Path & "\D2S\" & NLSND2SProjectFile
-    gsINIFile = App.Path & "\D2S\" & NLSND2SINIFile
+    gsProjectFile = App.Path & "\D2S\" & NLSD2SProjectFile
+    gsINIFile = App.Path & "\D2S\" & NLSD2SINIFile
     
     Call D2SSettingsLoad
     
@@ -2687,63 +2696,63 @@ End Sub
 Private Sub D2SSettingsSave()
 
     'Project Info
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2STargetFolder, DirD2S.Path
-    SaveINISetting gsProjectFile, NLSND2SSettings, NLSND2SAspectRatio, comAspectRate.ListIndex
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2STargetFolder, DirD2S.Path
+    SaveINISetting gsProjectFile, NLSD2SSettings, NLSD2SAspectRatio, comAspectRate.ListIndex
     
     'Settings
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SAutoShutdown, chkAutoShutdown
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SDontDelete, chkNoDelete
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SUseCCE, pInt(optEncoder(0))
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SUseTMPG, pInt(optEncoder(1))
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SAudioMode, comAudioMode.ListIndex
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SAudioBitrate, comAudioBitrate.ListIndex
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SAudioResample, chkAudioDownsample
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SSafeMode, chkSafeMode
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCCECBR, pInt(optCCEVEM(0))
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCCEOneVBR, pInt(optCCEVEM(1))
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCCEMultiVBR, pInt(optCCEVEM(2))
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCCEPasses, txtCCEVBR
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2STMPGRateControl, comRateControl.ListIndex
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2STMPGMotionSearch, comMotion.ListIndex
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMaxBitrate, txtMaxBitrate
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinBitrate, txtMinBitrate
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMaxAvg, txtMaxAvg
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinAvg, txtMinAvg
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinsHigh1, txtUnd1
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinsHigh2, txtUnd2
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinsHigh3, txtUnd3
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinsHigh4, txtUnd4
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SMinsHigh5, txtUnd5
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD1, txtCD1
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD2, txtCD2
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD3, txtCD3
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD4, txtCD4
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD5, txtCD5
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SNumCD6, txtCD6
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize1, comCDSize1.Text
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize2, comCDSize2.Text
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize3, comCDSize3.Text
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize4, comCDSize4.Text
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize5, comCDSize5.Text
-    SaveINISetting gsINIFile, NLSND2SSettings, NLSND2SCDSize6, comCDSize6.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SAutoShutdown, chkAutoShutdown
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SDontDelete, chkNoDelete
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SUseCCE, pInt(optEncoder(0))
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SUseTMPG, pInt(optEncoder(1))
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SAudioMode, comAudioMode.ListIndex
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SAudioBitrate, comAudioBitrate.ListIndex
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SAudioResample, chkAudioDownsample
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SSafeMode, chkSafeMode
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCCECBR, pInt(optCCEVEM(0))
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCCEOneVBR, pInt(optCCEVEM(1))
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCCEMultiVBR, pInt(optCCEVEM(2))
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCCEPasses, txtCCEVBR
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2STMPGRateControl, comRateControl.ListIndex
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2STMPGMotionSearch, comMotion.ListIndex
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMaxBitrate, txtMaxBitrate
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinBitrate, txtMinBitrate
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMaxAvg, txtMaxAvg
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinAvg, txtMinAvg
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinsHigh1, txtUnd1
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinsHigh2, txtUnd2
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinsHigh3, txtUnd3
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinsHigh4, txtUnd4
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SMinsHigh5, txtUnd5
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD1, txtCD1
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD2, txtCD2
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD3, txtCD3
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD4, txtCD4
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD5, txtCD5
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SNumCD6, txtCD6
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize1, comCDSize1.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize2, comCDSize2.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize3, comCDSize3.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize4, comCDSize4.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize5, comCDSize5.Text
+    SaveINISetting gsINIFile, NLSD2SSettings, NLSD2SCDSize6, comCDSize6.Text
     
     'Executables
     If optEncoder(0) = True Then
-        SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SCCEExecutable, txtEncoderEXE
+        SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SCCEExecutable, txtEncoderEXE
     Else
-        SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2STMPGExecutable, txtEncoderEXE
+        SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2STMPGExecutable, txtEncoderEXE
     End If
 
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SPVAExecutable, txtPVAStrumento
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SPVAExecutable, txtPVAStrumento
     
     'Programs
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SDVD2AVIEx, txtDVD2AVI
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SBeSweetEx, txtBeSweet
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SPulldownEx, txtPulldown
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SbbMPEGEx, txtbbMPEG
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SMPG2DecDLL, txtMPEG2Dec
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SInverseTelecineDLL, txtInverse
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SSimpleResizeDLL, txtSimpleResize
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SDVD2AVIEx, txtDVD2AVI
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SBeSweetEx, txtBeSweet
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SPulldownEx, txtPulldown
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SbbMPEGEx, txtbbMPEG
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SMPG2DecDLL, txtMPEG2Dec
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SInverseTelecineDLL, txtInverse
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SSimpleResizeDLL, txtSimpleResize
     
 End Sub
 
@@ -2769,44 +2778,44 @@ End Sub
 Private Sub D2SSettingsLoad()
 
     'Settings
-    chkAutoShutdown = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SAutoShutdown, "0")
-    chkNoDelete = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SDontDelete, "0")
-    optEncoder(0) = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SUseCCE, "1")
-    optEncoder(1) = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SUseTMPG, "0")
-    comAudioMode.ListIndex = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SAudioMode, "0")
-    comAudioBitrate.ListIndex = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SAudioBitrate, "7")
-    chkAudioDownsample = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SAudioResample, "1")
-    chkSafeMode = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SSafeMode, "0")
-    optCCEVEM(0) = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCCECBR, "1")
-    optCCEVEM(1) = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCCEOneVBR, "0")
-    optCCEVEM(2) = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCCEMultiVBR, "0")
-    txtCCEVBR = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCCEPasses, "2")
-    comRateControl.ListIndex = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2STMPGRateControl, "0")
-    comMotion.ListIndex = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2STMPGMotionSearch, "0")
-    txtMaxBitrate = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMaxBitrate, "2530")
-    txtMinBitrate = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinBitrate, "300")
-    txtMaxAvg = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMaxAvg, "2230")
-    txtMinAvg = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinAvg, "1600")
-    txtUnd1 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinsHigh1, "0")
-    txtUnd2 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinsHigh2, "0")
-    txtUnd3 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinsHigh3, "0")
-    txtUnd4 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinsHigh4, "0")
-    txtUnd5 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SMinsHigh5, "0")
-    txtCD1 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD1, "0")
-    txtCD2 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD2, "0")
-    txtCD3 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD3, "0")
-    txtCD4 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD4, "0")
-    txtCD5 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD5, "0")
-    txtCD6 = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SNumCD6, "0")
-    comCDSize1.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize1, "0")
-    comCDSize2.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize2, "0")
-    comCDSize3.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize3, "0")
-    comCDSize4.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize4, "0")
-    comCDSize5.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize5, "0")
-    comCDSize6.Text = GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SCDSize6, "0")
+    chkAutoShutdown = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SAutoShutdown, "0")
+    chkNoDelete = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SDontDelete, "0")
+    optEncoder(0) = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SUseCCE, "1")
+    optEncoder(1) = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SUseTMPG, "0")
+    comAudioMode.ListIndex = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SAudioMode, "0")
+    comAudioBitrate.ListIndex = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SAudioBitrate, "7")
+    chkAudioDownsample = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SAudioResample, "1")
+    chkSafeMode = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SSafeMode, "0")
+    optCCEVEM(0) = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCCECBR, "1")
+    optCCEVEM(1) = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCCEOneVBR, "0")
+    optCCEVEM(2) = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCCEMultiVBR, "0")
+    txtCCEVBR = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCCEPasses, "2")
+    comRateControl.ListIndex = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2STMPGRateControl, "0")
+    comMotion.ListIndex = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2STMPGMotionSearch, "0")
+    txtMaxBitrate = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMaxBitrate, "2530")
+    txtMinBitrate = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinBitrate, "300")
+    txtMaxAvg = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMaxAvg, "2230")
+    txtMinAvg = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinAvg, "1600")
+    txtUnd1 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinsHigh1, "0")
+    txtUnd2 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinsHigh2, "0")
+    txtUnd3 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinsHigh3, "0")
+    txtUnd4 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinsHigh4, "0")
+    txtUnd5 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SMinsHigh5, "0")
+    txtCD1 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD1, "0")
+    txtCD2 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD2, "0")
+    txtCD3 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD3, "0")
+    txtCD4 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD4, "0")
+    txtCD5 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD5, "0")
+    txtCD6 = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SNumCD6, "0")
+    comCDSize1.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize1, "0")
+    comCDSize2.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize2, "0")
+    comCDSize3.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize3, "0")
+    comCDSize4.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize4, "0")
+    comCDSize5.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize5, "0")
+    comCDSize6.Text = GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SCDSize6, "0")
     
     'Executables
-    txtPVAStrumento = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SPVAExecutable, " ")
+    txtPVAStrumento = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SPVAExecutable, " ")
     
     Call mEncoderExecutableLoad
     
@@ -2814,9 +2823,9 @@ Private Sub D2SSettingsLoad()
     Call D2S_ProgramsLoad
     
     'Project Settings
-    comAspectRate.ListIndex = GetINISetting(gsProjectFile, NLSND2SSettings, NLSND2SAspectRatio, "0")
+    comAspectRate.ListIndex = GetINISetting(gsProjectFile, NLSD2SSettings, NLSD2SAspectRatio, "0")
     On Error GoTo DriveHandler
-    DirD2S.Path = GetINISetting(gsProjectFile, NLSND2SFilenames, NLSND2STargetFolder, "C:\")
+    DirD2S.Path = GetINISetting(gsProjectFile, NLSD2SFilenames, NLSD2STargetFolder, "C:\")
 
     Exit Sub
 
@@ -2848,13 +2857,13 @@ End Sub
 Private Sub D2S_ProgramsLoad()
 
     'Programs
-    txtbbMPEG = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SbbMPEGEx, " ")
-    txtPulldown = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SPulldownEx, " ")
-    txtMPEG2Dec = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SMPG2DecDLL, " ")
-    txtInverse = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SInverseTelecineDLL, "1 ")
-    txtSimpleResize = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SSimpleResizeDLL, " ")
-    txtBeSweet = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SBeSweetEx, " ")
-    txtDVD2AVI = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SDVD2AVIEx, " ")
+    txtbbMPEG = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SbbMPEGEx, " ")
+    txtPulldown = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SPulldownEx, " ")
+    txtMPEG2Dec = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SMPG2DecDLL, " ")
+    txtInverse = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SInverseTelecineDLL, "1 ")
+    txtSimpleResize = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SSimpleResizeDLL, " ")
+    txtBeSweet = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SBeSweetEx, " ")
+    txtDVD2AVI = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SDVD2AVIEx, " ")
 
 End Sub
 
@@ -2971,13 +2980,13 @@ End Sub
 
 Private Sub mEncodingOptionsCheck()
 
-  gsD2SINIFile = Replace(txtDVD2SVCDEXE, "DVD2SVCD.exe", NLSND2SINIFile)
-  txtEncCheck = D2S_CheckPrograms(gsD2SINIFile, NLSND2SExecutables, txtPVAStrumento, Me.txtEncoderEXE)
+  gsD2SINIFile = Replace(txtDVD2SVCDEXE, "DVD2SVCD.exe", NLSD2SINIFile)
+  txtEncCheck = D2S_CheckPrograms(gsD2SINIFile, NLSD2SExecutables, txtPVAStrumento, Me.txtEncoderEXE)
   
   If InStr(1, txtEncCheck, "!", vbTextCompare) = 0 Then
         
         chkStartEnc.Enabled = True
-        If InStr(1, D2S_CheckPrograms(gsINIFile, NLSND2SExecutables), "!", vbTextCompare) <> 0 Then
+        If InStr(1, D2S_CheckPrograms(gsINIFile, NLSD2SExecutables), "!", vbTextCompare) <> 0 Then
             
             Call D2S_ImportLinks
             Call D2S_ProgramsLoad
@@ -2996,9 +3005,9 @@ End Sub
 Private Sub mEncoderExecutableLoad()
 
     If optEncoder(0) = True Then
-        txtEncoderEXE = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SCCEExecutable, " ")
+        txtEncoderEXE = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SCCEExecutable, " ")
     Else
-        txtEncoderEXE = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2STMPGExecutable, " ")
+        txtEncoderEXE = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2STMPGExecutable, " ")
     End If
 
 End Sub

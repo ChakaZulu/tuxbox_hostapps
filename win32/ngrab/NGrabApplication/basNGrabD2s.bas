@@ -302,11 +302,11 @@ Public Sub D2S_Start(ByVal pStream As String, ByVal pCount As Integer)
     'Globale Variablen initialisieren
     Call D2S_InitGVar
     
-    gsD2SPath = Replace(gsD2SINIFile, NLSND2SINIFile, "", , , vbTextCompare)
-    gsAppPath = Replace(gsINIFile, NLSND2SINIFile, "", , , vbTextCompare)
-    gsTargetPath = GetINISetting(gsProjectFile, NLSND2SFilenames, NLSND2STargetFolder, "C:\")
+    gsD2SPath = Replace(gsD2SINIFile, NLSD2SINIFile, "", , , vbTextCompare)
+    gsAppPath = Replace(gsINIFile, NLSD2SINIFile, "", , , vbTextCompare)
+    gsTargetPath = GetINISetting(gsProjectFile, NLSD2SFilenames, NLSD2STargetFolder, "C:\")
     gsTargetPath = UCase(Left(gsTargetPath, 1)) & Mid(gsTargetPath, 2)
-    lsPVAEx = GetINISetting(gsINIFile, NLSND2SExecutables, NLSND2SPVAExecutable, "C:\")
+    lsPVAEx = GetINISetting(gsINIFile, NLSD2SExecutables, NLSD2SPVAExecutable, "C:\")
     If Right(gsTargetPath, 1) = "\" Then
         gsVideoFilename = gsTargetPath & "Video"
         gsAudioFilename = gsTargetPath & "Audio"
@@ -349,9 +349,9 @@ End Sub
 '-----------------------------------------------------------------------
 Private Sub D2S_InitGVar()
 
-   gsD2SINIFile = Replace(goSettings.sItem(NLSEncFile), "DVD2SVCD.EXE", NLSND2SINIFile, , , vbTextCompare)
-   gsProjectFile = App.Path & "\D2S\" & NLSND2SProjectFile
-   gsINIFile = App.Path & "\D2S\" & NLSND2SINIFile
+   gsD2SINIFile = Replace(goSettings.sItem(NLSEncFile), "DVD2SVCD.EXE", NLSD2SINIFile, , , vbTextCompare)
+   gsProjectFile = App.Path & "\D2S\" & NLSD2SProjectFile
+   gsINIFile = App.Path & "\D2S\" & NLSD2SINIFile
 
 End Sub
 
@@ -438,22 +438,22 @@ Public Function D2S_CheckPrograms(ByVal pD2SINI As String, ByVal pKey As String,
     
     'Püfen ob dvd2svcd.ini vorhanden
     If gbFileExists(pD2SINI) = False Then
-        D2S_CheckPrograms = NLSND2SINIFile & " nicht vorhanden !"
+        D2S_CheckPrograms = NLSD2SINIFile & " nicht vorhanden !"
         Exit Function
     End If
     
     'Programme prüfen
-    colPrograms.Add (NLSND2SDVD2AVIEx)
-    colPrograms.Add (NLSND2SBeSweetEx)
-    colPrograms.Add (NLSND2SMPEG51Ex)
-    colPrograms.Add (NLSND2SVFAPIEx)
-    colPrograms.Add (NLSND2SPulldownEx)
-    colPrograms.Add (NLSND2SSubMuxEx)
-    colPrograms.Add (NLSND2SbbMPEGEx)
-    colPrograms.Add (NLSND2SVFAPIEx)
-    colPrograms.Add (NLSND2SMPG2DecDLL)
-    colPrograms.Add (NLSND2SInverseTelecineDLL)
-    colPrograms.Add (NLSND2SSimpleResizeDLL)
+    colPrograms.Add (NLSD2SDVD2AVIEx)
+    colPrograms.Add (NLSD2SBeSweetEx)
+    colPrograms.Add (NLSD2SMPEG51Ex)
+    colPrograms.Add (NLSD2SVFAPIEx)
+    colPrograms.Add (NLSD2SPulldownEx)
+    colPrograms.Add (NLSD2SSubMuxEx)
+    colPrograms.Add (NLSD2SbbMPEGEx)
+    colPrograms.Add (NLSD2SVFAPIEx)
+    colPrograms.Add (NLSD2SMPG2DecDLL)
+'    colPrograms.Add (NLSD2SInverseTelecineDLL)
+'    colPrograms.Add (NLSD2SSimpleResizeDLL)
     
     For Each sProgram In colPrograms
     
@@ -535,18 +535,18 @@ End Function
 Public Sub D2S_ImportLinks()
 
     'Executables
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SDVD2AVIEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SDVD2AVIEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SBeSweetEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SBeSweetEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SMPEG51Ex, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SMPEG51Ex, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SVFAPIEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SVFAPIEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SPulldownEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SPulldownEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SSubMuxEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SSubMuxEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SMPEG51Ex, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SMPEG51Ex, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SbbMPEGEx, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SbbMPEGEx, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SMPG2DecDLL, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SMPG2DecDLL, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SMPG2DecDIV, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SMPG2DecDLL, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SInverseTelecineDLL, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SInverseTelecineDLL, " ")
-    SaveINISetting gsINIFile, NLSND2SExecutables, NLSND2SSimpleResizeDLL, GetINISetting(gsD2SINIFile, NLSND2SExecutables, NLSND2SSimpleResizeDLL, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SDVD2AVIEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SDVD2AVIEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SBeSweetEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SBeSweetEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SMPEG51Ex, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SMPEG51Ex, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SVFAPIEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SVFAPIEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SPulldownEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SPulldownEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SSubMuxEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SSubMuxEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SMPEG51Ex, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SMPEG51Ex, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SbbMPEGEx, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SbbMPEGEx, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SMPG2DecDLL, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SMPG2DecDLL, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SMPG2DecDIV, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SMPG2DecDLL, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SInverseTelecineDLL, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SInverseTelecineDLL, " ")
+    SaveINISetting gsINIFile, NLSD2SExecutables, NLSD2SSimpleResizeDLL, GetINISetting(gsD2SINIFile, NLSD2SExecutables, NLSD2SSimpleResizeDLL, " ")
     
 End Sub
 
@@ -575,26 +575,26 @@ End Sub
 Private Sub D2S_InitProject()
     
     'Filenames
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SAudioFileName, gsAudioFilename & ".mpa"
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SMP2FileName, gsAudioFilename & ".mp2"
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SFinalMPV, gsVideoFilename & ".mpv"
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SMPVFileName, gsVideoFilename & ".mpv"
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SFinalbbMpeg, gsVideoFilename & ".mpg"
-    SaveINISetting gsProjectFile, NLSND2SFilenames, NLSND2SD2SINIFile, gsINIFile
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SAudioFileName, gsAudioFilename & ".mpa"
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SMP2FileName, gsAudioFilename & ".mp2"
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SFinalMPV, gsVideoFilename & ".mpv"
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SMPVFileName, gsVideoFilename & ".mpv"
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SFinalbbMpeg, gsVideoFilename & ".mpg"
+    SaveINISetting gsProjectFile, NLSD2SFilenames, NLSD2SD2SINIFile, gsINIFile
     'VobFiles
-    SaveINISetting gsProjectFile, NLSND2SVOBFiles, NLSND2SVobName, gsVideoFilename & ".vob"
+    SaveINISetting gsProjectFile, NLSD2SVOBFiles, NLSD2SVobName, gsVideoFilename & ".vob"
     'Folders
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SPVAFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SD2AFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SVStripFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SAudioFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SCCEFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2STMPGFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SPullFolder, gsTargetPath & "\"
-    SaveINISetting gsINIFile, NLSND2SFolders, NLSND2SbbMPEGFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SPVAFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SD2AFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SVStripFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SAudioFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SCCEFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2STMPGFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SPullFolder, gsTargetPath & "\"
+    SaveINISetting gsINIFile, NLSD2SFolders, NLSD2SbbMPEGFolder, gsTargetPath & "\"
     
     'deaktiviert FirstTime Flag
-    SaveINISetting gsD2SINIFile, NLSND2SSettings, NLSND2SFirstRun, "0"
+    SaveINISetting gsD2SINIFile, NLSD2SSettings, NLSD2SFirstRun, "0"
 
 End Sub
 
@@ -702,7 +702,7 @@ Public Sub TimerProc(ByVal hWnd As Long, ByVal nIDEvent As Long, ByVal uElapse A
     'Batch Datei kopieren, bearbeiten und ausführen
     FileCopy gsAppPath & D2S_BATCH_IMG, gsAppPath & D2S_BATCH
     lsBatchString = gsD2SPath & "DVD2SVCD.EXE -d2s:""" & gsProjectFile & """ -run"
-    If GetINISetting(gsINIFile, NLSND2SSettings, NLSND2SAutoShutdown, "0") = 1 Then
+    If GetINISetting(gsINIFile, NLSD2SSettings, NLSD2SAutoShutdown, "0") = 1 Then
      lsBatchString = lsBatchString & " -shutdown"
     Else
      lsBatchString = lsBatchString & " -exit"
