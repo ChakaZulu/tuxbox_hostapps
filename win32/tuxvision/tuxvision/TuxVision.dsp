@@ -2,7 +2,7 @@
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Application" 0x0101
+# TARGTYPE "Win32 (x86) Application" 0x0101     
 
 CFG=TuxVision - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
