@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainHttpClients.pas,v $
+// Revision 1.3  2004/10/13 10:38:14  thotto
+// Telnet-Restart des nhttpd
+//
 // Revision 1.2  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -71,41 +74,11 @@ begin
             sTmp := '';
           end;
         end;
-      end else
-      begin
-        //restart the nhttpd
-        VcrEpgClientSocket.Active:= false;
-        VcrEpgClientSocket.Port   := 23;
-        VcrEpgClientSocket.Address:= m_sDBoxIp;
-        Application.ProcessMessages;
-        VcrEpgClientSocket.Active:= true;
-        sTmp := VcrEpgClientSocket.Socket.ReceiveText;
-        m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
-        if Length(sTmp) > 0 then
-        begin
-          VcrEpgClientSocket.Socket.SendText('root'+#13#10);
-          DoEvents;
-          Sleep(1000);
-          DoEvents;
-          sTmp := VcrEpgClientSocket.Socket.ReceiveText;
-          m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
-          VcrEpgClientSocket.Socket.SendText('nhttpd'+#13#10);
-          DoEvents;
-          Sleep(1000);
-          DoEvents;
-          sTmp := VcrEpgClientSocket.Socket.ReceiveText;
-          m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
-        end;
-        VcrEpgClientSocket.Active:= false;
-        VcrEpgClientSocket.Port   := 80;
-        VcrEpgClientSocket.Address:= m_sDBoxIp;
-        Application.ProcessMessages;
-        VcrEpgClientSocket.Active:= true;
       end;
       Result := sTmp;
       m_bHttpInProgress := false;
     except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'SendHttpCommand '+E.Message);
+      RestartHttpd;
     end;
   finally
     m_bHttpInProgress := false;
@@ -113,6 +86,35 @@ begin
   m_bHttpInProgress := false;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< SendHttpCommand');
 end;
+
+procedure TfrmMain.RestartHttpd;
+var
+  sTmp : String;
+begin
+  try
+    //restart the nhttpd
+    VcrDBoxTelnet.BoundIP := m_sDBoxIp;
+    Application.ProcessMessages;
+    VcrDBoxTelnet.Connect;
+    // login
+    sTmp := VcrDBoxTelnet.ReadLn(#0,1000);
+    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+    sTmp := VcrDBoxTelnet.ReadLn(#0,500);
+    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+    VcrDBoxTelnet.WriteLn('root');
+    DoEvents;
+    VcrDBoxTelnet.WriteLn('nhttpd');
+    DoEvents;
+    sTmp := VcrDBoxTelnet.ReadLn(#0,1000);
+    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+    DoEvents;
+    VcrDBoxTelnet.Disconnect;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'RestartHttpd '+E.Message);
+  end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
 
 procedure TfrmMain.GetProgEpg(sEventId,
                               sFilePath: String;

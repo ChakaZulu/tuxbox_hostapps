@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.4  2004/10/13 10:38:14  thotto
+// Telnet-Restart des nhttpd
+//
 // Revision 1.3  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -61,7 +64,7 @@ uses
   VcrDivXchk,
   HTMLLite,
   Planner,
-  DBPlanner;
+  DBPlanner, IdTelnet;
 
 {$M 65536,4194304}
 
@@ -253,6 +256,7 @@ type
     Recorded_Epg_DropFiles: TPJDropFiles;
     Recorded_EpgView: ThtmlLite;
     Label16: TLabel;
+    VcrDBoxTelnet: TIdTelnet;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -415,6 +419,7 @@ type
 
     function  SetHttpHeader: String;
     function  SendHttpCommand(sCommand: String): String;
+    procedure RestartHttpd;
 
     procedure OpenEpgDb(sEpgDbFilename : String);
     procedure CloseEpgDb;
@@ -2628,6 +2633,8 @@ begin
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'Recorded_Epg_DropFilesDropFiles '+ E.Message );
   end;
 end;
+
+
 
 end.
 

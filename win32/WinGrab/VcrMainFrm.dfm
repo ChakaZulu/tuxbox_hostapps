@@ -1488,7 +1488,6 @@ object frmMain: TfrmMain
               Font.Height = -8
               Font.Name = 'MS Sans Serif'
               Font.Style = []
-              IPAddress = '192.168.1.254'
             end
             object chxSwitchChannel: TTeCheckBox
               Left = 209
@@ -2178,5 +2177,11 @@ object frmMain: TfrmMain
     Provider = 'Microsoft.Jet.OLEDB.4.0'
     Left = 144
     Top = 512
+  end
+  object VcrDBoxTelnet: TIdTelnet
+    Port = 23
+    Terminal = 'dumb'
+    Left = 576
+    Top = 448
   end
 end
