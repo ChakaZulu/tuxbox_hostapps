@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.9 2003/06/28 17:48:40 obi Exp $
+ * $Id: ucodex.c,v 1.10 2003/06/28 18:05:11 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -27,7 +27,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "ucodex.h"
 
