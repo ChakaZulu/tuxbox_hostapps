@@ -41,7 +41,7 @@ bool	gflag_new_file;
 
 char    ga_basename[256] = "vts_01_";
 char	ga_ext[20] = "vob";
-bool	g_realtime = false;
+bool	g_realtime = true;
 
 // Default parameters
 bool	 gnosectionsd	 = false;
@@ -137,8 +137,8 @@ int main( int argc, char *argv[] ) {
 			dbox2name = argv[i];
 		} else if (!strcmp("-nonfos", argv[i])) {
 			// obsolete	
-		} else if (!strcmp("-rt", argv[i])) {
-			g_realtime = true;	
+		} else if (!strcmp("-nort", argv[i])) {
+			g_realtime = false;	
 		} else if (!strcmp("-log", argv[i])) {
 			logging = true;
 		} else if (!strcmp("-nos", argv[i])) {
@@ -185,7 +185,7 @@ int main( int argc, char *argv[] ) {
 					"-debug         generate debug information\n"
 					"-loop          Looping output files basename1/2\n"
 					"-udp [uport]   UDP Streaming, (experimental)[30000]\n"
-					"-rt            Real Time Scheduling for read threads\n"
+					"-nort          Disable Real Time Scheduling for read threads\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"

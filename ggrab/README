@@ -2,12 +2,14 @@ Einleitung
 ==========
 
 ggrab ist ein Streaming Tool für die Dbox2 mit Neutrino
+Dieses Programm ist beta, d.h. es kann zu unerwünschten Effekten kommen!!!
 
 Lauffähig gemeldet unter:
 Linux
 Cygwin
 Solaris
 MacOS X
+FreeBSD
 
 Features
 =========
@@ -125,13 +127,7 @@ Streaming per udp
 =================
 Um die Datenrate und die Kollisionen bei Datentransfer von der Box zu senken,
 habe ich hier das Streaming per unbestätigten UDP-Paketen realisiert.
-Für dieses Feature ist es notwendig, den Streamserver streampes auf der dbox2
-zu ersetzen. Der beiliegende Server namen streamudp ist kompatibel zum bisherigen 
-streampes. Dieser kann somit durch streamudp ausgetauscht werden.
-=======================   VORSICHT:    =====================================
-1. Da streampes im cramfs liegt, ist die Datei NICHT einfach per ftp austauschbar!!!!
-2. Da die Schnittstelle zum Treiber verändert wurde, läuft der Binary-Treiber NICHT
-auf den meisten Images. Baut also ein CDK und testet es dort.
+Diese Feature ist zum erstan Mal im Alexw vom 6.2.2003
 
 Begründung für UDP:
 Bei tcp ist die Verbindung gesichert, daß heißt, die Daten werden 
@@ -143,7 +139,7 @@ Heruntersetzen der Window-Size, Ping-Pong-Verkehr
 Dieses führt bei der hoen Last unweigerlich zum Pufferüberlauf auf der Box und damit zu
 Aussetzern im Stream.
 Bei UDP treten keine Kollisionen auf, es braucht weniger Bandbreite und Prozessorzeit.
-Bei den bisherigen Tests konnte problemlos mit Dauedatenraten über 7000 kBit/s und Peaks
+Bei den bisherigen Tests konnte problemlos mit Dauerdatenraten über 7000 kBit/s und Peaks
 bis 1 MBit/s gestreamt werden.
 
 
@@ -158,8 +154,8 @@ GET /<pid>,<udpport> HTTP 1.0\r\n\r\n 	-> Streaming per UDP auf Port <udpport>
 
 Format der UDP-Messages:
 ========================
-1444 Byte Gesamtlänge:
-1440 Byte Daten:
+n    Byte Gesamtlänge: (n = 1444 zur Zeit, max bis 65525 per fragmented IP)
+n-4  Byte Daten:
 4    Byte Paketzähler in Network Byte Order beginnent bei 0
 
 

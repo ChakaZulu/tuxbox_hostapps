@@ -193,7 +193,7 @@ int main(int argc, char * argv[])
 						{
 							p_act = recdata.epgtitle;
 							do {
-								p_act +=  strcspn(p_act, "/ \"%&-\t`'´!,:;");
+								p_act +=  strcspn(p_act, "/ \"%&-\t`'~<>!,:;?^°$\\=*#@¤|µ");
 								if (*p_act) {
 									*p_act++ = '_';
 								}
