@@ -96,24 +96,42 @@ HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigne
             hr=WriteTerminal(hSocket, CMD_PROMPT, "ps -ax");
         if (SUCCEEDED(hr))
             hr=WriteTerminal(hSocket, CMD_PROMPT, "/var/tuxbox/fbclear");
-#if 0
+
+        if (SUCCEEDED(hr))
+            hr=WriteTerminal(hSocket, CMD_PROMPT, "rmmod -r avia_gt_dvr");
+        if (SUCCEEDED(hr))
+            hr=WriteTerminal(hSocket, CMD_PROMPT, "find /lib/modules -name avia_gt_dvr.o > BSE");
+        if (SUCCEEDED(hr))
+            hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod -q `cat BSE`");
+
+#if 1
         if (isENX)
             {
             if (SUCCEEDED(hr))
                 hr=WriteTerminal(hSocket, CMD_PROMPT, "rmmod -r enx_dvr");
+            #if 1
             if (SUCCEEDED(hr))
-                hr=WriteTerminal(hSocket, CMD_PROMPT, "lsmod");
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "find /lib/modules -name enx_dvr.o > BSE");
             if (SUCCEEDED(hr))
-                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod /var/tuxbox/enx_dvr.o");
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod -q `cat BSE`");
+            #else
+            if (SUCCEEDED(hr))
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod -q /var/tuxbox/enx_dvr.o");
+            #endif
             }
         else
             {
             if (SUCCEEDED(hr))
                 hr=WriteTerminal(hSocket, CMD_PROMPT, "rmmod -r gtx_dvr");
+            #if 1
             if (SUCCEEDED(hr))
-                hr=WriteTerminal(hSocket, CMD_PROMPT, "lsmod");
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "find /lib/modules -name gtx_dvr.o > BSE");
             if (SUCCEEDED(hr))
-                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod /var/tuxbox/gtx_dvr.o");
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod -q `cat BSE`");
+            #else
+            if (SUCCEEDED(hr))
+                hr=WriteTerminal(hSocket, CMD_PROMPT, "insmod -q /var/tuxbox/gtx_dvr.o");
+            #endif
             }
 #endif
         }
