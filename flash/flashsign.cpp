@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: flashsign.cpp,v 1.4 2002/06/03 17:41:11 waldi Exp $
+ * $Id: flashsign.cpp,v 1.5 2002/06/29 13:10:54 waldi Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -33,6 +33,7 @@
 
 #include <getopt.h>
 
+#include <libcrypto++/lib.hpp>
 #include <libcrypto++/rand.hpp>
 
 #include <libflashimage/flashimage.hpp>
@@ -46,7 +47,7 @@ const char * program_name;
 
 static struct option long_options [] =
 {
-  { "image", required_argument, 0, 'i' },
+  { "certchain", required_argument, 0, 'c' },
   { "privatekey", required_argument, 0, 'k' },
   { "size", required_argument, 0, 's' },
   { "help", no_argument, 0, 250 },
@@ -60,9 +61,9 @@ void usage ( int status )
     std::cerr << "Try `" << program_name << " --help' for more information.\n";
   else
     std::cout
-      << "Usage: " << program_name << " [OPTIONS]\n\n"
+      << "Usage: " << program_name << " [OPTION]... FILE\n\n"
       << "Sign a flash image\n\n"
-      << "  -i, --image=FILE            image file\n"
+      << "  -c, --certchain=FILE        certchain for checks\n"
       << "  -k, --privatekey=FILE       private key for sign\n"
       << "  -s, --size=SIZE             size of output file in kb\n"
       << "      --help                  display this help and exit\n"
@@ -71,24 +72,23 @@ void usage ( int status )
   exit ( status );
 }
 
-std::map < std::string, std::string > parse_options ( int argc, char ** argv )
+int parse_options ( int argc, char ** argv, std::map < std::string, std::string > & options )
 {
-  char c;
+  unsigned char c;
   int option_index;
-  std::map < std::string, std::string > options;
 
   while ( 1 )
   {
     option_index = 0;
 
-    c = getopt_long (argc, argv, "i:k:o:s:", long_options, &option_index);
+    c = getopt_long (argc, argv, "c:k:o:s:", long_options, &option_index);
 
-    if ( c == -1 )
+    if ( c == 255 )
       break;
     switch ( c )
     {
-      case 'i':
-        options.insert ( std::pair < std::string, std::string > ( "image", optarg ) );
+      case 'c':
+        options.insert ( std::pair < std::string, std::string > ( "certchain", optarg ) );
         break;
       case 'k':
         options.insert ( std::pair < std::string, std::string > ( "privatekey", optarg ) );
@@ -112,16 +112,17 @@ std::map < std::string, std::string > parse_options ( int argc, char ** argv )
     }
   }
 
-  return options;
+  return optind;
 }
 
 int main ( int argc, char ** argv )
 {
   program_name = argv[0];
 
-  std::map < std::string, std::string > options = parse_options ( argc, argv );
+  std::map < std::string, std::string > options;
+  int optind = parse_options ( argc, argv, options );
   
-  if ( options["image"] == "" )
+  if ( argc == optind )
   {
     std::cerr << program_name << ": need a image file!\n";
     usage ( 1 );
@@ -139,15 +140,19 @@ int main ( int argc, char ** argv )
     usage ( 1 );
   }
 
+  if ( options["certchain"] == "" )
+    std::cerr << program_name << ": can't really check image without a certchain.\n";
+
+  Crypto::lib::init ();
   Crypto::rand::load_file ( "/dev/urandom", 128 );
 
-  std::fstream image_in ( options["image"].c_str (), std::ios::in | std::ios::out );
+  std::fstream image ( argv[optind], std::ios::in | std::ios::out );
   char * buf = NULL;
 
   try
   {
-    image_in.seekg ( 0, std::ios::end );
-    int size = image_in.tellg ();
+    image.seekg ( 0, std::ios::end );
+    int size = image.tellg ();
     int endsize = atoi ( options["size"].c_str () ) * 1024;
     int padsize = endsize - size;
 
@@ -165,34 +170,62 @@ int main ( int argc, char ** argv )
 
     int pad = padsize / 4096;
 
-    image_in.seekp ( 0, std::ios::end );
+    image.seekp ( 0, std::ios::end );
     while ( pad )
     {
-      image_in.write ( buf, 4096 );
+      image.write ( buf, 4096 );
       pad--;
     }
 
-    FlashImage::FlashImageCramFS fs ( image_in );
+    FlashImage::FlashImageCramFS fs ( image );
     FlashImage::FlashImage image ( fs );
+
+    std::cout << "sign image:" << std::endl;
+    fs.get_file ( "control", std::cout );
+    std::cout << std::endl;
+
+    {
+      std::map < int, std::string > errors;
+      switch ( image.verify_cert ( options["certchain"], errors ) )
+      {
+        case -1:
+          std::cout << "cert verification failed" << std::endl;
+          break;
+        case -2:
+          std::cout << "cert verification probably failed:" << std::endl;
+          for ( std::map < int, std::string > ::iterator it = errors.begin (); it != errors.end (); ++it )
+            std::cout << it -> second << std::endl;
+          break;
+        case -3:
+          std::cout << "cert verification failed:" << std::endl;
+          for ( std::map < int, std::string > ::iterator it = errors.begin (); it != errors.end (); ++it )
+            std::cout << it -> second << std::endl;
+          break;
+      }
+    }
 
     std::ifstream privatekey_in ( options["privatekey"].c_str (), std::ios::in );
     Crypto::evp::key::privatekey key;
     key.read ( privatekey_in );
 
-    if ( image.get_control_field ( "Digest" ) == "MD5" )
-      fs.sign ( key, Crypto::evp::md::md5 () );
-    else if ( image.get_control_field ( "Digest" ) == "SHA1" )
-      fs.sign ( key, Crypto::evp::md::sha1 () );
-    else if ( image.get_control_field ( "Digest" ) == "RIPEMD160" )
-      fs.sign ( key, Crypto::evp::md::ripemd160 () );
+    FlashImage::FlashImageSign sign = image.sign_image ();
+    while ( sign.update () );
+    sign.final ( key );
+
+    if ( ! image.verify_image ().final () )
+      std::cout << "image verification failed" << std::endl;
   }
 
+  catch ( Crypto::exception::undefined_libcrypto_error & except )
+  {
+    std::cout << "exception: " << except.what () << std::endl;
+  }
   catch ( std::runtime_error & except )
   {
     std::cout << "exception: " << except.what () << std::endl;
   }
 
-  image_in.close ();
+  image.close ();
   delete buf;
 
   return 0;
