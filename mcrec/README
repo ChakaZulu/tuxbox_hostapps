@@ -1,0 +1,111 @@
+Checked into cvs.tuxbox.org by Gagga with permission from the author.
+As of checkin time this was mcrec 0.18
+---------------------------------------------------------------------
+
+Contents of this README:
+------------------------
+
+- What is this program?
+- Features
+- What you need to use it
+- How do I record?
+- Compiling
+- Problems, todo
+- Authors
+- Links
+
+
+What is this program?
+---------------------
+
+This program records music from musicchoice channels.
+
+Features:
+---------
+
+- Works with dbox2/Linux
+
+- Records song by song
+
+- fetches songinfo from musicchoice site
+
+- stores songs in MP2 format with artits - songtitle
+
+- writes ID3v1.1
+
+
+What you need to use it
+-----------------------
+
+You need
+
+- a dbox2 running Linux
+- dbox2 must be network attached
+- a Linux box for recording
+
+How do I record?
+----------------
+
+edit the IP in mcrec.rc to match with your dbox,
+set the basedir and basefilename of your choice,
+connect to the internet and simply run mcrec
+
+tempfiles are stored in folder <basedir>
+finished songs are stored in folder <basedir>/finished/<channelname>
+
+
+Compiling:
+----------
+
+To compile mcrec, just cd to the "src" directory and do:
+./configure
+./make
+Please help yourself if you can.
+
+
+
+Problems, todo:
+---------------
+
+- if everything goes right, you can record hours of music without break;-)
+  the state of this program is more or less "proof of concept". I wont even 
+  call it pre alpha;-)
+- suggestions are welcome but please understand that my sparetime to work on
+  mcrec is very limited.
+
+my future plans include ideas like:
+- shockproof songinfo fetching
+- exit program if channel is switched on dbox
+- automatic channelswitching based on commandline parameters
+- support for cygwin
+- code cleanup .... and code cleanup and maybe some more code cleanup;-)
+
+what I don't want to do:
+- a GUI
+
+
+Authors:
+--------
+
+- mcrec was written by Wolfgang Breyha
+- mcrec is based on grab
+  - grab was written by Peter Niemayer.
+  - modifications to work with "Linux for dbox2" by Felix Domke
+  - AC3 tables were taken from libac3 by Aaron Holtzman
+
+- special thanks go to Reinhard Franz for the idea
+
+Links:
+------
+
+Don't expect end-user support from the authors of this free software.
+If you wish to exchange thoughts on this program, visit the Tuxbox Board at
+Berlios
+
+You'll hopefully find the most recent version of this software at
+
+http://mash.nwy.at/
+
+Have fun,
+
+Wolfgang

@@ -1,0 +1,98 @@
+0.18 -  not yet released
+	option "-p" to set basepath via option
+	some more output to sync to mcrec
+	requested by leth
+
+	fixed some segfaults if parameters in rc-file are missing
+	false display of "no EPG"-Message in "-m" mode fixed
+
+0.17 -	25.07.2003
+	option "-a". archiv mode...songname and size gets stored in a database
+	songs recorded once and deleted afterwards would be discarded
+	(enhanced -r)
+	thanks for the suggestion goes to Werner ?
+
+	support for proxyserver added. to be configured in mcrec.rc!
+	requested by Daniel Eiseler.
+
+	extension of saved files is now configureable.
+	change "extension=mp2" to whatever you prefer.
+	requested by Sven Diehl
+
+	mcrec uses now configure 
+	compiles now at least on Linux, Cygwin and Solaris
+	use
+	./configure
+	make
+	now to compile!
+	requested by Michael Alzheimer
+
+0.16 -  16.03.2003
+	option "-m <channel>". multi mode...multiply streams from encoded
+	material you ask yourself? indeed, it works! as long as a streampes
+	task sits on an apid it gets decoded as well as long as the same key
+	is used for the sid. since mcrec is a special tool for musicchoice
+	(mostly via pw) it makes sence to utilize that behavior of our
+	lovely dbox2 :-B
+
+	All you have to do is...use your usual options and use "-m" instead of
+	"-c". In case of udp (-u) mcrec adds the apid to the baseport to make it
+	easier. temporary files are now in format "<basefilename>_<apid>_<num>".
+
+	But take care that you don't move to an other transponder! mcrec doesn't
+	check that currently since there is no proper way to fetch tsid from
+	nhttpd.
+
+	minor bugfixes
+
+0.15 -  26.12.2002
+	option "-u [port]". ggrap-like UDP streaming support included.
+	you need the patched streampes from ggrap on your box.
+	defaultport 30000
+
+0.14 -  29.11.2002
+	option "-e" fixed. man, I should test options I implement;-)
+
+0.13 -	23.11.2002
+	option "-e" added to disable EPG completly for dialup users
+	_really_ dirty hack to ignore syncs after approx. 39 mins for longer
+	  broadcasts all syncs at song time modulo 39 Mins +/- 1 minute will
+	  be ignored option "-h" to disable this "feature";-)
+	be careful! debugoutput is a bit huge on sync currently!
+
+0.12 -  06.11.2002
+	display "fetching songinfo" on "EPG not updated yet"-event, too
+	avoid restart of songinfo_thread after "EPG not updated yet" recovery
+	minor compilerwarning fixed
+	if channel is not found in mcrec.progs EPG is disabled completly
+
+0.11 -  01.11.2002
+	characters forbidden in filenames are now replaced
+
+0.10 -	01.11.2002
+	option "-c <prognum>" for automatic switching to a specific radiochannel
+	"optimized" logging. vfprintf is the magic word;-)
+	at least it compiles and runs now an Cygwin. Let's see if it works well.
+	further code cleanup and first comments to the code.
+
+0.09 -	30.10.2002
+	option "-d" for some debug info
+	option "-r" for removing file duplicates of same size and name after
+	recording further code cleanup within remuxer and mcrec
+
+0.08 -	25.10.2002
+	songinfo display on dbox changed
+ 	songs are now named "<title>_xx.mp2" if destination file exists
+	basic logging to mcrec.log. use option "-l" to activate
+
+0.07 -	20.10.2002
+	changed nhttpd requests from "\n" back to "\r\n\r\n" due to problems
+	fixed some more possible SIGSEGV
+
+0.06 -	19.10.2002
+	strip trailing blanks from channelname
+	return emtpy URL-buffer if responsecode from webserver is not 200
+	fixed some SIGSEGV fetching mc-info
+
+0.05 -	19.10.2002
+	first preview release

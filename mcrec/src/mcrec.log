@@ -1,0 +1,93 @@
+using proxyserver 192.168.1.253:3128!
+switching to radiomode...done
+trying to switch to RTL Television ... done.
+requesting current program ID...got: 77539 
+channel name: RTL Television ...searching URL-database...
+channel not found in mcrec.progs!
+No EPG available
+selected apid: 0x68
+using proxyserver 192.168.1.253:3128!
+switching to radiomode...done
+trying to switch to RTL Television ... done.
+requesting current program ID...got: 77539 
+channel name: RTL Television ...searching URL-database...
+channel not found in mcrec.progs!
+No EPG available
+selected apid: 0x68
+using proxyserver 192.168.1.253:3128!
+switching to radiomode...done
+trying to switch to RTL Television ... done.
+requesting current program ID...got: 77539 
+channel name: RTL Television ...searching URL-database...
+channel not found in mcrec.progs!
+No EPG available
+selected apid: 0x68
+using proxyserver 192.168.1.253:3128!
+switching to radiomode...done
+trying to switch to RTL Television ... done.
+requesting current program ID...got: 77539 
+channel name: RTL Television ...searching URL-database...
+channel not found in mcrec.progs!
+No EPG available
+selected apid: 0x68
+using proxyserver 192.168.1.253:3128!
+switching to radiomode...done
+trying to switch to HITLISTE ... done.
+requesting current program ID...got: 8716438 
+channel name: HITLISTE ...searching URL-database...
+musicchoice EPG-URL: /EPG/hitlist.shtml
+selected apid: 0x310
+initializing songdb (/var/mcrec/finished/hitlist/mcrec.songdb)...done
+opening 192.168.1.60:31338 PID 0x310 via TCP
+
+track:   Rock Your Body
+artist1: Justin Timberlake
+artist2: 
+album:   Justified
+label:   Jive Records
+year:    
+start recording...                            
+
+track:   No, Not Now
+artist1: Hot Hot Heat
+artist2: 
+album:   Make Up The Breakdown
+label:   B-Unique Records
+year:    
+
+MPEG_Audio sync found...                             
+finished recording...
+moving file to: /var/mcrec/finished/hitlist/Hot Hot Heat - No, Not Now.mp2
+start recording...                            
+
+track:   Damaged (Antillas Remix)
+artist1: Plummet
+artist2: 
+album:   Damaged (CD Single)
+label:   Serious Records
+year:    
+
+MPEG_Audio sync found...                             
+finished recording...
+moving file to: /var/mcrec/finished/hitlist/Plummet - Damaged (Antillas Remix).mp2
+start recording...                            
+
+track:   Fighter
+artist1: Christina Aguilera
+artist2: 
+album:   Stripped
+label:   RCA Records
+year:    
+
+MPEG_Audio sync found...                             
+finished recording...
+moving file to: /var/mcrec/finished/hitlist/Christina Aguilera - Fighter.mp2
+start recording...                            
+
+track:   Catch Up To My Step
+artist1: Junkie XL, Solomon Burke
+artist2: 
+album:   Catch Up To My Step (CD Single)
+label:   Roadrunner Records
+year:    
+writing songdb...

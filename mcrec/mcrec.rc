@@ -1,0 +1,9 @@
+dbox2name=192.168.1.60
+basedir=./
+basefilename=mcrec_
+mchost=www.musicchoice.co.uk
+mcbaseurl=/EPG/
+mcurlext=.shtml
+extension=mp2
+proxy=
+proxyport=
