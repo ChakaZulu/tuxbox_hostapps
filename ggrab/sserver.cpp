@@ -51,7 +51,8 @@ int main(int argc, char * argv[])
 	char a_grabname[256];
 	char a_vpid[20];
 	char a_apid[20];
-	char a_filename[256]="";
+	char a_filename[256];
+	char a_path[256]="";
 	char a_host[256];
 	int	i,n;
 	struct sockaddr_in cliaddr;
@@ -82,7 +83,7 @@ int main(int argc, char * argv[])
 	for (i = 1; i < argc; i++) {
 		if (!strcmp("-o",argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need path for -o\n"); return -1; }
-			strcpy (a_filename, argv[i]);
+			strcpy (a_path, argv[i]);
 		}
 		else {
 			a_arg[n++]=argv[i];
@@ -148,7 +149,9 @@ int main(int argc, char * argv[])
 						fprintf(stderr, "EPG TITLE   : %s\n", recdata.epgtitle);
 						fprintf(stderr, "***********************************************************\n");
 						sprintf(a_vpid,"0x%03x",recdata.vpid);	
-						sprintf(a_apid,"0x%03x",recdata.apid);	
+						sprintf(a_apid,"0x%03x",recdata.apid);
+
+						strcpy (a_filename,a_path);
 							
 						if (strlen(a_filename)) {
 							strcat(a_filename,"/");
