@@ -56,4 +56,7 @@ HRESULT SetDSoundVolume(__int64 val);
 HRESULT SendSplitEventToAudioFileRenderer(void);
 HRESULT SendSplitDataToAudioFileRenderer(ID3 *id3);
 
+HRESULT RenderVideoStream (IGraphBuilder* pFg, IBaseFilter* pVideoDecoder, int lVideoRendererSelect);
+
+
 #endif

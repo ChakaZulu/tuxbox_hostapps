@@ -99,7 +99,7 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
         return(E_UNEXPECTED);
     pHTMLCircularBuffer->Clear();
 
-    hr=WaitForSocketData(s, &avail, 1000);
+    hr=WaitForSocketData(s, &avail, 2000);
     if (FAILED(hr)||(avail==0))
         return(hr);
 
@@ -1063,6 +1063,7 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
         ret=send(sock, wbuffer, strlen(wbuffer),0);
 
         hr=ReadCompleteDataFromSocket(sock);
+		dprintf("ReadCompleteDataFromSocket:[%lX]", hr);
 
         if (SUCCEEDED(hr))
             {

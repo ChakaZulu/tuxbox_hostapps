@@ -36,6 +36,7 @@ CCircularBuffer::CCircularBuffer()
     m_Buffer=NULL;
     m_RPtr=NULL;
     m_numReadPointer=0;
+    m_Marker=-1;
 }
 
 CCircularBuffer::~CCircularBuffer()
@@ -50,6 +51,21 @@ void CCircularBuffer::Interrupt()
     Sleep(WAIT_DELAY*10);
 }
 
+void CCircularBuffer::SetMarker()
+{
+    EnterCriticalSection(&m_CS);
+    dprintf("Set Marker");
+    m_Marker=m_WPtr;
+    LeaveCriticalSection(&m_CS);
+}
+
+void CCircularBuffer::ResetMarker()
+{
+    EnterCriticalSection(&m_CS);
+    dprintf("Reset Marker");
+    m_Marker=-1;
+    LeaveCriticalSection(&m_CS);
+}
 
 HRESULT CCircularBuffer::Initialize(int dwBufferSize, int numReadPointer)
 {
@@ -75,13 +91,6 @@ HRESULT CCircularBuffer::Initialize(int dwBufferSize, int numReadPointer)
     m_WPtr=0;
     m_Interrupt=FALSE;
 
-
-    for (i=0;i<MAX_BUFFER_ITEMS;i++)
-        {
-        m_BufferItemArray[i]=(BufferItemExtension*)malloc(sizeof(BufferItemExtension));
-        memset(m_BufferItemArray[i], 0, sizeof(BufferItemExtension));
-        }
-
     m_BufferExtensionRIndex=0;
     m_BufferExtensionWIndex=0;
 
@@ -95,8 +104,7 @@ BOOL CCircularBuffer::Clear()
     EnterCriticalSection(&m_CS);
     for(i=0;i<m_numReadPointer;i++)
         m_RPtr[i]=0;
-    for (i=0;i<MAX_BUFFER_ITEMS;i++)
-        memset(m_BufferItemArray[i], 0, sizeof(BufferItemExtension));
+
     m_WPtr=0;
     m_Interrupt=FALSE;
     LeaveCriticalSection(&m_CS);
@@ -294,3 +302,78 @@ int CCircularBuffer::Read(int which, unsigned char *dest, long len)
     return(len);
 }
 
+int CCircularBuffer::ReadToMarker(int which, unsigned char *dest, long len, int *found)
+{
+    if ((which<0)||(which>=m_numReadPointer))
+        return(FALSE);
+
+    EnterCriticalSection(&m_CS);
+
+    *found=FALSE;
+    if (m_Marker<0)
+        {
+        LeaveCriticalSection(&m_CS);
+        return(Read(which, dest, len));
+        }
+
+    while (!canRead(which, len) && !m_Interrupt)
+        {
+        LeaveCriticalSection(&m_CS);
+        WaitForSingleObject(m_Event, WAIT_DELAY);
+        EnterCriticalSection(&m_CS);
+        }
+
+    if (m_Interrupt)
+        {
+        long diff = m_WPtr - m_RPtr[which];
+        if (diff < 0) 
+            diff += m_BufferSize;
+        if (diff == 0) 
+            {
+            LeaveCriticalSection(&m_CS);
+            return 0;
+            }
+        if (len>diff)
+            {
+            LeaveCriticalSection(&m_CS);
+            return ReadToMarker(which, dest, diff, found);
+            }
+        }
+
+
+    if (m_Marker>=m_RPtr[which])
+        {
+        if (m_Marker<(m_RPtr[which]+len))
+            {
+            len=m_Marker-m_RPtr[which];
+            *found=TRUE;
+            }
+        }
+    else
+    if (m_Marker<m_RPtr[which])
+        {
+        if ((m_Marker+m_BufferSize)<(m_RPtr[which]+len))
+            {
+            len=m_Marker+m_BufferSize-m_RPtr[which];
+            *found=TRUE;
+            }
+        }
+
+
+    if ((m_RPtr[which]+len)>=m_BufferSize)
+        {
+        int first=m_BufferSize-m_RPtr[which];
+        memcpy(dest      , m_Buffer+m_RPtr[which], first);
+        memcpy(dest+first, m_Buffer              , len - first);
+        m_RPtr[which]=len-first;
+        }
+    else
+        {
+        memcpy(dest, m_Buffer+m_RPtr[which], len);
+        m_RPtr[which]+=len;
+        }
+    
+    LeaveCriticalSection(&m_CS);
+    SetEvent(m_Event);
+    return(len);
+}

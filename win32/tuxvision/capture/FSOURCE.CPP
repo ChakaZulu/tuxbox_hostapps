@@ -192,6 +192,13 @@ int g_Instance=0;
 //
 STDAPI DllRegisterServer( void )
 {
+    //!!BS: Of cause we could just call "hr = AMovieDllRegisterServer2( TRUE );"
+    //!!BS: but then all the previous settings for the capture filter would be lost.
+    //!!BS: What I did try here is first to readout any existing setting, then perform
+    //!!BS: registration and last write back the saved settings.
+    //!!BS: This simply avoids with every new install of the app (and the registering of
+    //!!BS: the com objects) that the user has to update his device/network specific parameters
+
     HRESULT hr=NOERROR;
     CDBOXIICapture *pTempFilter=new CDBOXIICapture(NULL, &hr);
 
@@ -1317,6 +1324,8 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 }
             }
         else
+        //!!BS: I changed the delivered buffer size from AUDIO_BUFFER_SIZE to AUDIO_FRAME_SIZE
+        //!!BS: just to decrease latency
         if (m_SampleType==SAMPLE_TYPE_APES)
             {
             if (CMultiplexBuffer!=NULL)
@@ -1341,6 +1350,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 pms->SetTime(&ts,&te);
                 pms->SetMediaTime(&ms, &me);
 
+                /*
                 if (m_NewAudioSegmentDetectedIntern)
                     {
                     pms->SetDiscontinuity(TRUE);
@@ -1349,10 +1359,26 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 else
                     pms->SetDiscontinuity(FALSE);
 
+                */
                 }
 
-                CMultiplexBuffer->Read(0, pData, AUDIO_FRAME_SIZE);
-			    pms->SetActualDataLength(AUDIO_FRAME_SIZE);
+                //CMultiplexBuffer->Read(0, pData, AUDIO_FRAME_SIZE);
+			    //pms->SetActualDataLength(AUDIO_FRAME_SIZE);
+                
+                int nlen=0;
+                int found=0;
+                nlen=CMultiplexBuffer->ReadToMarker(0, pData, AUDIO_FRAME_SIZE, &found);
+			    pms->SetActualDataLength(nlen);
+                if (found)
+                    {
+                    CMultiplexBuffer->ResetMarker();
+                    pms->SetDiscontinuity(TRUE);
+                    }
+                else
+                    {
+                    pms->SetDiscontinuity(FALSE);
+                    }
+
                 pms->SetSyncPoint(TRUE);
                 }
             }

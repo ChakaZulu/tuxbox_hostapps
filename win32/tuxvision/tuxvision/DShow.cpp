@@ -347,6 +347,7 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
 	if (pFg==NULL)
 		return(E_POINTER);
     
+
     hr = pFg->QueryInterface(IID_IVideoWindow, (void **)&pVideoWindow);
     if (hr == NOERROR) 
         {
@@ -576,21 +577,39 @@ HRESULT CreatePreviewGraph()
 
     if (SUCCEEDED(hr))
         hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pDemux, 0, TRUE);
+
+#if 1
     if (SUCCEEDED(hr))
         hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_PCLE_MPEGVideoDecoder2, &pVideoDecoder, L"VideoDecoder");
-
     if (SUCCEEDED(hr))
         hr=TryConnectingFilters(gpIGraphBuilder, pDemux, 0, pVideoDecoder, 0, TRUE);
-    if (SUCCEEDED(hr))
-        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_PinnacleVideoRenderer, &pVideoRenderer, L"VideoRenderer");
+
 
     if (SUCCEEDED(hr))
         hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DeInterlace, &pDeInterlace, L"DeInterlace");
     if (SUCCEEDED(hr))
         hr=TryConnectingFilters(gpIGraphBuilder, pVideoDecoder, 0, pDeInterlace, 0, TRUE);
 
+//    hr=RenderVideoStream (gpIGraphBuilder, pVideoDecoder, 0);
+
+//    if (SUCCEEDED(hr))
+//        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_PinnacleVideoRenderer, &pVideoRenderer, L"VideoRenderer");
+//    if (SUCCEEDED(hr))
+//        hr=TryConnectingFilters(gpIGraphBuilder, pDeInterlace, 0, pVideoRenderer, 0, TRUE);
+
+    hr=RenderVideoStream (gpIGraphBuilder, pDeInterlace, 2);
+
+#else
+    {
+    IPin *pPin=NULL;
     if (SUCCEEDED(hr))
-        hr=TryConnectingFilters(gpIGraphBuilder, pDeInterlace, 0, pVideoRenderer, 0, TRUE);
+        hr=GetOutputPin(pDemux, &pPin, 0);
+    if (SUCCEEDED(hr))
+        hr = gpIGraphBuilder->Render(pPin);
+    RELEASE(pPin);
+    }
+#endif
+
 
     if (SUCCEEDED(hr))
         hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_MPADecoder, &pAudioDecoder, L"AudioDecoder");
@@ -640,6 +659,7 @@ HRESULT CreatePreviewGraph()
 
 HRESULT MakeUniqueFileName(TCHAR *szSrcFileName)
 {
+    DWORD ret=0xFFFFFFFF;
     int DstNameAlreadyExists=0;
     int count=0;
     TCHAR szDstFileName[264];
@@ -655,6 +675,13 @@ HRESULT MakeUniqueFileName(TCHAR *szSrcFileName)
 
         _makepath( szDstFileName, drive, dir, fname, ext);
 
+        ret=GetFileAttributes(szDstFileName);
+        if (ret!=0xFFFFFFFF)
+            {
+            DstNameAlreadyExists=1;
+            wsprintf(fname,"%s#%ld",tname,count);
+            }
+/*
         fp=fopen(szDstFileName,"rb");
         if (fp!=NULL)
             {
@@ -662,6 +689,7 @@ HRESULT MakeUniqueFileName(TCHAR *szSrcFileName)
             fclose(fp);
             wsprintf(fname,"%s#%ld",tname,count);
             }
+*/
         count++;
         //!!BS: just for safety reasons ...
         if (count>=1000)
@@ -1118,6 +1146,95 @@ HRESULT SetDSoundVolume(__int64 val)
     return hr;
 }
 
+HRESULT RenderVideoStream (IGraphBuilder* pFg, IBaseFilter* pVideoDecoder, int lVideoRendererSelect)
+{
+    HRESULT     hr=NOERROR;
+	IPin		*pPinVideoOut=NULL;
+    IBaseFilter *pOverlayMixer=NULL; 
+    IBaseFilter *pVideoRenderer=NULL; 
+
+    // !!BS:
+    // lVideoRendererSelect:
+    // 0: (default) use VMR
+    // 1: use OverlayMixer
+    // 2: use PINNACLE VideoRenderer
+    // !!BS:
+
+//
+// 1.) try VMR Filter first if specific selection is set (0 is default)
+//
+    if ( SUCCEEDED(hr) && (lVideoRendererSelect==0) )
+        {
+        hr=LoadFilterByCLSID(pFg, CLSID_VideoMixingRenderer, &pOverlayMixer, L"OverlayMixer");
+        if ( SUCCEEDED(hr) )
+            {
+            if (SUCCEEDED(hr))
+                hr = TryConnectingFilters(pFg, pVideoDecoder, 0, pOverlayMixer, 0, TRUE);
+
+            if (FAILED(hr))
+                {
+                pFg->RemoveFilter (pOverlayMixer);
+                RELEASE(pOverlayMixer);
+                }
+            }
+        else
+            {
+            pFg->RemoveFilter (pOverlayMixer);
+            RELEASE(pOverlayMixer);
+            }
+        }
+//
+// 2.) try OverlayMixer Filter next if specific selection is set (1) or VMR failed
+//
+    if ( FAILED(hr) || (lVideoRendererSelect==1) )
+        {
+        hr=LoadFilterByCLSID(pFg, CLSID_OverlayMixer, &pOverlayMixer, L"OverlayMixer");
+        if ( SUCCEEDED(hr) )
+            hr = TryConnectingFilters(pFg, pVideoDecoder, 0, pOverlayMixer, 0, TRUE);
+
+        if ( SUCCEEDED(hr) && (pOverlayMixer!=NULL))
+            {
+            hr = GetPinByNumber((IBaseFilter*) pOverlayMixer, (IPin**) &pPinVideoOut, 0, PINDIR_OUTPUT);
+            if (SUCCEEDED(hr))
+                hr = pFg->Render(pPinVideoOut);
+            }
+        if (FAILED(hr))
+            {
+            if (pOverlayMixer!=NULL)
+                {
+                pFg->RemoveFilter (pOverlayMixer);
+                RELEASE(pOverlayMixer);
+                }
+            RELEASE(pPinVideoOut);
+            }
+        }
+    RELEASE(pOverlayMixer);
+//
+// 3.) try PCLEVideoRenderer next if specific selection is set (2) or VMR and OverlayMixer failed
+//
+    if ( FAILED(hr) || (lVideoRendererSelect==2) )
+        {
+        hr=LoadFilterByCLSID(pFg, CLSID_PinnacleVideoRenderer, &pVideoRenderer, L"VideoRenderer");
+        if (SUCCEEDED(hr))
+            hr = TryConnectingFilters(pFg, pVideoDecoder, 0, pVideoRenderer, 0, TRUE);
+        }
+//
+// 4.) try std VideoRenderer next if everything else faile ... (set -1 to force this mode ...)
+//
+    if ( FAILED(hr) || (lVideoRendererSelect<0) )
+        {
+        RELEASE(pPinVideoOut);
+        hr = GetPinByNumber((IBaseFilter*) pVideoDecoder, (IPin**) &pPinVideoOut, 0, PINDIR_OUTPUT);
+        if (SUCCEEDED(hr) && (pPinVideoOut!=NULL))
+        hr = pFg->Render(pPinVideoOut);
+        }
+
+ 
+    RELEASE(pVideoRenderer);
+    RELEASE(pPinVideoOut);
+    return (hr);
+}
+
 HRESULT SendSplitEventToAudioFileRenderer(void)
 {
     HRESULT hr=NOERROR;
@@ -1161,9 +1278,16 @@ HRESULT SendSplitDataToAudioFileRenderer(ID3 *id3)
     // ------------------------------------------------------------------------------------
     ZeroMemory(wszFilename,sizeof(wszFilename));
 
-    lstrcpy(szID3File, id3->artist);
-    lstrcat(szID3File, " - ");
-    lstrcat(szID3File, id3->songname);
+    if (lstrlen(id3->artist)>0)
+        {
+        lstrcpy(szID3File, id3->artist);
+        lstrcat(szID3File, " - ");
+        lstrcat(szID3File, id3->songname);
+        }
+    else
+        {
+        lstrcpy(szID3File, id3->songname);
+        }
     
     ValidateFileName(szID3File);
 

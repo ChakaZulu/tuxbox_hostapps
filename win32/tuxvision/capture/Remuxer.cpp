@@ -1600,8 +1600,16 @@ int Remuxer::write_mpp(FILE * mppfile) {
 				dprintf ("MPEG_Audio sync found !");
                 m_NewAudioSegmentDetected=TRUE;
                 m_NewAudioSegmentDetectedIntern=TRUE;
+
+                //!!BS: We should really place some kind of marker in circular ringbuffer here !
+                //!!BS: Just to ease finding the correct position in other stages ...
+
                 if (m_NewAudioSegmentEvent!=NULL)
                     SetEvent(m_NewAudioSegmentEvent);
+
+                if (mpp_started)
+                    if (CMultiplexBuffer!=NULL)
+                        CMultiplexBuffer->SetMarker();
 		    	}
 	    	}
 				

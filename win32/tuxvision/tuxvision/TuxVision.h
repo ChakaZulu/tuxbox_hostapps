@@ -27,7 +27,7 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.2.0"
+#define REVISION            "Rev.0.0.2.1"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 #define AUDIO_PCM       0
 #define AUDIO_MPEG1L2   1
@@ -63,6 +63,7 @@ extern long         gSTREAMPort;
 extern long         gMCEEnable;
 extern TCHAR        gMCEURL[264];
 extern long         gMCETimeOut;
+extern long         gMCEInternetConnection;
 
                     
 typedef struct 

@@ -146,6 +146,7 @@ long          gSTREAMPort=4000;
 long          gMCEEnable=FALSE;
 TCHAR         gMCEURL[264]="www.musicchoice.co.uk";
 long          gMCETimeOut=10;
+long          gMCEInternetConnection=TRUE;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -169,7 +170,7 @@ void    LoadParameter(void);
 void    SaveParameter(void);
 
 void __cdecl SongInfoThread(void *rs);
-HANDLE songevents[2];
+HANDLE songevents[3];
 unsigned long  songeventThread=0;
 void MapMCEChannel(char *szChannel, char *szMCEChannel);
 
@@ -365,6 +366,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         InitMCE();
         songevents[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
         songevents[1]=CreateEvent(NULL,FALSE,FALSE,NULL);
+        songevents[2]=CreateEvent(NULL,FALSE,FALSE,NULL);
         songeventThread=_beginthread(SongInfoThread, 0,(void *)NULL);
 
         IDBOXIICapture *pIDBOXIICapture=NULL;
@@ -466,6 +468,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                 SendMessage(ghWndVideo,WM_KEYDOWN,27,0);
                 }
 		  break;
+
 		case WM_USER:
 			//OnWM_User(hwnd,message,wParam,lParam);
 			break;
@@ -916,6 +919,11 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 		case IDC_RECORD:
             {
             __int64 val=0;
+            if (gState==StatePreview)
+                {
+                StopGraph(gpIGraphBuilder);
+                DestroyGraph(gpIGraphBuilder);
+                }
             CreateCaptureGraph();
             gState=StateRecord;
             SetDSoundVolume(gDSoundVoume);
@@ -923,6 +931,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			UpdateWindowState(hwnd);
             LogPrintf("RECORD");
             LogFlush(hwnd);
+            SetEvent(songevents[2]);
             SetEvent(songevents[0]);
 			}
             break;
@@ -953,6 +962,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             UpdateWindowState(hwnd);
             LogPrintf("PREVIEW");
             LogFlush(hwnd);
+            SetEvent(songevents[2]);
             SetEvent(songevents[0]);
 			}
             break;
@@ -1042,7 +1052,7 @@ int UpdateWindowState(HWND hWnd)
 			EnableWindow(GetDlgItem(hWnd,IDC_CHANNEL),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_GETCHANNELLIST),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_RESET_NHTTPD), FALSE);
-			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),FALSE);
+//			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_NOPREVIEW), FALSE);
 //			EnableWindow(GetDlgItem(hWnd,IDC_PLAY),FALSE);
 			break;
@@ -1393,6 +1403,8 @@ void LoadParameter(void)
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEURL", (unsigned char *)regval, sizeof(regval)))
         lstrcpy(gMCEURL,regval);
 
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEInternetConnection", (unsigned char *)regval, sizeof(regval)))
+        gMCEInternetConnection=atoi(regval);
 }
 
 void SaveParameter(void)
@@ -1463,6 +1475,11 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%s",gMCEURL);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEURL", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gMCEInternetConnection);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEInternetConnection", (unsigned char *)regval, lstrlen(regval));
+
+
 }
 
 
@@ -1473,13 +1490,15 @@ void __cdecl SongInfoThread(void *rs)
     struct SongInfo si;
     HRESULT hr=NOERROR;
     int i=0;
+    BOOL gotMCEInfo=FALSE;
+    BOOL bClearData=FALSE;
 
     ZeroMemory(&si, sizeof(struct SongInfo));
 
     while(TRUE)
         {
         //dprintf("SongInfoThread waiting ...");
-        ret=WaitForMultipleObjects(2, songevents, FALSE, 10000);
+        ret=WaitForMultipleObjects(3, songevents, FALSE, 10000);
         
         switch(ret)
             {
@@ -1500,59 +1519,110 @@ void __cdecl SongInfoThread(void *rs)
                 
                 MapMCEChannel(szChannel, szMCEChannel);
 
+                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+
                 if (lstrlen(szMCEChannel)>0)
                     {
-                    SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
-                    for(i=0;i<5;i++)
+                    //!!BS: if we recover from a broken connection, wait for a while to
+                    //!!BS: run into the next track before grabbing track information
+                    if (gMCEInternetConnection && (!gotMCEInfo))
+                        Sleep(5000);
+
+                    gotMCEInfo=FALSE;
+
+                    if (gMCEInternetConnection)
                         {
-                        //ZeroMemory(&si, sizeof(struct SongInfo));
-                        hr=GetMCEInfo(gMCEURL, 80, szMCEChannel, &si);
-                        if (SUCCEEDED(hr))
+                        for(i=0;i<5;i++)
                             {
-                            struct ID3 id3;
-                            char szStr[1024];
-                            ZeroMemory(szStr, sizeof(szStr));
-                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"You are listening to:");
-                            wsprintf(szStr,"Title : %s",si.track);
-                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
-                            wsprintf(szStr,"Album : %s",si.album);
-                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
-                            wsprintf(szStr,"Artist: %s",si.artist1);
-                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
-                            dprintf("Title : %s",si.track);
-                            dprintf("Album : %s",si.album);
-                            dprintf("Artist: %s",si.artist1);
-                            dprintf("---------------------");
+                            if (bClearData)
+                                ZeroMemory(&si, sizeof(struct SongInfo));
+                            bClearData=FALSE;
+                            hr=GetMCEInfo(gMCEURL, 80, szMCEChannel, &si);
+                            if (SUCCEEDED(hr))
+                                {
+                                struct ID3 id3;
+                                char szStr[1024];
+                                ZeroMemory(szStr, sizeof(szStr));
+                                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"You are listening to:");
+                                wsprintf(szStr,"Title : %s",si.track);
+                                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                                wsprintf(szStr,"Album : %s",si.album);
+                                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                                wsprintf(szStr,"Artist: %s",si.artist1);
+                                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                                dprintf("Title : %s",si.track);
+                                dprintf("Album : %s",si.album);
+                                dprintf("Artist: %s",si.artist1);
+                                dprintf("---------------------");
 
-                            ZeroMemory(&id3, sizeof(id3));
-                       		id3.tag[0] = 'T';
-                            id3.tag[1] = 'A';
-                            id3.tag[2] = 'G';
-		                    strncpy(id3.songname, si.track, sizeof(id3.songname));
-		                    strncpy(id3.artist, si.artist1, sizeof(id3.artist));
-  	                        strncpy(id3.album, si.album, sizeof(id3.album));
-		                    strncpy(id3.year, si.year, sizeof(id3.year));
-		                    strncpy(id3.comment, si.label, sizeof(id3.comment));
+                                ZeroMemory(&id3, sizeof(id3));
+                       		    id3.tag[0] = 'T';
+                                id3.tag[1] = 'A';
+                                id3.tag[2] = 'G';
+		                        strncpy(id3.songname, si.track, sizeof(id3.songname));
+		                        strncpy(id3.artist, si.artist1, sizeof(id3.artist));
+  	                            strncpy(id3.album, si.album, sizeof(id3.album));
+		                        strncpy(id3.year, si.year, sizeof(id3.year));
+		                        strncpy(id3.comment, si.label, sizeof(id3.comment));
 
-		                    id3.empty = '\0';
-		                    id3.tracknum = '\0';
-		                    id3.genre = (unsigned char)0xFF;
+		                        id3.empty    = '\0';
+		                        id3.tracknum = '\0';
+		                        id3.genre = (unsigned char)0xFF;
 
-                            SendSplitDataToAudioFileRenderer(&id3);
+                                gotMCEInfo=TRUE;
+                                SendSplitDataToAudioFileRenderer(&id3);
 
-                            break;
-                            }
-                        else
-                            {
-                            Sleep(10);
+                                break;
+                                }
+                            else
+                                {
+                                Sleep(2000);
+                                }
                             }
                         }                                        
+
+                    if ( (!gMCEInternetConnection) || (!gotMCEInfo))
+                        {
+                        struct ID3 id3;
+                        ZeroMemory(&id3, sizeof(id3));
+                       	id3.tag[0] = 'T';
+                        id3.tag[1] = 'A';
+                        id3.tag[2] = 'G';
+		                lstrcpy(id3.songname, szChannel);
+
+		                id3.empty    = '\0';
+		                id3.tracknum = '\0';
+		                id3.genre = (unsigned char)0xFF;
+                        
+                        Sleep(5000);
+                        SendSplitDataToAudioFileRenderer(&id3);
+
+                        if ((gMCEInternetConnection)&&(!gotMCEInfo))
+                            {
+                            TCHAR szTmp[264]="";
+                            wsprintf(szTmp,"Unable to get titleinfo on channel <%s>.",szChannel);
+                            LogPrintf(szTmp);
+                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szTmp);
+                            }
+                        }
+
+                    }
+                else
+                    {
+                    TCHAR szTmp[264]="";
+                    wsprintf(szTmp,"No MCE translation for channel <%s> !",szChannel);
+                    LogPrintf(szTmp);
+                    SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szTmp);
                     }
                 }
                 break;
             case WAIT_OBJECT_0+1:
                 dprintf("Termination event !");
                 return;
+                break;
+            case WAIT_OBJECT_0+2:
+                dprintf("Clear data event");
+                bClearData=TRUE;
                 break;
             }
         }
@@ -1569,7 +1639,7 @@ void MapMCEChannel(char *szChannel, char *szMCEChannel)
     lstrcpy(szMCEChannel,"");
     do
         {
-        if (!lstrcmp(szChannel,MCEChannels[i][0]))
+        if (!lstrcmpi(szChannel,MCEChannels[i][0]))
             {
             lstrcpy(szMCEChannel, MCEChannels[i][1]);
             break;

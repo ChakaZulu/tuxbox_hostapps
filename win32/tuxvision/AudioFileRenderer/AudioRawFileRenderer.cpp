@@ -278,7 +278,7 @@ STDMETHODIMP CAudioRawFileRendererInputPin::Receive(IMediaSample *pSample)
         int i=0;
         for(i=0;i<len-1;i++)
             {
-            if (pbData[i]=0xFF)
+            if (pbData[i]==0xFF)
                 if ((pbData[i+1]&0xF0)==0xF0)
                     {
                     pbData+=i;
@@ -532,7 +532,10 @@ HRESULT CAudioRawFileRenderer::OpenFile()
 
     m_hFile = CreateFile((LPCTSTR) pFileName,   // The filename
                          GENERIC_WRITE,         // File access
-                         (DWORD) 0,             // Share access
+                         
+                         (DWORD) 0,             // Share access   
+                         //FILE_SHARE_READ|FILE_SHARE_WRITE,             // Share access
+                         
                          NULL,                  // Security
                          CREATE_ALWAYS,         // Open flags
                          (DWORD) 0,             // More flags

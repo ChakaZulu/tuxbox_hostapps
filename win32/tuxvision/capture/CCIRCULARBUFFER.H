@@ -20,16 +20,6 @@
 * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#define MAX_BUFFER_ITEMS    16
-
-typedef struct 
-    {
-    DWORD    isUsed;
-    LONGLONG llStartTime;
-    BYTE    *BufferStartAddress;
-    DWORD    BufferSize;
-    } BufferItemExtension;
-
 class CCircularBuffer 
 {
 public:
@@ -44,9 +34,13 @@ public:
     void    Write(unsigned char *src, long len);
     BOOL    canRead(int which, long len);
     int     Read(int which, unsigned char *dest, long len);
+    int     ReadToMarker(int which, unsigned char *dest, long len, int *found);
     BOOL    Clear();
     int     Skip(int which, long len);
     int     Remain(int which, long *len);
+    void    SetMarker();
+    void    ResetMarker();
+
 
 private:
 
@@ -60,7 +54,7 @@ private:
     int     m_BufferExtensionRIndex;
     int     m_BufferExtensionWIndex;
 
-    BufferItemExtension* m_BufferItemArray[MAX_BUFFER_ITEMS];
+    int     m_Marker;
 
     CRITICAL_SECTION m_CS; 
     HANDLE           m_Event;

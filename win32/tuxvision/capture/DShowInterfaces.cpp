@@ -35,6 +35,11 @@
 #include "Remuxer.h"
 #include "grab.h"
 
+//!!BS: Functions in this module are mainly to support RAW video out and help
+//!!BS: to create an illusiosion for an app that this is a real capture driver ...
+//!!BS: For the simple case of just streaming MPEG Video from the DBox this
+//!!BS: part is not needed.
+
 // ----------------------------------------------------------------
 //								IAMCrossbar
 // ----------------------------------------------------------------

@@ -372,11 +372,17 @@ BOOL CALLBACK DlgProc_MCE(
 			{
             TCHAR txt[264]="";
             SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_SETCHECK, (unsigned int)gMCEEnable, 0 );
+            if (!gMCEEnable)
+                {
+                gMCEInternetConnection=FALSE;
+                EnableWindow(GetDlgItem(hdlg,IDC_MCE_INTERNET),FALSE);
+                }
+            SendMessage( GetDlgItem(hdlg,IDC_MCE_INTERNET), BM_SETCHECK, (unsigned int)gMCEInternetConnection, 0 );
             SetWindowText(GetDlgItem(hdlg,IDC_MCE_URL), gMCEURL);
             itoa(gMCETimeOut, txt, 10);
             SetWindowText(GetDlgItem(hdlg,IDC_MCE_TIMEOUT), txt);
 
-            if (gMCEEnable)
+            if (gMCEEnable&&gMCEInternetConnection)
                 {
                 EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
                 EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
@@ -400,10 +406,22 @@ BOOL CALLBACK DlgProc_MCE(
                     SendMessage(hdlg,WM_INITDIALOG,0,0);
 					break;
 
+				case IDC_MCE_INTERNET:
 				case IDC_MCE_ENABLE:
                     {
                     gMCEEnable=SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_GETCHECK, 0, 0 );
-                    if (gMCEEnable)
+                    if (!gMCEEnable)
+                        {
+                        gMCEInternetConnection=FALSE;
+                        SendMessage( GetDlgItem(hdlg,IDC_MCE_INTERNET), BM_SETCHECK, (unsigned int)gMCEInternetConnection, 0 );
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_INTERNET),FALSE);
+                        }
+                    else
+                        {
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_INTERNET),TRUE);
+                        }
+                    gMCEInternetConnection=SendMessage( GetDlgItem(hdlg,IDC_MCE_INTERNET), BM_GETCHECK, 0, 0 );
+                    if (gMCEEnable&&gMCEInternetConnection)
                         {
                         EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
                         EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
@@ -420,7 +438,9 @@ BOOL CALLBACK DlgProc_MCE(
                     {
                     TCHAR txt[264]="";
                     gMCEEnable=TRUE;
+                    gMCEInternetConnection=TRUE;
                     SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_SETCHECK, (unsigned int)gMCEEnable, 0 );
+                    SendMessage( GetDlgItem(hdlg,IDC_MCE_INTERNET), BM_SETCHECK, (unsigned int)gMCEInternetConnection, 0 );
                     lstrcpy(gMCEURL, "www.musicchoice.co.uk");
                     SetWindowText(GetDlgItem(hdlg,IDC_MCE_URL), gMCEURL);
                     gMCETimeOut=10;
@@ -429,6 +449,7 @@ BOOL CALLBACK DlgProc_MCE(
 
                     EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
                     EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
+                    EnableWindow(GetDlgItem(hdlg,IDC_MCE_INTERNET),TRUE);
                     }
                     break;
 				}
