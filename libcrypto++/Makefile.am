@@ -10,11 +10,15 @@ libcrypto___la_SOURCES = \
 
 libcrypto___la_LDFLAGS = -lcrypto
 
-INCLUDES = -I$(top_builddir)/../apps -I$(top_builddir)/../apps/libcrypto++
 AM_CXXFLAGS = -fno-rtti
 
+INCLUDES = -I$(top_builddir)/../apps -I$(top_builddir)/../apps/libcrypto++
+
+all-local:
+	@ln -s $(top_builddir)/../apps/libcrypto++/*.hpp .
+
 mostlyclean-local:
-	@rm -r *.cpp
+	@rm -r *.cpp *.hpp
 
 $(libcrypto___la_SOURCES):
 	@ln -s $(top_builddir)/../apps/libcrypto++/$@
