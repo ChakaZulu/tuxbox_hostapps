@@ -74,6 +74,7 @@ long          gIs16By9=FALSE;
 long          gRecNoPreview=FALSE;
 __int64       gFilteredVideoBitrate=0;
 __int64       gFilteredAudioBitrate=0;
+__int64       gDSoundVoume=100;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -229,6 +230,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         SendMessage( GetDlgItem(hwnd,IDC_16BY9), BM_SETCHECK, gIs16By9, 0 );
         SendMessage( GetDlgItem(hwnd,IDC_NOPREVIEW), BM_SETCHECK, gRecNoPreview, 0 );
 
+		SendMessage(GetDlgItem(hwnd,IDC_VOLUME), TBM_SETRANGE, TRUE, MAKELONG(0, 100) );
+        SendMessage(GetDlgItem(hwnd,IDC_VOLUME), TBM_SETPOS, TRUE, (long)gDSoundVoume);
 
         SetTimer(ghWndApp,1,1000,NULL);
     
@@ -313,6 +316,22 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
         case WM_NCLBUTTONDBLCLK:
             dprintf("WM_NCLBUTTONDBLCLK: %ld",wParam);
             return(0);
+
+
+        case WM_HSCROLL:
+			switch(LOWORD(wParam))
+				{
+				case TB_THUMBTRACK:
+				case TB_THUMBPOSITION:
+				case TB_ENDTRACK:
+					if ((HWND)lParam==GetDlgItem(hwnd,IDC_VOLUME))
+						{
+						gDSoundVoume=SendMessage((HWND)lParam, TBM_GETPOS, 0, 0L);
+                        SetDSoundVolume(gDSoundVoume);
+						}
+					break;
+                }
+            break;
 
         case WM_TIMER:
             {
@@ -546,11 +565,15 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             break;
 
 		case IDC_RECORD:
+            {
+            __int64 val=0;
             CreateCaptureGraph();
             gState=StateRecord;
+            SetDSoundVolume(gDSoundVoume);
             RunGraph(gpIGraphBuilder);
 			UpdateWindowState(hwnd);
-			break;
+			}
+            break;
 
 		case IDC_STOP:
             StopGraph(gpIGraphBuilder);
@@ -566,10 +589,14 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDC_PREVIEW:
+            {
+            __int64 val=0;
             CreatePreviewGraph();
             gState=StatePreview;
+            SetDSoundVolume(gDSoundVoume);
             RunGraph(gpIGraphBuilder);
             UpdateWindowState(hwnd);
+			}
             break;
 
 		case IDC_OPTIONS:
@@ -701,7 +728,8 @@ void CreateChannelList(HWND hwnd)
                 }
             if (SUCCEEDED(hr)&&(count>=0))
                 {
-                hr=UpdateChannelInfo(pIDBOXIICapture, currentChannel);
+                //!!BS moved inside loop to avoid stall on subchannel
+                //hr=UpdateChannelInfo(pIDBOXIICapture, currentChannel);
 
                 for(i=0;i<=count;i++)
                     {
@@ -712,7 +740,10 @@ void CreateChannelList(HWND hwnd)
                     index=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_ADDSTRING, 0, (LONG)(LPSTR)(buf) );
                     SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETITEMDATA, index, (unsigned long)cid );
                     if (cid==currentChannel)
+                        {
                         SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETCURSEL, index, 0 );
+                        hr=UpdateChannelInfo(pIDBOXIICapture, currentChannel);
+                        }
                         
                     //dprintf("Update Channel: <%ld> <%s> <%ld>",i,buf,(unsigned long)cid);
                     }
@@ -806,6 +837,8 @@ void LoadParameter(void)
         gIs16By9=atoi(regval);
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "RecNoPreview", (unsigned char *)regval, sizeof(regval)))
         gRecNoPreview=atoi(regval);
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DSoundVolume", (unsigned char *)regval, sizeof(regval)))
+        gDSoundVoume=atoi(regval);
 }
 
 void SaveParameter(void)
@@ -826,6 +859,9 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%ld",gRecNoPreview);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "RecNoPreview", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gDSoundVoume);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DSoundVolume", (unsigned char *)regval, lstrlen(regval));
 }
 
 

@@ -43,5 +43,7 @@ HRESULT GetCaptureFileSize(__int64 *size);
 HRESULT GetResyncCount(__int64 *val);
 HRESULT GetCurrentBitrates(__int64 *val, __int64 *val2);
 
+HRESULT GetDSoundVolume(__int64 *val);
+HRESULT SetDSoundVolume(__int64 val);
 
 #endif

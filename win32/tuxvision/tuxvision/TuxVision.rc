@@ -188,7 +188,7 @@ BEGIN
                     WS_TABSTOP,308,94,52,10
     LTEXT           "Sync",IDC_STATIC,335,157,26,10,SS_SUNKEN
     CTEXT           "0",IDC_RESYNCCOUNT,365,157,45,10,SS_SUNKEN
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH | 
+    CONTROL         "Slider1",IDC_VOLUME,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,340,44,72,9
     LTEXT           "PCVolume",IDC_STATIC,302,44,36,10,SS_SUNKEN
 END
@@ -206,22 +206,30 @@ FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "Misc",IDC_STATIC,4,2,240,138
     CONTROL         "Fullscreen",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,26,30,70,10
+                    WS_DISABLED | WS_GROUP,26,30,58,10
     CONTROL         "Allways on top",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,130,30,92,10
-    CONTROL         "Window",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,26,48,70,
-                    10
-    GROUPBOX        "On Maximize Video",IDC_STATIC,14,16,94,52,WS_GROUP
+    CONTROL         "Window",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON | 
+                    WS_DISABLED,26,48,58,10
+    GROUPBOX        "On Maximize Video",IDC_STATIC,14,16,94,52,WS_DISABLED | 
+                    WS_GROUP
     CONTROL         "Automatic AspectRatio",IDC_AUTOASPECTRATIO,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,48,92,10
     GROUPBOX        "VideoWindow",IDC_STATIC,116,16,118,52
     GROUPBOX        "Priority",IDC_STATIC,14,76,94,54,WS_GROUP
     CONTROL         "RealTime",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,26,89,70,10
-    CONTROL         "High",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,26,103,70,
+                    WS_GROUP,26,89,58,10
+    CONTROL         "High",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,26,103,58,
                     10
     CONTROL         "Normal",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,26,116,
-                    70,10
+                    58,10
+    GROUPBOX        "HTTPServer",IDC_STATIC,116,76,118,54,WS_DISABLED | 
+                    WS_GROUP
+    EDITTEXT        IDC_IPADDRESS,162,108,42,15,ES_AUTOHSCROLL | WS_DISABLED | 
+                    WS_GROUP
+    LTEXT           "Port",IDC_STATIC,126,110,22,10,SS_SUNKEN | WS_DISABLED
+    CONTROL         "Enable Server",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,126,92,80,10
 END
 
 

@@ -37,6 +37,7 @@
 #define IDC_VIDEOBITRATE                1076
 #define IDC_RESYNCCOUNT                 1077
 #define IDC_SLIDER1                     1078
+#define IDC_VOLUME                      1078
 #define IDC_RADIO1                      1079
 #define IDC_CHECK1                      1080
 #define IDC_RADIO2                      1081
@@ -44,6 +45,7 @@
 #define IDC_RADIO3                      1083
 #define IDC_RADIO4                      1084
 #define IDC_RADIO5                      1085
+#define IDC_CHECK2                      1086
 
 // Next default values for new objects
 // 
@@ -51,7 +53,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40010
-#define _APS_NEXT_CONTROL_VALUE         1084
+#define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -660,3 +660,61 @@ HRESULT GetCurrentBitrates(__int64 *val, __int64 *val2)
     RELEASE(pSource);
     return(hr);
 }
+
+HRESULT GetDSoundVolume(__int64 *val)
+{
+    HRESULT       hr=NOERROR;
+    IBasicAudio*  pBA=NULL;
+    IBaseFilter*  pFilter=NULL;
+    long          value=0;
+
+    if (val==NULL)
+        return(E_POINTER);
+    if (gpIGraphBuilder==NULL)
+        return(E_FAIL);
+
+    hr = gpIGraphBuilder->FindFilterByName (L"AudioRenderer", &pFilter);
+    if ( SUCCEEDED(hr) )
+        {
+        hr = pFilter->QueryInterface (IID_IBasicAudio, (LPVOID*) &pBA);
+        if (SUCCEEDED(hr))
+            {
+            hr = pBA->get_Volume (&value);
+            *val = max (0, (4*value/100)+100);
+            RELEASE(pBA);
+            }
+        RELEASE(pFilter);
+        }
+    return hr;
+}
+
+HRESULT SetDSoundVolume(__int64 val)
+{
+    HRESULT       hr=NOERROR;
+    IBasicAudio*  pBA=NULL;
+    IBaseFilter*  pFilter=NULL;
+    long          value=0;
+
+    if (val==NULL)
+        return(E_POINTER);
+    if (gpIGraphBuilder==NULL)
+        return(E_FAIL);
+
+    hr = gpIGraphBuilder->FindFilterByName (L"AudioRenderer", &pFilter);
+    if ( SUCCEEDED(hr) )
+        {
+        hr = pFilter->QueryInterface (IID_IBasicAudio, (LPVOID*) &pBA);
+        if (SUCCEEDED(hr))
+            {
+            value = (val ? (long)(val-100)*100/4 : -10000L);
+            hr = pBA->put_Volume (value);
+            if (FAILED(hr))
+                {
+                dprintf("Error setting volume: %ld",value);
+                }
+            RELEASE(pBA);
+            }
+        RELEASE(pFilter);
+        }
+    return hr;
+}
