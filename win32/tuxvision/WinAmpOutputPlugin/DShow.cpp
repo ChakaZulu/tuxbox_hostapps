@@ -50,8 +50,13 @@ int gInterruptStreaming=0;
 int gWaitForCompletion=0;
 int gMaxTimeOut=0;
 
-extern "C" int __cdecl GetAudioData(BYTE *data, int *size);
+char    g_DBOXAddress[264];
+char    g_DBOXLogin[264];
+char    g_DBOXPassword[264];
+int     g_IsENX;
+int     g_DBOXStopPlayback;
 
+extern "C" int __cdecl GetAudioData(BYTE *data, int *size);
 
 //---------------------------------------------------------
 //!!BS: EndOfStream ???
@@ -314,4 +319,56 @@ HRESULT DeInitGraph(void)
     Sleep(5000);
 
 	return(NOERROR);
+}
+
+HRESULT setConfiguration(void)
+{
+    __int64 val=0;
+    HRESULT hr=NOERROR;
+    IDBOXIIRender *pIDBOXIIRender=NULL;
+
+    // Graphbuilder instance
+	hr = CoCreateInstance(CLSID_DBOXIIRender, NULL, CLSCTX_INPROC_SERVER, IID_IDBOXIIRender, (void **)&pIDBOXIIRender);
+
+    if (SUCCEEDED(hr))
+        {
+        val=(__int64)g_DBOXStopPlayback;
+	    pIDBOXIIRender->setParameter(CMD_STOPPLAYBACK, val);
+        val=(__int64)g_IsENX;
+	    pIDBOXIIRender->setParameter(CMD_DECODERTYPE, val);
+        pIDBOXIIRender->setParameter(CMD_IPADDRESS, (__int64)g_DBOXAddress);
+        pIDBOXIIRender->setParameter(CMD_LOGIN, (__int64)g_DBOXLogin);
+        pIDBOXIIRender->setParameter(CMD_PASSWORD, (__int64)g_DBOXPassword);
+        }
+
+    RELEASE(pIDBOXIIRender);
+
+    return(hr);
+}
+
+HRESULT getConfiguration(void)
+{
+    __int64 val=0;
+    HRESULT hr=NOERROR;
+    IDBOXIIRender *pIDBOXIIRender=NULL;
+
+    CoInitialize(NULL);
+
+    // Graphbuilder instance
+	hr = CoCreateInstance(CLSID_DBOXIIRender, NULL, CLSCTX_INPROC_SERVER, IID_IDBOXIIRender, (void **)&pIDBOXIIRender);
+
+    if (SUCCEEDED(hr))
+        {
+	    pIDBOXIIRender->getParameter(CMD_STOPPLAYBACK, &val, NULL);
+        g_DBOXStopPlayback=(int)val;
+	    pIDBOXIIRender->getParameter(CMD_DECODERTYPE, &val, NULL);
+        g_IsENX=(int)val;
+        pIDBOXIIRender->getParameter(CMD_IPADDRESS, (__int64 *)g_DBOXAddress, NULL);
+        pIDBOXIIRender->getParameter(CMD_LOGIN, (__int64 *)g_DBOXLogin, NULL);
+        pIDBOXIIRender->getParameter(CMD_PASSWORD, (__int64 *)g_DBOXPassword, NULL);
+        }
+
+    RELEASE(pIDBOXIIRender);
+
+    return(hr);
 }

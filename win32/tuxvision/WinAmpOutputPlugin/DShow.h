@@ -33,6 +33,18 @@ extern __int64 g_TotalByteTransmitted;
 HRESULT InitGraph(int AudioSampleFrequency, int AudioChannels, int AudioBitsPerSample, int AudioBitrate);
 HRESULT InjectData(BYTE *data, int size);
 HRESULT DeInitGraph(void);
+
 HRESULT GetDeliveredData(__int64 *data);
 HRESULT CheckIfStillPlaying(int *state);
+
+HRESULT getConfiguration(void);
+HRESULT setConfiguration(void);
+
+extern char g_DBOXAddress[264];
+extern char g_DBOXLogin[264];
+extern char g_DBOXPassword[264];
+extern int  g_IsENX;
+extern int  g_DBOXStopPlayback;
+
+
 #endif

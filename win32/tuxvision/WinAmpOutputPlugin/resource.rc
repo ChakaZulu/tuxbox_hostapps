@@ -28,8 +28,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,0,0,16
+ PRODUCTVERSION 0,0,0,16
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -47,14 +47,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "PRIVAT\0"
             VALUE "FileDescription", "WinAmpOutputPlugin for DBOXII\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "FileVersion", "0, 0, 0, 16\0"
             VALUE "InternalName", "WinAmpOutputPlugin\0"
-            VALUE "LegalCopyright", "Copyright © 2002\0"
+            VALUE "LegalCopyright", "Copyright © 2002 BSE\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "out_DBOXII.dll\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "PRIVAT WinAmpOutputPlugin\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "ProductName", "WinAmpOutputPlugin\0"
+            VALUE "ProductVersion", "0, 0, 0, 16\0"
             VALUE "SpecialBuild", "\0"
         END
     END
@@ -110,13 +110,28 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_SYS_DEFAULT
 // Dialog
 //
 
-IDD_DIALOG DIALOG DISCARDABLE  0, 0, 186, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
+IDD_DIALOG DIALOGEX 0, 0, 218, 241
+STYLE DS_SYSMODAL | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | 
+    WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION "DBOXII Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    DEFPUSHBUTTON   "OK",IDOK,144,218,50,14
+    CONTROL         102,IDC_STATIC,"Static",SS_BITMAP,28,6,161,75
+    EDITTEXT        IDC_IPADDRESS,102,94,100,15,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_LOGIN,102,117,100,15,ES_AUTOHSCROLL | WS_GROUP
+    EDITTEXT        IDC_PASSWORD,102,141,100,15,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Disable Playback",IDC_STOPPLAYBACK,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,13,170,73,10
+    LTEXT           "IPAddress",IDC_STATIC,16,95,69,10,SS_SUNKEN
+    LTEXT           "Login",IDC_STATIC,16,119,69,10,SS_SUNKEN
+    LTEXT           "Password",IDC_STATIC,16,143,69,10,SS_SUNKEN
+    GROUPBOX        "Decoder",IDC_STATIC,102,164,100,38,WS_GROUP,
+                    WS_EX_TRANSPARENT
+    CONTROL         "GTX",IDC_GTX,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    110,176,82,10
+    CONTROL         "ENX",IDC_ENX,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    110,186,82,10
 END
 
 
@@ -131,13 +146,20 @@ BEGIN
     IDD_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 211
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 234
     END
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_TUX          BITMAP  DISCARDABLE     "tux.bmp"
 #endif    // Neutral (Sys. Default) resources
 /////////////////////////////////////////////////////////////////////////////
 

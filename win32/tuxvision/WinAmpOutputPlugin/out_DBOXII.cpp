@@ -33,6 +33,7 @@
 
 #define PI_VER "Rev.0.0"
 
+HWND gDialogHandle=NULL;
 
 __int64 g_PlayTime=0;
 __int64 g_SampleRate=0;
@@ -40,7 +41,6 @@ __int64 g_NumChannels=0;
 __int64 g_BytePerSample=0;
 __int64 g_TotalByteReceived=0;
 __int64 g_pause=0;
-
 
 BOOL WINAPI DllMain (HINSTANCE hDllInst, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -109,10 +109,66 @@ Out_Module *winampGetOutModule()
 	return &out2;
 }
 
+BOOL CALLBACK DialogWindowProc(
+                                HWND hwndDlg,  // handle to dialog box
+                                UINT uMsg,     // message
+                                WPARAM wParam, // first message parameter
+                                LPARAM lParam  // second message parameter
+                              )
+{
+
+	switch(uMsg)
+		{
+		case WM_INITDIALOG:
+			{
+
+            gDialogHandle=hwndDlg;
+			SendMessage( GetDlgItem(hwndDlg,IDC_STOPPLAYBACK), BM_SETCHECK, (unsigned int)g_DBOXStopPlayback, 0 );
+            if (g_IsENX)
+			    SendMessage( GetDlgItem(hwndDlg,IDC_ENX), BM_SETCHECK, 1, 0 );
+            else            
+			    SendMessage( GetDlgItem(hwndDlg,IDC_GTX), BM_SETCHECK, 1, 0 );
+            SetWindowText(GetDlgItem(hwndDlg,IDC_IPADDRESS), g_DBOXAddress);
+            SetWindowText(GetDlgItem(hwndDlg,IDC_LOGIN), g_DBOXLogin);
+            SetWindowText(GetDlgItem(hwndDlg,IDC_PASSWORD), g_DBOXPassword);
+            }
+			return (0);
+
+		case WM_COMMAND:
+	        switch(GET_WM_COMMAND_ID (wParam, lParam))
+		        {
+                case IDOK:
+                    {
+                    g_DBOXStopPlayback=SendMessage( GetDlgItem(hwndDlg,IDC_STOPPLAYBACK), BM_GETCHECK, 0, 0 );
+                    g_IsENX=SendMessage( GetDlgItem(hwndDlg,IDC_ENX), BM_GETCHECK, 0, 0 );
+                    GetWindowText(GetDlgItem(hwndDlg,IDC_IPADDRESS), g_DBOXAddress, 264);
+                    GetWindowText(GetDlgItem(hwndDlg,IDC_LOGIN), g_DBOXLogin, 264);
+                    GetWindowText(GetDlgItem(hwndDlg,IDC_PASSWORD), g_DBOXPassword, 264);
+                    }
+                    EndDialog(hwndDlg, 0);
+                    break;
+                }
+			break;
+
+		case WM_CLOSE:
+            EndDialog(hwndDlg, 0);
+			return (0);
+		}
+
+    return(FALSE);
+}
+
 
 void config(HWND hwnd)
 {
-    dprintf("config");
+    if (gDialogHandle==NULL)
+        {
+        getConfiguration();
+        DialogBox(out2.hDllInstance, MAKEINTRESOURCE(IDD_DIALOG), out2.hMainWindow, DialogWindowProc);
+        setConfiguration();
+        gDialogHandle=NULL;
+        dprintf("config");
+        }
 }
 
 void about(HWND hwnd)
