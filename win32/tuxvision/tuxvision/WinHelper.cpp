@@ -215,7 +215,7 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
             if (gAlwaysOnTop)
                 style=HWND_TOPMOST;
 
-            SetWindowPos(hWndParent, style, glAppTop, glAppLeft, glAppWidth, glAppHeight, 0);
+            SetWindowPos(hWndParent, style, glAppLeft, glAppTop,  glAppWidth, glAppHeight, 0);
 
             SetWindowPos(hWnd,NULL,
                         restore->left, 
