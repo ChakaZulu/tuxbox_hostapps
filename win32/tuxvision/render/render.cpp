@@ -350,7 +350,7 @@ void __cdecl AVWriteThread(void *thread_arg)
     bufferAudio    =(unsigned char *)malloc(bufferlenAudio);
     bufferMultiplex=(unsigned char *)malloc(bufferlenMultiplex);
 
-#if 1
+#if 0
     if ((gSocketAudioPES>0)&&(gSocketVideoPES==0)&&(CMultiplexBuffer==NULL))
         {
         BYTE *tmp=(BYTE *)malloc(AUDIO_BUFFER_SIZE);
