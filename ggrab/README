@@ -2,7 +2,7 @@ Einleitung
 ==========
 
 
-ggrab ist ein neues Streaming Tool für die Dbox2 mit Neutrino
+ggrab ist ein Streaming Tool für die Dbox2 mit Neutrino
 
 Lauffähig gemeldet unter:
 Linux
@@ -75,6 +75,8 @@ noch nicht realisiert:
 
 Option: -nomux 
 
+Experimentelles Feature:
+Streaeming per udp
 
 Kontakt:
 Forum "wingrab" bei tuxbox.berlios.de (mein Nick ist Gandalfx)

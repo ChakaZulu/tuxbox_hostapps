@@ -1,6 +1,6 @@
 #define MAX_PP_LEN	2048          // Program Packet Rate
 #define MPLEX_RATE	10080000     
-#define VIDEO_FORERUN 	10800         // Viedo Vorlauf in 90kHz
+#define VIDEO_FORERUN 	14000         // Viedo Vorlauf in 90kHz
 #define AUDIO_FORERUN 	3600          // Audio Vorlauf in 90 kHz
 #define READ_DELAY	20            // Read Delay in ms
 

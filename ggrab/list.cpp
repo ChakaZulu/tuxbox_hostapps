@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
+#include <sys/signal.h>
 #include <errno.h>
 #include <time.h>
 #include "tools.h"
@@ -18,7 +19,8 @@ void * m_fill_video (void * p_arg) {
 	int		len;
 	STARTFLAG	startflag;
 	class xlist *   p_this = (class xlist *) p_arg;
-
+	
+	
 	while (!found) {
 		lptr = p_this->m_pbuffer->SearchStreamId(lptr,0,0,0, &sid);
 		if ((sid & 0xf0) == 0xe0) {
@@ -91,8 +93,9 @@ void  * m_fill_audio (void * p_arg) {
 	int		len;
 	CBUFPTR		lptr = 0;
 	class xlist *   p_this = (class xlist *) p_arg;
-
+	
 	while (!found) {
+		
 		lptr = p_this->m_pbuffer->SearchStreamId(lptr,0,0,0, &sid);
 		if (((sid & 0xe0) == 0xc0) || sid == 0xbd) {
 			p_this->m_pbuffer->CopyBuffer(lptr, a_buffer);

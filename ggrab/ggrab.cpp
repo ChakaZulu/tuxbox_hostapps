@@ -20,6 +20,7 @@ program: ggrab version 0.09 by Peter Menzebach <pm-ggrab at menzebach.de>
 #include <stdlib.h>
 #include <pthread.h>
 #include <netdb.h>
+#include <errno.h>
 #include <iostream>
 #include <unistd.h>
 #include <string.h>
@@ -45,6 +46,8 @@ program: ggrab version 0.09 by Peter Menzebach <pm-ggrab at menzebach.de>
 // Some globals TODO eleminate them
 int vfd;
 int afd;
+int vfd_udp;
+int afd_udp;
 
 double	      vcorrect;
 unsigned char audio_sid;
@@ -57,6 +60,8 @@ int	vrecmax;
 int	arecmax;
 int	vrecbytes;
 int	arecbytes;
+int	gvpackloss;
+int	gapackloss;
 double	dtime  = 0;
 double	daudio = 0;
 
@@ -78,6 +83,7 @@ bool	nosectionsd 	= false;
 bool	gcore 		= false;
 bool	debug 		= false;
 bool	gloop 		= false;
+bool	gudp 		= false;
 
 // Reader Threads
 pthread_t hv_thread;	
@@ -89,7 +95,7 @@ int 	toggle_sectionsd(char * p_name);
 void  *	readkeyboard (void * p_arg);
 void  * readvstream (void * p_arg);
 void  * readastream (void * p_arg);
-int 	openStream(char * name, int port, int pid);
+int 	openStream(char * name, int port, int pid, int udpport, int & udpsocket);
 FILE * 	open_next_output_file(FILE *);
 void 	install_signal_handler (void) ;
 void 	sighandler (int num);
@@ -109,6 +115,7 @@ int main( int argc, char *argv[] ) {
 	int		a,v;
 	time_t		now;
 	int		msec;
+	int		port;
 	FILE *  	fp;
 	time_t		last 		= 0;
 	int 		vpid 		= 0;
@@ -117,7 +124,6 @@ int main( int argc, char *argv[] ) {
 	time_t		start_time 	= time(0);
 
 	//some default parameters for arguments
-	int 		port 		= 31338;
 	bool		quiet		= false;
 	bool		nomux 		= false;
 	char  * 	dbox2name 	= "dbox";
@@ -192,6 +198,8 @@ int main( int argc, char *argv[] ) {
 			gcore = true;
 		} else if (!strcmp("-debug", argv[i])) {
 			debug = true;
+		} else if (!strcmp("-udp", argv[i])) {
+			gudp = true;
 		} else if (!strcmp("-h", argv[i])) {
 
 			fprintf(stderr, "ggrab version 0.09, Copyright (C) 2002 Peter Menzebach\n"
@@ -222,6 +230,7 @@ int main( int argc, char *argv[] ) {
 					"-core          generate core dump if error exit\n"
 					"-debug         generate core dump if error exit\n"
 					"-loop          Looping output files basename1/2\n"
+					"-udp           UDP Streaming, (experimental)\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"
@@ -244,7 +253,15 @@ int main( int argc, char *argv[] ) {
 		fprintf(stderr, "option -p <vpid> <apid> is mandatory\n");
 		fprintf(stderr, "run 'ggrab -h' for usage information\n");
 		return -1;
-	}	
+	}
+	
+	if (gudp) {
+		port = 31340;
+	}
+	else {
+		port = 31338;
+	}
+		
 
 	// Max size - 3 MB because cut at next Sequence start
 	max_file_size -= 1024 * 1024 * 3;
@@ -252,8 +269,8 @@ int main( int argc, char *argv[] ) {
 	
 	toggle_sectionsd(dbox2name) ;
 
-	vfd = openStream (dbox2name, port, vpid);
-	afd = openStream (dbox2name, port, apid);
+	vfd = openStream (dbox2name, port, vpid, 30000, vfd_udp);
+	afd = openStream (dbox2name, port, apid, 30001, afd_udp);
 
 	pthread_create( & hv_thread, 0, readvstream , 0);
 	pthread_create( & ha_thread, 0, readastream , 0);
@@ -305,6 +322,8 @@ int main( int argc, char *argv[] ) {
 			
 			if (flag_term) {
 				if (vpack.startflag == START_SEQ) {
+					close(vfd);
+					close(afd);
 					fclose(fp);
 					toggle_sectionsd(dbox2name);
 					fprintf(stderr,"\n");
@@ -328,7 +347,7 @@ int main( int argc, char *argv[] ) {
 				fill_pp_scr(apack.p_buffer,act_src);
 			}
 			else {
-				fill_pp_scr(apack.p_buffer,vpack.src_wanted);
+				fill_pp_scr(apack.p_buffer,apack.src_wanted);
 				act_src=apack.src_wanted;
 			}
 			act_src += apack.len * 8 / ((double) MPLEX_RATE) * 90000;
@@ -361,14 +380,16 @@ int main( int argc, char *argv[] ) {
 					  0);
 
 				if(debug) {
-					fprintf(stderr, "vh %05d ah %05d dp %5.1f da %5.1f pd %6d vb %4d ab %4d",
+					fprintf(stderr, "vh %05d ah %05d dp %5.1f da %5.1f pd %6d vb %4d ab %4d vl %4d al %4d",
 					  vrecmax,
 					  arecmax,
 					  dtime,
 					  daudio,
 					  gpadding,
 					  vbuf.GetByteCount()/1024,
-					  abuf.GetByteCount()/1024
+					  abuf.GetByteCount()/1024,
+					  gvpackloss,
+					  gapackloss
 				           );
 				}
 				fprintf(stderr, "\r");
@@ -659,7 +680,6 @@ generate_next_audio_pp (class xlist * alist) {
 	
 	pts = act_pts + (aelem.len - a_restlen) * pts_per_byte - vcorrect;
 
-
 	fill_pes_pts(p_pes,pts);
 	
 	ppack.src_wanted = pts - AUDIO_FORERUN;
@@ -691,7 +711,6 @@ generate_next_audio_pp (class xlist * alist) {
 			act_pts = aelem.pts;
 			if (fabs(last_pes_pts-act_pts) > 50000) {
 				fprintf(stderr, "audio pts gap = %10.1f\n", fabs(last_pes_pts - act_pts)/90000);
-				//act_pts = last_pes_pts + pts_per_byte * (MAX_PP_LEN-28);
 			}
 			pts_per_byte = (act_pts-last_pes_pts) / aelem.len;
 			l_act      =  aelem.lptr;
@@ -799,13 +818,21 @@ open_next_output_file (FILE * fp) {
 }
 
 	
-int openStream(char * name, int port, int pid) {
+int openStream(char * name, int port, int pid, int udpport, int & udpsocket) {
 
 	struct hostent * hp = gethostbyname(name);
 		
 	struct sockaddr_in adr;
 	memset ((char *)&adr, 0, sizeof(struct sockaddr_in));
 				
+	if (gudp) {
+		udpsocket = socket(AF_INET, SOCK_DGRAM, 0);
+		memset(&adr, 0, sizeof(adr));
+		adr.sin_family = AF_INET;
+		adr.sin_addr.s_addr = htonl(INADDR_ANY);
+		adr.sin_port = htons(udpport);
+		bind(udpsocket, (sockaddr *)&adr, sizeof(struct sockaddr_in));
+	}
    	if (hp == 0) {
 		errexit("unable to lookup hostname");
 	}
@@ -826,18 +853,21 @@ int openStream(char * name, int port, int pid) {
 	}
 	
 	char buffer[100];		
-	sprintf(buffer, "GET /%x HTTP/1.0\r\n\r\n", pid);
+	sprintf(buffer, "GET /%x %d HTTP/1.0\r\n\r\n", pid, udpport);
 	write(sock, buffer, strlen(buffer));
-	
+
 	return sock;
 }
 
 void  * readvstream (void * p_arg) {
 
 	unsigned char * pBuf;
+	static char a_buf[1500];
+	char * p_act;
 	int len;
 	int r;
-	static int delay = READ_DELAY * 1000;
+	int rest = 0;
+	int pnr = 0;
 	FILE * fp;
 	time_t	ltime;
 	p_arg=0;	
@@ -865,7 +895,7 @@ void  * readvstream (void * p_arg) {
 			fprintf(stderr,"WARNING: video readthread cannot change nice level - continuing\n");
 		}
 	}
-
+	
 	if (vlog) {
 		if((fp = fopen ("log.vid","w")) == 0) {
 			errexit ("cannot open Logfile log.vid");
@@ -877,8 +907,43 @@ void  * readvstream (void * p_arg) {
 
 	while (1) {
 		len = vbuf.GetNextFillBuffer (&pBuf);
-		
-		r=read(vfd, pBuf, len);
+	
+
+		if (gudp) {
+			if (!rest) {
+				if (len > 1500) {
+					r = recv(vfd_udp, pBuf, len, 0);
+					if (r > 0) {
+						r -=4;
+					}
+					gvpackloss = pnr++ - ntohl(*((int *) (pBuf + r)));
+				}
+				else {
+					rest = recv(vfd_udp, a_buf, sizeof(a_buf),0);
+					if (rest > 0) {
+						rest -=4;
+					}
+					gvpackloss = pnr++ - ntohl(*((int *) (a_buf + r)));
+					p_act = a_buf;
+				}
+			}
+			if (rest) {
+				if (rest > 0) {
+					r = rest > len ? len : rest;
+					memcpy (pBuf, p_act, r);
+					rest  -= r;
+					p_act += r;
+				}
+				else {
+					r = rest;
+					rest = 0;
+				}
+			}
+		}
+		else {
+			r = read(vfd, pBuf, len);
+		}
+	
 		if (r > 0) {
 			ltime=time(0);
 			if (vlog) {
@@ -892,13 +957,10 @@ void  * readvstream (void * p_arg) {
 		}
 		else {
 			if (r < 0) {
-				errexit("Video Read: Read Error");
+				if (errno != EINTR) {
+					return(0);
+				}
 			}
-			if((time(0) - ltime) > 1) {
-				fprintf(stderr, "\n\nVideo Read: timeout, len=%d\n",len);
-				errexit("Video Read: No Data from Box");
-			}
-			usleep (delay);
 		}
 	}
 	return(0);
@@ -907,9 +969,12 @@ void  * readvstream (void * p_arg) {
 void  * readastream (void * p_arg) {
 
 	unsigned char * pBuf;
+	char * p_act;
 	int len;
 	int r;
-	static int delay = READ_DELAY * 1000;
+	int pnr = 0;
+	int rest = 0;
+	static char a_buf[1500];
 	FILE * fp;
 	time_t ltime;
 	p_arg=0;	
@@ -947,8 +1012,41 @@ void  * readastream (void * p_arg) {
 
 	while (1) {
 		len = abuf.GetNextFillBuffer (&pBuf);
+		if (gudp) {
+			if (!rest) {
+				if (len > 1500) {
+					r = recv(afd_udp, pBuf, len, 0);
+					if (r > 0) {
+						r -=4;
+					}
+					gapackloss = pnr++ - ntohl(*((int *) (&(pBuf[r]))));
+				}
+				else {
+					rest = recv(afd_udp, a_buf, sizeof(a_buf),0);
+					if (rest > 0) {
+						rest -=4;
+					}
+					gapackloss = pnr++ - ntohl(*((int *) (&(a_buf[r]))));
+					p_act = a_buf;
+				}
+			}
+			if (rest) {
+				if (rest > 0) {
+					r = rest > len ? len : rest;
+					memcpy (pBuf, p_act, r);
+					rest  -= r;
+					p_act += r;
+				}
+				else {
+					r = rest;
+					rest = 0;
+				}
+			}
+		}
+		else {
+			r = read(afd, pBuf, len);
+		}
 		
-		r=read(afd, pBuf, len);
 		if (r > 0) {
 			ltime=time(0);
 			if (alog) {
@@ -962,13 +1060,10 @@ void  * readastream (void * p_arg) {
 		}
 		else {
 			if (r < 0) {
-				errexit("Video Read: Read Error");
+				if (errno != EINTR) {
+					return (0);
+				}
 			}
-			if((time(0) - ltime) > 1) {
-				fprintf(stderr, "\n\nAudio Read: timeout, len=%d\n",len);
-				errexit("Audio Read: No Data from Box");
-			}
-			usleep (delay);
 		}
 	}
 	return(0);
@@ -1040,8 +1135,9 @@ int toggle_sectionsd(char * p_name) {
 	r=read(sock, buffer, 100);
 	buffer[r]=0;
 	close (sock);
-	sleep(3);
 	return (0);
 }
-		
+
+
+
 
