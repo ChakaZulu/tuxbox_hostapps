@@ -1,0 +1,42 @@
+package TeControls_100_R50;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS OFF}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $620000}
+{$DESCRIPTION 'Te Controls Runtime Package - VCL40'}
+{$IMPLICITBUILD OFF}
+
+requires
+  VCL50;
+
+contains
+  TeButtons in 'TeButtons.pas',
+  TeImgList in 'TeImgList.pas',
+  TeComCtrls in 'TeComCtrls.pas',
+  TeControls in 'TeControls.pas',
+  TeContainerPanel in 'TeContainerPanel.pas',
+  TeTextObjectModel in 'TeTextObjectModel.pas',
+  TeRichOLE in 'TeRichOle.pas',
+  TeRichConv in 'TeRichConv.pas',
+  TeRichEdit in 'TeRichEdit.pas';
+
+end.
