@@ -25,6 +25,7 @@ bmp2raw/Makefile
 flash/Makefile
 ggrab/Makefile
 grab/Makefile
+libconfigfile/Makefile
 libcrypto++/Makefile
 libflashimage/Makefile
 stream/Makefile
