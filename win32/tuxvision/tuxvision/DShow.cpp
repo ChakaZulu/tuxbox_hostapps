@@ -357,16 +357,30 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
             int t=pRect->top;
             if (is16By9)
                 {
-                int hh=((9*w)/16);
+                int hh=(9*w)/16;
+                int ww=(h*16)/9;
                 if (hh<h)
                     t=t+(h-hh)/2;
+                if (ww<w)
+                    {
+                    l=l+(w-ww)/2;
+                    w=ww;
+                    hh=(9*w)/16;
+                    }
                 h=hh;
                 }
             else
                 {
-                int hh=((3*w)/4);
+                int hh=(3*w)/4;
+                int ww=(h*4)/3;
                 if (hh<h)
                     t=t+(h-hh)/2;
+                if (ww<w)
+                    {
+                    l=l+(w-ww)/2;
+                    w=ww;
+                    hh=(3*w)/4;
+                    }
                 h=hh;
                 }
             hr=pVideoWindow->SetWindowPosition(l,t,w,h);

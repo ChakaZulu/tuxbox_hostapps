@@ -21,13 +21,13 @@
 */
 
 #ifndef __TUXVISION_H__
-#define __TUXVISION_H__
+#define __TUXVISION_H__ 
 
 #define ALPHA_VERSION       1
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.18"
+#define REVISION            "Rev.0.0.0.19"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 #define AUDIO_PCM       0
 #define AUDIO_MPEG1L2   1
