@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-program: ggrab version 0.20alpha by Peter Menzebach <pm-ggrab at menzebach.de>
+program: ggrab version 0.21 by Peter Menzebach <pm-ggrab at menzebach.de>
 
 */
 
@@ -156,7 +156,7 @@ int main( int argc, char *argv[] ) {
 			}
 		} else if (!strcmp("-h", argv[i])) {
 
-			fprintf(stderr, "ggrab version 0.20alpha, Copyright (C) 2002 Peter Menzebach\n"
+			fprintf(stderr, "ggrab version 0.21, Copyright (C) 2002 Peter Menzebach\n"
 			                "ggrab comes with ABSOLUTELY NO WARRANTY; This is free software,\n"
 			                "and you are welcome to redistribute it under the conditions of the\n"
 			                "GNU Public License, see www.gnu.org\n"

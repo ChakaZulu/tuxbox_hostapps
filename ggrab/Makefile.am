@@ -5,9 +5,9 @@
 # _LARGEFILE64SOURCE  --- Large file Linux
 #
 
-AM_CPPFLAGS = -DREENTRANT -D_LARGEFILE64_SOURCE 
+AM_CPPFLAGS = -DREENTRANT -D_LARGEFILE64_SOURCE
 
-bin_PROGRAMS = ggrab sserver 
+bin_PROGRAMS = ggrab sserver
 
 EXTRA_DIST = cbuffer.h list.h sserver.h tools.h pesstream.h
 
