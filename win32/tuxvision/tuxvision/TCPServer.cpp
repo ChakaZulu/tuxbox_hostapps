@@ -39,38 +39,32 @@
 
 #define HTTP_CONTROL_REQUEST	"/control/?"
 
-typedef struct
-			{
-			char Directory[264];
-			char Streaming[32];
-			int  Sockets;
-			int  Maxsockets;
-			int  Port;
-			int  Command;
-			int  Value;
-			}InternalParam;
-
+int      gOpenSocketCount=0;
 HWND     ghWndTCP;
-InternalParam gParam;
 
-#define  MY_CONNECT (WM_USER+100)
-#define  MY_READ    (WM_USER+101)
+#define  MY_CONNECT_HTTP   (WM_USER+100)
+#define  MY_READ_HTTP      (WM_USER+101)
+#define  MY_CONNECT_STREAM (WM_USER+102)
+#define  MY_READ_STREAM    (WM_USER+103)
 
 int OnInitInstance(void);
 int OnWM_Create(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
-int OnMY_Connect(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
-int OnMY_Read(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
+int OnMY_CONNECT_HTTP(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
+int OnMY_READ_HTTP(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
+int OnMY_CONNECT_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
+int OnMY_READ_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam);
 
 volatile    BOOL gEnable=TRUE;
 
-BOOL	    gInterfaceDetected=FALSE;
+char		gStartingPoint[264]="local";
+char		gStartingPage[264]="index.htm";
+int			gTalkPortHTTP=80;
+int			gTalkPortSTREAM=4000;
 
-char		gStartingPoint[264]={0};
-char		gStartingPage[264]={0};
-int			gTalkPort=0;
-
-SOCKADDR_IN gstSockNameServer;
-SOCKET      gListenSocket=INVALID_SOCKET;
+SOCKADDR_IN gstSockNameServerHTTP;
+SOCKET      gListenSocketHTTP=INVALID_SOCKET;
+SOCKADDR_IN gstSockNameServerSTREAM;
+SOCKET      gListenSocketSTREAM=INVALID_SOCKET;
 
 #define TRANSFERBUFFERSIZE 512000 
 #define MAX_IMAGE_SIZE	    98000
@@ -85,7 +79,8 @@ LONG     APIENTRY WndProcTCP(HWND hWnd,UINT message,UINT wParam,LONG lParam);
 
 LRESULT  APIENTRY GetHostName(HWND hDlg,UINT message,UINT wParam,LONG lParam);
 
-void     __cdecl CreateResponse(void *rs);
+void     __cdecl CreateHTTPResponse(void *rs);
+void     __cdecl CreateSTREAMResponse(void *rs);
 void     __cdecl TransferThread(void *t);
 
 int      GetResponse(char *path, SOCKET sock, int *isVideoRequest);
@@ -101,7 +96,7 @@ int		 SendFileTCP(char *newPath, SOCKET sock, BYTE *ImageData, DWORD ImageLen);
 #define MAX_IN_BUFFER MAX_MSG_LENGTH
 
 
-void __cdecl CreateResponse(void *rs)
+void __cdecl CreateHTTPResponse(void *rs)
 {
     SOCKET rSock;
     int nData;
@@ -122,7 +117,7 @@ void __cdecl CreateResponse(void *rs)
 		  {
 		  CancelConnection(rSock,0);
 		  dprintf("!!! Invalid Data !!!");
-		  gParam.Sockets=CountConnections();
+		  gOpenSocketCount=CountConnections();
 		  return;
 		  }
     do
@@ -143,8 +138,57 @@ void __cdecl CreateResponse(void *rs)
 
 
     CancelConnection(rSock,1);
-    dprintf("Thread exit");
-//	gParam.Sockets=CountConnections();
+    dprintf("HTTP Thread exit");
+//	gOpenSocketCount=CountConnections();
+    return;
+}
+
+void __cdecl CreateSTREAMResponse(void *rs)
+{
+    SOCKET rSock;
+    int nData;
+    int keepSocketOpen=0;
+    
+    BYTE InBuffer[MAX_MSG_LENGTH];    // packet buffer
+
+	rSock=(SOCKET)rs;
+
+    memset(InBuffer,0,MAX_MSG_LENGTH);
+
+    //dprintf("Enter Receive");
+	nData=RecvDataTCP(rSock, (char *)InBuffer,MAX_MSG_LENGTH, -1);
+    //dprintf("Exit Receive");
+
+    dprintf("STREAM received %ld byte.",nData);
+
+	if (nData==-1)
+		  {
+		  CancelConnection(rSock,0);
+		  dprintf("!!! Invalid Data !!!");
+		  gOpenSocketCount=CountConnections();
+		  return;
+		  }
+/*
+    do
+		{
+        retval=CheckCommand((char *)InBuffer,nData,rSock,&keepSocketOpen);	
+        if (retval==INVALID_SOCKET)
+           {
+           keepSocketOpen=0;
+		   CancelConnection(rSock,0);
+           return;
+           }
+        if (retval==0)
+            break;
+        if (keepSocketOpen)
+            break;
+        }while(TRUE);
+*/
+
+
+    CancelConnection(rSock,1);
+    dprintf("STREAM Thread exit");
+//	gOpenSocketCount=CountConnections();
     return;
 }
 
@@ -266,8 +310,6 @@ DWORD ILen;
 				}
 			}
 				
-		gParam.Command=cmd;
-		gParam.Value=data;
 		// ---------------------------------
 
 		strcpy(gserver_url, "HTTP/1.0 200 OK\r\n");
@@ -545,51 +587,24 @@ unsigned char tmp[264];
 }
 
 
-
-
-
-
-// --------------------------------------------------------------------------
-int OnInitInstance()
-{
-    char wPath[264];
-
-	GetCurrentDirectory(264,wPath);
-	lstrcat(wPath,"\\config.dat");
-	GetPrivateProfileString("GLOBAL","BASE","local",gStartingPoint,240,wPath);
-	gTalkPort=(int)GetPrivateProfileInt("GLOBAL","REMOTE_PORT",80,wPath);
-	GetPrivateProfileString("GLOBAL","REDIRECTOR_STARTPAGE","index.htm",gStartingPage,240,wPath);
-
-
-	gParam.Maxsockets=MAX_CLIENTS;
-	gParam.Port=gTalkPort;
-	lstrcpy(gParam.Directory,gStartingPoint);
-
-
-	//if (HTTP_IF_Initialize()==NOERROR)
-		gInterfaceDetected=TRUE;
-
-	return(TRUE);
-
-}
-
 int OnWM_Create(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 {
 	OpenTCP(hwnd);
 	CancelAllConnections();
-	gListenSocket=InitLstnSockTCP(gTalkPort,&gstSockNameServer,hwnd,MY_CONNECT);
+	gListenSocketHTTP=InitLstnSockTCP(gTalkPortHTTP,&gstSockNameServerHTTP,hwnd,MY_CONNECT_HTTP);
+	gListenSocketSTREAM=InitLstnSockTCP(gTalkPortSTREAM,&gstSockNameServerSTREAM,hwnd,MY_CONNECT_STREAM);
 	return(0);
 }
 
-int OnMY_Connect(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
+int OnMY_CONNECT_HTTP(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 {
 	if (!gEnable)
 		return(0);
 
 	if (WSAGETSELECTEVENT(lParam) == FD_ACCEPT)
 		{
-		NewConnectionTCP(gListenSocket,&gstSockNameServer,hwnd,MY_READ,(SOCKET)wParam);
-		gParam.Sockets=CountConnections();
+		NewConnectionTCP(gListenSocketHTTP,&gstSockNameServerHTTP,hwnd,MY_READ_HTTP,(SOCKET)wParam);
+		gOpenSocketCount=CountConnections();
 
 		}
 	if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
@@ -597,7 +612,23 @@ int OnMY_Connect(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 	return(0);
 }
 
-int OnMY_Read(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
+int OnMY_CONNECT_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
+{
+	if (!gEnable)
+		return(0);
+
+	if (WSAGETSELECTEVENT(lParam) == FD_ACCEPT)
+		{
+		NewConnectionTCP(gListenSocketSTREAM,&gstSockNameServerSTREAM,hwnd,MY_READ_STREAM,(SOCKET)wParam);
+		gOpenSocketCount=CountConnections();
+
+		}
+	if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
+	    CancelConnection((SOCKET)wParam,0 /*1*/ /*0*/);
+	return(0);
+}
+
+int OnMY_READ_HTTP(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 {
 	if (!gEnable)
 		return(0);
@@ -613,7 +644,7 @@ int OnMY_Read(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			return(0);
 			}
 
-		dThread=_beginthread(CreateResponse,1000000,(void *)rSock);
+		dThread=_beginthread(CreateHTTPResponse,1000000,(void *)rSock);
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_BELOW_NORMAL);
 		return(0);
@@ -624,7 +655,7 @@ int OnMY_Read(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 		dprintf("Close Request from Client\n");
 		DeleteConnection((SOCKET)wParam);
 		closesocket((SOCKET)wParam);	
-		gParam.Sockets=CountConnections();
+		gOpenSocketCount=CountConnections();
 		Sleep(100);
 		return(0);
 		}
@@ -633,7 +664,40 @@ int OnMY_Read(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 
 }
 
+int OnMY_READ_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
+{
+	if (!gEnable)
+		return(0);
 
+	if (WSAGETSELECTEVENT(lParam) == FD_READ)
+		{
+		unsigned long  dThread;
+		SOCKET rSock=(SOCKET)wParam;
+
+		if (FindSocket(rSock)<0)
+			{
+			dprintf("unknown socket ???\n");
+			return(0);
+			}
+
+		dThread=_beginthread(CreateSTREAMResponse,1000000,(void *)rSock);
+		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
+		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_BELOW_NORMAL);
+		return(0);
+		}
+
+	if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
+		{
+		dprintf("Close Request from Client\n");
+		DeleteConnection((SOCKET)wParam);
+		closesocket((SOCKET)wParam);	
+		gOpenSocketCount=CountConnections();
+		Sleep(100);
+		return(0);
+		}
+
+	return(0);
+}
 HRESULT HTTPRun(void)
 {
 	CancelAllConnections();
@@ -663,8 +727,6 @@ HRESULT HTTPInit(void)
 	int result;
 	WNDCLASS wndClass;
     gEnable=TRUE;
-
-    OnInitInstance();
 
     wndClass.style          = CS_HREDRAW | CS_VREDRAW;
     wndClass.lpfnWndProc    = WndProcTCP;
@@ -710,18 +772,28 @@ LRESULT CALLBACK WndProcTCP (HWND hwnd, UINT message , WPARAM wParam, LPARAM lPa
 			OnWM_Create(hwnd,message,wParam,lParam);
 			return (0);
 
-		case MY_CONNECT:
-            dprintf("MY_CONNECT");
-			OnMY_Connect(hwnd,message,wParam,lParam);
+		case MY_CONNECT_HTTP:
+            dprintf("MY_CONNECT_HTTP");
+			OnMY_CONNECT_HTTP(hwnd,message,wParam,lParam);
 			break;
 
-		case MY_READ:
-            dprintf("MY_READ");
-			OnMY_Read(hwnd,message,wParam,lParam);
+		case MY_READ_HTTP:
+            dprintf("MY_READ_HTTP");
+			OnMY_READ_HTTP(hwnd,message,wParam,lParam);
+			break;
+
+		case MY_CONNECT_STREAM:
+            dprintf("MY_CONNECT_STREAM");
+			OnMY_CONNECT_STREAM(hwnd,message,wParam,lParam);
+			break;
+
+		case MY_READ_STREAM:
+            dprintf("MY_READ_STREAM");
+			OnMY_READ_STREAM(hwnd,message,wParam,lParam);
 			break;
 
         case WM_TIMER:
-            dprintf("OpenSockets:%ld",gParam.Sockets);
+            //dprintf("OpenSockets:%ld",gOpenSocketCount);
             break;
 		}
 	return (DefWindowProc(hwnd, message, wParam, lParam));
