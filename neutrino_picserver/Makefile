@@ -1,4 +1,4 @@
-CFLAGS = -O3 -I.
+CFLAGS = -O3 -I. -g
 
 picserver: picserver.o
 	$(CC) -o picserver picserver.o -ljpeg -lpthread
