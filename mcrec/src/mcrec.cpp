@@ -1283,7 +1283,7 @@ void finish_file(char * filename)
 		{
 			if (mcrecsongdb->searchentry(dbname, currfs))
 			{
-				logprintf("file already in recorddb. removing file.\n");
+				logprintf("file already in recorddb.\n removing file: %s\n",newname);
 				unlink(filename);
 				free(dbname);
 				free(newname);
@@ -1299,7 +1299,7 @@ void finish_file(char * filename)
 		{
 			if ((rmdub) && (currfs == mcstat.st_size))
 			{
-				logprintf("file of same name and size found. removing dublicate.\n");
+				logprintf("file of same name and size found.\nremoving dublicate: %s\n",newname);
 				unlink(filename);
 				free(newname);
 				free(newfile);
@@ -1318,7 +1318,7 @@ void finish_file(char * filename)
 				{
 					if (++i > 99)
 					{
-						logprintf("too much copies of song. can't rename\n");
+						logprintf("too much copies of song. can't rename: %s\n",newname);
 						return;
 					}
 					newname[strlen(newname)-7] = '\0';
