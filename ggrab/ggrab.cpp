@@ -31,6 +31,7 @@ program: ggrab version 0.09 by Peter Menzebach <pm-ggrab at menzebach.de>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <sys/fcntl.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <math.h>
@@ -322,11 +323,11 @@ int main( int argc, char *argv[] ) {
 			
 			if (flag_term) {
 				if (vpack.startflag == START_SEQ) {
+					fprintf(stderr,"\n");
 					close(vfd);
 					close(afd);
 					fclose(fp);
 					toggle_sectionsd(dbox2name);
-					fprintf(stderr,"\n");
 					exit (0);
 				}
 			}
@@ -1061,7 +1062,7 @@ void  * readastream (void * p_arg) {
 		else {
 			if (r < 0) {
 				if (errno != EINTR) {
-					return (0);
+					return(0);
 				}
 			}
 		}
@@ -1091,6 +1092,7 @@ int toggle_sectionsd(char * p_name) {
 
 	static bool	sectionsd_stopped = false;
 	int	r;
+	int	flags;
 
 	struct hostent * hp = gethostbyname(p_name);
 		
@@ -1119,7 +1121,11 @@ int toggle_sectionsd(char * p_name) {
 		close(sock);
 		errexit("error to connect to socket");
 	}
-	
+	flags = fcntl(sock, F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	fcntl(sock, F_SETFL, flags );
+
+
 	char buffer[100];	
 	if (sectionsd_stopped) {
 		sprintf(buffer, "GET /control/zapto?startsectionsd HTTP/1.0\r\n\r\n");
@@ -1133,7 +1139,6 @@ int toggle_sectionsd(char * p_name) {
 
 	sleep(1);
 	r=read(sock, buffer, 100);
-	buffer[r]=0;
 	close (sock);
 	return (0);
 }
