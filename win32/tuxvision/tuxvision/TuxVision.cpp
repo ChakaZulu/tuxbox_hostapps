@@ -293,7 +293,18 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
             SetWindowPos(ghWndApp, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
 
         SetTimer(ghWndApp,1,1000,NULL);
-    
+
+/*    
+        if (gpVCap!=NULL)
+            {
+            IDBOXIICapture *pIDBOXIICapture=NULL;
+            hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+            if (SUCCEEDED(hr))
+                pIDBOXIICapture->setParameter(CMD_RESTARTNHTTPD, NULL);
+            RELEASE(pIDBOXIICapture);
+            }
+*/
+
         CreateChannelList(ghWndApp);
 
    
@@ -408,6 +419,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             int i=0;
             if (wParam==CMD_VCR_RECORD)
                 {
+				//SendMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
+                //SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                 for(;;)
                     {
 				    int channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, i, 0 );
@@ -428,6 +441,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             if (wParam==CMD_VCR_STOP)
                 {
 				PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
+                //SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                 }
             }
 
@@ -1088,7 +1102,7 @@ HRESULT SetTVChannel(HWND hwnd, unsigned long channel)
 
 HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChannel)
 {
-    char buf[264]="";
+    char buf[1024]="";
     char szEPGID[264]="";
     char szEPGDate[264]="";
     char szEPGTime[264]="";
@@ -1129,8 +1143,8 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
     else
         lstrcpy(szEPGTitle, "");
 
-    if (lstrlen(szEPGID)>0)
-        hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
+//    if (lstrlen(szEPGID)>0)
+//        hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
 
     SetDlgItemText(ghWndApp,IDC_CHANNELINFO, szEPGTitle);
     lstrcpy(gszDestinationFile, szEPGTitle);
@@ -1259,7 +1273,6 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%ld",gSTREAMPort);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "STREAMPort", (unsigned char *)regval, lstrlen(regval));
-
 
 }
 

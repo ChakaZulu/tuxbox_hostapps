@@ -142,6 +142,7 @@ public:
 
     int     m_AudioSampleFrequency;
 
+    int     m_StartSucceeded;
     // It should (is) only allowed to to create these objects with CreateInstance
     CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr);
 	~CDBOXIICapture();

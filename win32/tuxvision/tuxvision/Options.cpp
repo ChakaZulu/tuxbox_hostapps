@@ -82,6 +82,9 @@ BOOL CALLBACK DlgProc_DBOX(
 			        pIDBOXIICapture->getParameter(CMD_STOPPLAYBACK, &val, NULL);
 			        SendMessage( GetDlgItem(hdlg,IDC_STOPPLAYBACK), BM_SETCHECK, (unsigned int)val, 0 );
 
+			        pIDBOXIICapture->getParameter(CMD_SKIPPREPARATION, &val, NULL);
+			        SendMessage( GetDlgItem(hdlg,IDC_SKIPPREPARATION), BM_SETCHECK, (unsigned int)val, 0 );
+
                     pIDBOXIICapture->getParameter(CMD_IPADDRESS, (__int64 *)szStr, NULL);
                     SetWindowText(GetDlgItem(hdlg,IDC_IPADDRESS), szStr);
 
@@ -139,6 +142,9 @@ BOOL CALLBACK DlgProc_DBOX(
                         {
                         int val=SendMessage( GetDlgItem(hdlg,IDC_STOPPLAYBACK), BM_GETCHECK, 0, 0 );
                         pIDBOXIICapture->setParameter(CMD_STOPPLAYBACK, (__int64)val);
+
+                        val=SendMessage( GetDlgItem(hdlg,IDC_SKIPPREPARATION), BM_GETCHECK, 0, 0 );
+                        pIDBOXIICapture->setParameter(CMD_SKIPPREPARATION, (__int64)val);
 
                         GetWindowText(GetDlgItem(hdlg,IDC_IPADDRESS), szStr, 264);
                         pIDBOXIICapture->setParameter(CMD_IPADDRESS, (__int64)szStr);
@@ -243,9 +249,12 @@ BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                 SendMessage(GetDlgItem(hDlg,IDC_AUDIORECODE),BM_SETCHECK, 1, 0);
                 SendMessage(GetDlgItem(hDlg,IDC_AUDIOTHROUGH),BM_SETCHECK, 0, 0);
-                EnableWindow(GetDlgItem(hDlg,IDC_AUDIOFORMAT), TRUE);
-                EnableWindow(GetDlgItem(hDlg,IDC_AUDIOSAMPLEFREQUENCY), TRUE);
-                EnableWindow(GetDlgItem(hDlg,IDC_AUDIOBITRATE), TRUE);
+                if (gCaptureAudioOnly)
+                    {
+                    EnableWindow(GetDlgItem(hDlg,IDC_AUDIOFORMAT), TRUE);
+                    EnableWindow(GetDlgItem(hDlg,IDC_AUDIOSAMPLEFREQUENCY), TRUE);
+                    EnableWindow(GetDlgItem(hDlg,IDC_AUDIOBITRATE), TRUE);
+                    }
                 }
             
 		    }

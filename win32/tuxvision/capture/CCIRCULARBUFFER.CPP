@@ -188,7 +188,7 @@ BOOL CCircularBuffer::canRead(int which, long len)
     if (delta<0) 
         delta+=m_BufferSize;
 
-    if (len>delta-1)
+    if (len>delta)
         result=FALSE;
 
     LeaveCriticalSection(&m_CS);

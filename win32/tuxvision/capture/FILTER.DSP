@@ -485,17 +485,5 @@ DEP_CPP_TELNE=\
 	
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\AUTHORS.TXT
-# End Source File
-# Begin Source File
-
-SOURCE=.\COPYING.TXT
-# End Source File
-# Begin Source File
-
-SOURCE=.\README.TXT
-# End Source File
 # End Target
 # End Project

@@ -42,6 +42,7 @@ extern Remuxer         *CRemuxer;
 extern CCircularBuffer *CVideoBuffer;
 extern CCircularBuffer *CAudioBuffer;
 extern CCircularBuffer *CMultiplexBuffer;
+extern CCircularBuffer *pHTMLCircularBuffer;
 
 extern volatile __int64         gTotalVideoDataCount;
 extern volatile __int64         gTotalAudioDataCount;
@@ -78,3 +79,5 @@ extern BOOL  gIsVideoConnected;
 extern BOOL  gIsAudioConnected;
 extern BOOL  gIsPSPinConnected;
 extern BOOL  gfThreadAborted;
+
+extern DWORD GetWindowsVersion(void);

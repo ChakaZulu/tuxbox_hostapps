@@ -61,3 +61,6 @@ STDMETHOD(getParameter) (THIS_ __int64 command, __int64 *data1, __int64 *data2) 
 #define CMD_GETWIDTHEIGHT   15  //     get *__int64 in data1 width and in data2 height
 #define CMD_GETAUDIOFREQ    16  //     get *__int64 in data1 audio sample frequency at the start of the streaming
 #define CMD_GETEPG          17  //     get *__int64 in data2 contains EPGInfo string
+#define CMD_SKIPPREPARATION 18  // set/get *__int64 in data1 TRUE/FALSE to skip DBox Preparation or not
+#define CMD_AUDIOVIDEOPID   19  // set/get *__int64 in data1 Audio PID and in data2 Video PID, default:0,0 for automatic selection
+#define CMD_RESTARTNHTTPD   20  // set (data ignored)        simply triggers restart of nhttpd (the pure evil ...)

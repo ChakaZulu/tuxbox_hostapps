@@ -17,6 +17,8 @@
 #define IDC_STOPPLAYBACK                1003
 #define IDC_LOGIN                       1004
 #define IDC_PASSWORD                    1005
+#define IDC_SKIPPREPARATION             1006
+#define IDC_RESETNHTTPD                 1007
 #define IDC_PREVIEW                     1016
 #define IDC_STOP                        1017
 #define IDC_RECORD                      1018

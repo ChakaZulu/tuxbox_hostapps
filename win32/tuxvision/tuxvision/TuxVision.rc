@@ -134,13 +134,19 @@ BEGIN
     LTEXT           "Password",IDC_STATIC,14,68,69,10,SS_SUNKEN
     LTEXT           "DBOX Status:",IDC_STATUS,96,122,140,10,SS_SUNKEN
     PUSHBUTTON      "Test Configuration",IDC_TEST,14,120,64,14
+    CONTROL         "Skip DBox Preparation",IDC_SKIPPREPARATION,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,
+                    100,94,92,10
+    CONTROL         "Reset nhttpd on startup",IDC_RESETNHTTPD,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,
+                    100,106,92,10
 END
 
 ABOUT DIALOG DISCARDABLE  0, 0, 238, 146
 STYLE DS_MODALFRAME | WS_POPUP
 FONT 8, "MS Sans Serif"
 BEGIN
-    CTEXT           "TuxVision, Rev.0.0.0.14",IDC_STATIC,64,19,112,10,
+    CTEXT           "TuxVision, Rev.0.0.0.18",IDC_STATIC,64,19,112,10,
                     SS_SUNKEN
     CTEXT           "© BSE 2002",IDC_STATIC,64,33,112,10,SS_SUNKEN
     GROUPBOX        "",IDC_STATIC,4,2,230,140

@@ -306,9 +306,10 @@ bool Remuxer::audio_packet_wanted(unsigned char * pes) {
 		
 		if (   pes[3] == STREAM_PRIVATE_1
 		    || pes[3] == STREAM_AUDIO
-		    || pes[3] == STREAM_REST_AUDIO
-		    || pes[3] == 0xc1 // EuroNews uses this...
-		    || pes[3] == 0xc2 // Fritz, Sputnik Radio 
+		    || ( (pes[3]>=STREAM_REST_AUDIO) && (pes[3]<=(STREAM_REST_AUDIO+0x1F)) )
+		    //|| pes[3] == 0xc1 // EuroNews uses this...
+		    //|| pes[3] == 0xc2 // Fritz, Sputnik Radio 
+		    //|| pes[3] == 0xc3 // Radiomultikulti
 		   ) {
 			
 			wanted_audio_stream = pes[3];

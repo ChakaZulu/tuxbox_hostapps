@@ -49,6 +49,7 @@ int gSocketVideoPES=0;
 int gSocketAudioPES=0;
 
 CCircularBuffer *CMultiplexBuffer=NULL;
+CCircularBuffer *pHTMLCircularBuffer=NULL;
 
 Remuxer         *CRemuxer=NULL;
 BOOL            gIsVideoConnected=FALSE;
@@ -60,6 +61,8 @@ volatile __int64         gTotalAudioDataCount=0;
 __int64         gLastVideoDataCount=0;
 __int64         gLastAudioDataCount=0;
 long            gLastAVBitrateRequest=0;
+
+BOOL            gFakeisDataAvailable=FALSE;
 
 HRESULT InitSockets(void)
 {
@@ -73,6 +76,46 @@ HRESULT InitSockets(void)
 void DeInitSockets(void)
 {
     WSACleanup();
+}
+
+HRESULT ReadCompleteDataFromSocket(SOCKET s)
+{
+    HRESULT hr=NOERROR;
+    unsigned long avail=0;
+    int ret=0;
+    int i=0;
+
+    if (!pHTMLCircularBuffer)
+        return(E_UNEXPECTED);
+    pHTMLCircularBuffer->Clear();
+
+    hr=WaitForSocketData(s, &avail, 1000);
+    if (FAILED(hr)||(avail==0))
+        return(hr);
+
+    while(TRUE)  
+        {
+        if ((ret==0)&&(avail>0))
+            {
+            char rbuffer[1024];
+            ZeroMemory(rbuffer,sizeof(rbuffer));
+            ret=recv(s,rbuffer,sizeof(rbuffer),0);
+            if (ret>0)
+                {
+                if (!pHTMLCircularBuffer->canWrite(ret))
+                    return(E_UNEXPECTED);
+                pHTMLCircularBuffer->Write((BYTE *)rbuffer, ret);
+                i=0;
+                }
+            }
+        ret=WaitForSocketData(s, &avail, 50);
+        if (ret<0)
+            break;
+        if (i++>10)
+            break;
+        }
+
+    return(NOERROR);
 }
 
 HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim)
@@ -101,8 +144,11 @@ HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim)
 
 int isDataAvailable(int socket, unsigned long size)
 {
-    int ret;
-    unsigned long avail;
+    int ret=0;
+    unsigned long avail=0;
+
+    if (gFakeisDataAvailable)
+        return(TRUE);
 
     ret=ioctlsocket(socket, FIONREAD, &avail);
 
@@ -172,7 +218,7 @@ int openPES(const char * name, unsigned short port, int pid, int bsize)
 	if (SOCKET_ERROR == connect(sock, (sockaddr*)&adr, sizeof(struct sockaddr_in))) 
         {
 		dprintf("connect failed !");
-		EmptySocket(sock);
+		//EmptySocket(sock);
         closesocket(sock);
 		return(SOCKET_ERROR);
 	    }
@@ -215,7 +261,7 @@ int openPS(const char * name, unsigned short port, int vpid, int apid, int bsize
 	if (SOCKET_ERROR == connect(sock, (sockaddr*)&adr, sizeof(struct sockaddr_in))) 
         {
 		dprintf("connect failed !");
-		EmptySocket(sock);
+		//EmptySocket(sock);
 		closesocket(sock);
 		return(SOCKET_ERROR);
 	    }
@@ -270,6 +316,7 @@ char *MYstrstr(char *str, char *token)
     return(NULL);
 }
 
+/*
 HRESULT EmptySocket(SOCKET s)
 {
     #define MAXCLOOP    50
@@ -309,7 +356,7 @@ HRESULT EmptySocket(SOCKET s)
 // -------------------------------------------------------------------
     return(ret);
 }
-
+*/
 
 int OpenSocket(const char *name, unsigned short port)
 {
@@ -338,7 +385,6 @@ int OpenSocket(const char *name, unsigned short port)
 	if (SOCKET_ERROR == connect(sock, (sockaddr*)&adr, sizeof(struct sockaddr_in))) 
         {
 		dprintf("connect failed !");
-		EmptySocket(sock);
 		closesocket(sock);
 		return(SOCKET_ERROR);
 	    }
@@ -348,9 +394,7 @@ int OpenSocket(const char *name, unsigned short port)
 HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
 {
     HRESULT hr=NOERROR;
-    int i=0;
     int ret=0;
-    unsigned long avail;
 
     dprintf("SetChannel from %s:%d ", name, (int)port);
     	
@@ -372,84 +416,41 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
+    hr=ReadCompleteDataFromSocket(sock);
+    if (SUCCEEDED(hr))
         {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
-
-    hr=E_FAIL;
-
-    while(TRUE)
-        {
-        if ((ret==0)&&(avail>0))
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer, sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-            //dprintf("------");
-            //dprintf(rbuffer);
-            if (!strcmp(rbuffer,"ok"))
-                {
-                hr=NOERROR;
-                break;
-                }
-
-// ---------------------------------------------------    
+            hr=E_FAIL;
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
                 if (p1!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
+                    if (lstrcmp(p1,"ok")==0)
+                        {
+                        hr=NOERROR;
+                        }
                     }
                 }
-// ---------------------------------------------------  
-
-
-            if (p1!=NULL)
-                {
-                if (!strcmp(p1,"ok"))
-                    {
-                    hr=NOERROR;
-                    break;
-                    }
-                p2=MYstrstr(p1,"\n");
-                }
-            if (p2!=NULL)
-                {
-                if (!strcmp(p2,"ok"))
-                    {
-                    hr=NOERROR;
-                    break;
-                    }
-                }
-            //dprintf("------");
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+                            
+            free(rbuffer);
             }
-        ret=WaitForSocketData(sock, &avail, 250);
-        if (ret<0)
-            break;
-        if (i++>20)
-            break;
         }
 
     if (FAILED(hr))
@@ -457,7 +458,6 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
         dprintf("SetChannel FAILED !!!");
         }
 
-    EmptySocket(sock);
     closesocket(sock);
 
     return(hr);
@@ -467,7 +467,6 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
 {
     HRESULT hr=NOERROR;
     int ret=0;
-    unsigned long avail;
 	
     *channel=0;
     dprintf("GetChannel from %s:%d ", name, (int)port);
@@ -490,75 +489,45 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
-        {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
 
-    while(avail>0)
+    hr=ReadCompleteDataFromSocket(sock);
+    if (SUCCEEDED(hr))
         {
-        if (ret>=0)
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer,sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-
-// ---------------------------------------------------    
+            hr=E_FAIL;
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
                 if (p1!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
+                    int pos=strlen(p1)-1;
+                    if (pos>0)
+                        p1[pos]=0;
+                    *channel=atol(p1);
+                    //dprintf(p1);
                     }
                 }
-// ---------------------------------------------------  
-
-            if (p1!=NULL)
-                {
-                pos=strlen(p1)-1;
-                if (pos>0)
-                    p1[pos]=0;
-                *channel=atol(p1);
-                //dprintf(p1);
-                }
-            else
-                {
-                dprintf("uuups ...");
-                }
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+                            
+            free(rbuffer);
             }
-
-        ret=ioctlsocket(sock, FIONREAD, &avail);
-        if ((!avail) && (*channel==0))
-            {
-            HRESULT hr=WaitForSocketData(sock, &avail, 1000);
-            if (FAILED(hr)||(avail==0))
-                break;
-            }
-
         }
 
-
-	EmptySocket(sock);
     closesocket(sock);
 
     if (*channel==0)
@@ -572,7 +541,7 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
     HRESULT hr=NOERROR;
     int ret=0;
     int i=0;
-    unsigned long avail;
+    unsigned long avail=0;
 	
     lstrcpy(info,"");
 
@@ -596,70 +565,47 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
-        {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
+    hr=ReadCompleteDataFromSocket(sock);
 
-      while(TRUE)  
+    if (SUCCEEDED(hr))
         {
-        if ((ret==0)&&(avail>0))
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer,sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-// ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
                 if (p1!=NULL)
+                    p2=MYstrstr(p1,"\n");
+                if (p2!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
+                    if (lstrlen(p2)>1)  //ignore trailing cr or lf
+                        {
+                        p2--;
+                        *p2=0;
+                        lstrcpyn(info, p1, 264);
+                        //dprintf(p1);
+                        }
                     }
                 }
-// ---------------------------------------------------    
-            if (p1!=NULL)
-                p2=MYstrstr(p1,"\n");
-            if (p2!=NULL)
-                {
-                if (lstrlen(p2)>1)  //ignore trailing cr or lf
-                    {
-                    p2--;
-                    *p2=0;
-                    lstrcpyn(info, p1, 264);
-                    break;
-                    //dprintf(p1);
-                    }
-                }
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+                            
+            free(rbuffer);
             }
-        ret=WaitForSocketData(sock, &avail, 250);
-        if (ret<0)
-            break;
-        if (i++>20)
-            break;
         }
-
-
-	EmptySocket(sock);
     closesocket(sock);
 
     if (lstrlen(info)==0)
@@ -672,12 +618,10 @@ HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *i
 {
     HRESULT hr=NOERROR;
     int ret=0;
-    int i=0;
-    unsigned long avail;
 	
     lstrcpy(info,"");
 
-    dprintf("GetChannelInfo from %s:%d ", name, (int)port);
+    dprintf("GetEPGInfo from %s:%d ", name, (int)port);
 
 	int sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
@@ -697,68 +641,44 @@ HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *i
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
-        {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
 
-      while(TRUE)  
+    hr=ReadCompleteDataFromSocket(sock);
+
+    if (SUCCEEDED(hr))
         {
-        if ((ret==0)&&(avail>0))
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer,sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-// ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
+
                 if (p1!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
+                    if (lstrlen(p1)>1)
+                        {
+                        lstrcpyn(info, p1, 1024);
+                        }
                     }
                 }
-// ---------------------------------------------------    
-            if (p1!=NULL)
-                p2=MYstrstr(p1,"\n");
-            if (p2!=NULL)
-                {
-                if (lstrlen(p2)>1)
-                    {
-                    lstrcpyn(info, p2, 264);
-                    break;
-                    //dprintf(p1);
-                    }
-                }
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+            free(rbuffer);
             }
-        ret=WaitForSocketData(sock, &avail, 250);
-        if (ret<0)
-            break;
-        if (i++>20)
-            break;
         }
 
-
-	EmptySocket(sock);
     closesocket(sock);
 
     if (lstrlen(info)==0)
@@ -807,7 +727,7 @@ HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
 
     WaitForSocketData(sock, &avail, 5000);
 
-	EmptySocket(sock);
+//	EmptySocket(sock);
     closesocket(sock);
 
     if (ret>0)
@@ -821,7 +741,6 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
 {
     HRESULT hr=NOERROR;
     int ret=0;
-    unsigned long avail;
     int i=0;
     int gotAudio=0;
     int gotVideo=0;
@@ -849,94 +768,66 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
-        {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
+    hr=ReadCompleteDataFromSocket(sock);
 
-    while(avail>0)
+    if (SUCCEEDED(hr))
         {
-        if (ret>=0)
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
-            unsigned int i;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer, sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-            //dprintf("------");
-            //dprintf(rbuffer);
-
-// ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
+
+                if (p1!=NULL)
+                    p2=MYstrstr(p1,"\n");
                 if (p1!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
-                    }
-                }
-// ---------------------------------------------------  
-
-            if (p1!=NULL)
-                p2=MYstrstr(p1,"\n");
-            if (p1!=NULL)
-                {
-                for(i=0;i<strlen(p1);i++)
-                    {
-                    if (p1[i]=='\n') 
+                    for(i=0;i<lstrlen(p1);i++)
                         {
-                        p1[i]=0;
-                        break;
+                        if (p1[i]=='\n') 
+                            {
+                            p1[i]=0;
+                            break;
+                            }
                         }
+                    *vpid=atoi(p1);
+                    gotVideo=1;
                     }
-                *vpid=atoi(p1);
-                gotVideo=1;
-                }
-            if (p2!=NULL)
-                {
-                for(i=0;i<strlen(p2);i++)
+                if (p2!=NULL)
                     {
-                    if (p2[i]=='\n') 
+                    for(i=0;i<lstrlen(p2);i++)
                         {
-                        p2[i]=0;
-                        break;
+                        if (p2[i]=='\n') 
+                            {
+                            p2[i]=0;
+                            break;
+                            }
                         }
+                    *apid=atoi(p2);
+                    gotAudio=1;
                     }
-                *apid=atoi(p2);
-                gotAudio=1;
                 }
-            //dprintf("------");
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+            free(rbuffer);
             }
-        if ((gotAudio)&&(gotVideo))
-            break;
-        ret=WaitForSocketData(sock, &avail, 250);
-        if (ret<0)
-            break;
-        if (i++>20)
-            break;
         }
 
-    dprintf("APID: %ld, VPID:%ld",*apid, *vpid);
 
-	EmptySocket(sock);
+    dprintf("APID: %ld, VPID:%ld",*apid, *vpid);
     closesocket(sock);
 	return(hr);
 }
@@ -985,7 +876,7 @@ HRESULT CheckBoxStatus(const char *name, unsigned short port)
     tv.tv_usec=0;
     ret=select (0, NULL, &fd_write, &fd_except, &tv);
 
-	EmptySocket(sock);
+// 	EmptySocket(sock);
     closesocket(sock);
 
     if (ret<=0)
@@ -1031,96 +922,72 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    hr=WaitForSocketData(sock, &avail, 5000);
-    if (FAILED(hr)||(avail==0))
-        {
-        EmptySocket(sock);
-        closesocket(sock);
-        return(hr);
-        }
+    hr=ReadCompleteDataFromSocket(sock);
 
-    while(avail>0)
+    if (SUCCEEDED(hr))
         {
-        if (ret>=0)
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
             {
-            int pos=0;
-            unsigned int i;
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
             char *p3=NULL;
             char *p4=NULL;
-            char rbuffer[1024];
-            ZeroMemory(rbuffer, sizeof(rbuffer));
-            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-            //dprintf("------");
-            //dprintf(rbuffer);
-
-// ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
                 if (p1==NULL)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
+
+
+                if (p1!=NULL)
+                    p2=MYstrstr(p1,"\n");
                 if (p1!=NULL)
                     {
-                    if (*p1=='\n')
-                        p1++;
+                    for(i=0;i<lstrlen(p1);i++)
+                        if (p1[i]=='\n') {p1[i]=0;break;}
+                    *width=atoi(p1);
                     }
-                }
-// ---------------------------------------------------  
+                if (p2!=NULL)
+                    p3=MYstrstr(p2,"\n");
+                if (p2!=NULL)
+                    {
+                    for(i=0;i<lstrlen(p2);i++)
+                        if (p2[i]=='\n') {p2[i]=0;break;}
+                    *height=atoi(p2);
+                    }
+                if (p3!=NULL)
+                    p4=MYstrstr(p3,"\n");
+                if (p3!=NULL)
+                    {
+                    for(i=0;i<lstrlen(p3);i++)
+                        if (p3[i]=='\n') {p3[i]=0;break;}
+                    *bitrate=atoi(p3);
+                    }
+                if (p4!=NULL)
+                    {
+                    for(i=0;i<lstrlen(p4);i++)
+                        if (p4[i]=='\n') {p4[i]=0;break;}
+                    if (lstrcmp(p4,"4:3"))
+                        *is4By3=0;
+                    }
 
-
-            if (p1!=NULL)
-                p2=MYstrstr(p1,"\n");
-            if (p1!=NULL)
-                {
-                for(i=0;i<strlen(p1);i++)
-                    if (p1[i]=='\n') {p1[i]=0;break;}
-                *width=atoi(p1);
                 }
-            if (p2!=NULL)
-                p3=MYstrstr(p2,"\n");
-            if (p2!=NULL)
-                {
-                for(i=0;i<strlen(p2);i++)
-                    if (p2[i]=='\n') {p2[i]=0;break;}
-                *height=atoi(p2);
-                }
-            if (p3!=NULL)
-                p4=MYstrstr(p3,"\n");
-            if (p3!=NULL)
-                {
-                for(i=0;i<strlen(p3);i++)
-                    if (p3[i]=='\n') {p3[i]=0;break;}
-                *bitrate=atoi(p3);
-                }
-            if (p4!=NULL)
-                {
-                for(i=0;i<strlen(p4);i++)
-                    if (p4[i]=='\n') {p4[i]=0;break;}
-                if (lstrcmp(p4,"4:3"))
-                    *is4By3=0;
-                }
-            //dprintf("------");
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+            free(rbuffer);
             }
-        ret=WaitForSocketData(sock, &avail, 250);
-        if (ret<0)
-            break;
-        if (i++>20)
-            break;
         }
 
-	EmptySocket(sock);
+
     closesocket(sock);
 	return(hr);
 }
@@ -1131,7 +998,6 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
 
     HRESULT hr=NOERROR;
     int ret=0;
-    unsigned long avail;
     char rem_str[1024];
 	
     lstrcpy(rem_str,"");
@@ -1169,120 +1035,84 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
         lstrcat(wbuffer,wbody);
         ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-        hr=WaitForSocketData(sock, &avail, 5000);
+        hr=ReadCompleteDataFromSocket(sock);
 
-        if ((avail<=0)||FAILED(hr))
+        if (SUCCEEDED(hr))
             {
-    		EmptySocket(sock);
-            closesocket(sock);
-            return(E_FAIL);
-            }
-
-        while(avail>0)
-            {
-            if (ret>=0)
+            long len=0;
+            pHTMLCircularBuffer->Remain(0, &len);
+            if (len>0)
                 {
-                int pos=0;
-                unsigned int i;
-                int srbuffer=RCV_BUFFER_SIZE;
+                char *rbuffer=(char *)malloc(len+2);
+                ZeroMemory(rbuffer, len+2);
+                pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+                // ---------------------------------------------------    
+                //
+                // ---------------------------------------------------    
                 char *p1=NULL;
                 char *p2=NULL;
-                char *rbuffer=(char *)malloc(srbuffer);
-                ZeroMemory(rbuffer,srbuffer);
-                if (lstrlen(rem_str)>0)
-                    lstrcpy(rbuffer, rem_str);
-                ret=recv(sock,rbuffer+lstrlen(rem_str),srbuffer-1-lstrlen(rem_str),0);
-                //dprintf("------");
-                //dprintf(rbuffer);
-
-// ---------------------------------------------------    
-            if (!strncmp(rbuffer,"HTTP",4))
-                {
-                p1=MYstrstr(rbuffer,"\n\n");
-                if (p1==NULL)
-                    p1=MYstrstr(rbuffer,"\r\n\r\n");
-                }
-            else
-                {
-                p2=MYstrstr(rbuffer,"\n\n");
-                if (p2==NULL)
-                    p2=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p2!=NULL)
-                    p1=p2;
-                else
-                    p1=rbuffer; 
-                if (p1!=NULL)
+                if (!strncmp(rbuffer,"HTTP",4))
                     {
-                    if (*p1=='\n')
-                        p1++;
-                    }
-                }
-// ---------------------------------------------------  
+                    p1=MYstrstr(rbuffer,"\n\n");
+                    if (p1==NULL)
+                        p1=MYstrstr(rbuffer,"\r\n\r\n");
 
-
-                if (gTotalChannelCount>=(MAX_LIST_ITEM-1))
-                    break;
-                while (p1!=NULL)
-                    {
-                    if (*p1!=0)
+                    while (p1!=NULL)
                         {
-                        int nlfound=0;
-                        unsigned int k;
-                        unsigned long lval=0;
-                        char *sval=NULL;
-                        if (gTotalChannelCount>=(MAX_LIST_ITEM-1))
-                            break;
-                        gTotalChannelCount++;
-                        for(i=0;i<strlen(p1);i++)
+                        if (*p1!=0)
                             {
-                            if (p1[i]=='\n') 
+                            int nlfound=0;
+                            unsigned int k;
+                            unsigned long lval=0;
+                            char *sval=NULL;
+                            if (gTotalChannelCount>=(MAX_LIST_ITEM-1))
+                                break;
+                            gTotalChannelCount++;
+                            for(i=0;i<lstrlen(p1);i++)
                                 {
-                                p2=p1+i+1;p1[i]=0;
-                                nlfound=1;
+                                if (p1[i]=='\n') 
+                                    {
+                                    p2=p1+i+1;p1[i]=0;
+                                    nlfound=1;
+                                    break;
+                                    }
+                                }
+                            if (!nlfound)
+                                {
+                                if (lstrlen(p1)<1024)
+                                    lstrcpy(rem_str, p1);
+                                gTotalChannelCount--;
                                 break;
                                 }
-                            }
-                        if (!nlfound)
-                            {
-                            if (lstrlen(p1)<1024)
-                                lstrcpy(rem_str, p1);
-                            gTotalChannelCount--;
-                            break;
-                            }
-                        dprintf(p1);
-                        sscanf(p1,"%lu", &lval);
-                        sval=p1;
-                        for(k=0;k<strlen(p1)-1;k++)   
-                            {
-                            if (p1[k]==' ')
+                            dprintf(p1);
+                            sscanf(p1,"%lu", &lval);
+                            sval=p1;
+                            for(k=0;k<strlen(p1)-1;k++)   
                                 {
-                                sval=p1+k+1;
-                                break;
+                                if (p1[k]==' ')
+                                    {
+                                    sval=p1+k+1;
+                                    break;
+                                    }
                                 }
+                            gChannelNameList[gTotalChannelCount]=(char *)malloc(264);
+                            lstrcpyn(gChannelNameList[gTotalChannelCount], sval, 264);
+                            gChannelIDList[gTotalChannelCount]=lval;
+                            p1=p2;
                             }
-                        gChannelNameList[gTotalChannelCount]=(char *)malloc(264);
-                        lstrcpyn(gChannelNameList[gTotalChannelCount], sval, 264);
-                        gChannelIDList[gTotalChannelCount]=lval;
-                        p1=p2;
+                        else
+                            break;
                         }
-                    else
-                        break;
+
+
                     }
-                //dprintf("------");
-                if (rbuffer!=NULL)
-                    free(rbuffer);
-                rbuffer=NULL;
-                }
-            ret=ioctlsocket(sock, FIONREAD, &avail);
-            if (!avail)
-                {
-                HRESULT hr=WaitForSocketData(sock, &avail, 250);
-                if (FAILED(hr)||(avail==0))
-                    break;
+                // ---------------------------------------------------    
+                //
+                // ---------------------------------------------------    
+                free(rbuffer);
                 }
             }
 
-		EmptySocket(sock);
         closesocket(sock);
         *count=gTotalChannelCount;
         return(hr);
@@ -1362,11 +1192,30 @@ void __cdecl AVReadThread(void *thread_arg)
     int  bufferlenAudio=AUDIO_BUFFER_SIZE;
     BOOL firstAudio=TRUE;
     BOOL firstVideo=TRUE;
+    DWORD smode = -1;
+    
+/*
+    if (gSocketVideoPES>0)
+        ioctlsocket(gSocketVideoPES, FIONBIO , &smode ) ;     // set nonblocking mode
+    if (gSocketAudioPES>0)
+        ioctlsocket(gSocketAudioPES, FIONBIO , &smode ) ;     // set nonblocking mode
+*/
 
     bufferVideo=(unsigned char *)malloc(bufferlenVideo);
     bufferAudio=(unsigned char *)malloc(bufferlenAudio);
 
     dprintf("AVReadThread started ...");
+
+    if (!GetWindowsVersion())
+        {
+        OutputDebugString("ioctlsocket faking enabled\n");
+        gFakeisDataAvailable=TRUE;
+        }
+    else
+        {
+        OutputDebugString("ioctlsocket faking disabled\n");
+        gFakeisDataAvailable=FALSE;
+        }
 
     for (;;) 
         {
@@ -1389,6 +1238,7 @@ void __cdecl AVReadThread(void *thread_arg)
                 ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
                 if (ret>0)
                     {
+                    //dprintf("Receive Video: %ld",ret);
                     gTotalVideoDataCount+=ret;
                     CRemuxer->supply_video_data(bufferVideo, ret);
                     wait=FALSE;
@@ -1412,6 +1262,7 @@ void __cdecl AVReadThread(void *thread_arg)
                 ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
                 if (ret>0)
                     {
+                    //dprintf("Receive Audio: %ld",ret);
                     gTotalAudioDataCount+=ret;
                     CRemuxer->supply_audio_data(bufferAudio, ret);
                     wait=FALSE;
@@ -1489,7 +1340,6 @@ void DeInitStreaming()
 
 HRESULT InitPSStreaming(int vpid, int apid, char *IPAddress, int Port) 
 {
-
     if ((vpid>0)&&(apid>0))
         {
 	    gSocketVideoPES = openPS(IPAddress, Port, vpid, apid, VIDEO_BUFFER_SIZE);
@@ -1588,3 +1438,18 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
 	return(NOERROR);
 }
 
+//
+// returns 1 for real OS (Win2k, XP, ...) and 0 for all the old ones
+//
+DWORD GetWindowsVersion(void)
+{
+	OSVERSIONINFO osvi;
+	osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+
+    GetVersionEx (&osvi);
+
+    if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
+        return(1);
+    else
+        return(0);
+}

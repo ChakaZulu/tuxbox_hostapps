@@ -375,12 +375,15 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     m_DBOXPESStreamingPort=31338;
     m_DBOXPSStreamingPort=31337;
     m_DBOXHTTPPort=80;
-//    m_DBOXHTTPPort=8888;
     m_DBOXTelnetPort=23;
 
+    m_StartSucceeded=TRUE;
 
     LoadInternalData();
     val=-1;
+
+    pHTMLCircularBuffer=new CCircularBuffer();
+    pHTMLCircularBuffer->Initialize(512*1024, 1);
 
 //    hr=RetrieveChannelList(m_DBOXAddress, m_DBOXHTTPPort, NULL, &val);
 //    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long *)&val);
@@ -401,9 +404,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     {
     HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
     if (SUCCEEDED(hr))
-        hr=ExecuteCommand("killall -9 nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
-    if (SUCCEEDED(hr))
-        hr=ExecuteCommand("/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+        hr=ExecuteCommand("killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
     }
 #endif
 //!!BS nhttpd is really a bloody bastard ...
@@ -419,6 +420,9 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
 CDBOXIICapture::~CDBOXIICapture()
 {
+    if (pHTMLCircularBuffer)
+        delete pHTMLCircularBuffer;
+
     SaveInternalData();
     DeInitSockets();
 	g_Instance--;
@@ -499,6 +503,14 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             if (SUCCEEDED(hr))
                 hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
             break;
+
+        case CMD_RESTARTNHTTPD:
+            {
+            HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
+            if (SUCCEEDED(hr))
+                hr=ExecuteCommand("killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+            break;
+            }
         }
 	return(hr);
 }
@@ -707,7 +719,8 @@ STDMETHODIMP CDBOXIICapture::Stop()
 
     hr=CSource::Stop();
     DeInitStreaming();
-    ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 0);
+    if (m_StartSucceeded)
+        ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 0);
 //    hr=ExecuteCommand("killall -9 streampes", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
     return(hr);
 }
@@ -721,6 +734,8 @@ STDMETHODIMP CDBOXIICapture::Pause()
         {
         int vpid=0;
         int apid=0;
+
+        m_StartSucceeded=TRUE;
 
         if (pPushStreamVideo->IsConnected())
             gIsVideoConnected=TRUE;
@@ -737,42 +752,54 @@ STDMETHODIMP CDBOXIICapture::Pause()
         else
             gIsPSPinConnected=FALSE;
 
-#if USE_DBOX
-        hr=RetrievePIDs( &vpid, &apid, m_DBOXAddress, m_DBOXHTTPPort);
-        if (FAILED(hr))
-            return(E_FAIL);
-
-        if (mMode==0)
+        #if USE_DBOX
             {
-            if (!gIsPSPinConnected)
+            char dtxt[264];
+            hr=RetrievePIDs( &vpid, &apid, m_DBOXAddress, m_DBOXHTTPPort);
+            if (FAILED(hr))
+                return(E_FAIL);
+
+            if (mMode==0)
                 {
-                if (!gIsVideoConnected)
-                    vpid=0;
-                if (!gIsAudioConnected)
-                    apid=0;
+                if (!gIsPSPinConnected)
+                    {
+                    if (!gIsVideoConnected)
+                        vpid=0;
+                    if (!gIsAudioConnected)
+                        apid=0;
+                    }
                 }
+
+            //!!BS oops, there must be something wrong ...
+            if ((vpid==0)&&(apid==0))
+                {
+                OutputDebugString("No valid pid(s), ABORTED !\n");
+                m_StartSucceeded=FALSE;
+                return(E_FAIL);
+                }
+
+            if (m_DBOXStopPlayback)
+                hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 2);
+            else
+                hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 1);
+            if (FAILED(hr))
+                return(E_FAIL);
+
+            hr=ExecuteCommand("killall -HUP controld", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+            if (FAILED(hr))
+                return(E_FAIL);
+
+            sprintf(dtxt,"VPID:%ld, APID:%ld\n",vpid,apid);
+            OutputDebugString(dtxt);
+
+            if (mMode==0)
+                hr=InitStreaming(vpid, apid, m_DBOXAddress, m_DBOXPESStreamingPort);
+            else
+                hr=InitPSStreaming(vpid, apid, m_DBOXAddress, m_DBOXPSStreamingPort);
+            if (FAILED(hr))
+                return(E_FAIL);
             }
-
-        if (m_DBOXStopPlayback)
-            hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 2);
-        else
-            hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 1);
-        if (FAILED(hr))
-            return(E_FAIL);
-
-        hr=ExecuteCommand("killall -HUP controld", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
-        if (FAILED(hr))
-            return(E_FAIL);
-
-        dprintf("VPID:%ld, APID:%ld",vpid,apid);
-        if (mMode==0)
-            hr=InitStreaming(vpid, apid, m_DBOXAddress, m_DBOXPESStreamingPort);
-        else
-            hr=InitPSStreaming(vpid, apid, m_DBOXAddress, m_DBOXPSStreamingPort);
-        if (FAILED(hr))
-            return(E_FAIL);
-
-#endif
+        #endif
         }
 
     hr=CSource::Pause();
@@ -1109,7 +1136,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
     long tStart=timeGetTime();
     long tEnd=tStart;
 
-    if (gfThreadAborted)
+    if (gfThreadAborted||(!pCDBOXIICapture->m_StartSucceeded))
         {
         m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
         m_Abort=TRUE;

@@ -422,14 +422,16 @@ HRESULT CreateAudioOnlyPreviewGraph()
     IAudioResampler *pIAudioResampler=NULL;
 
 
-    if (SUCCEEDED(hr))
-        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_AudioResampler, &pAudioResampler, L"AudioResampler");
+    if (!gRecNoPreview || gTranscodeAudio)
+        {
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_AudioResampler, &pAudioResampler, L"AudioResampler");
 
-    if (SUCCEEDED(hr))
-        hr=pAudioResampler->QueryInterface(IID_AudioResampler, (void **)&pIAudioResampler);
-    if (SUCCEEDED(hr))
-        hr=pIAudioResampler->setParameter(CMD_DESTINATION_FREQUENCY, gTranscodeAudioSampleRate);
-
+        if (SUCCEEDED(hr))
+            hr=pAudioResampler->QueryInterface(IID_AudioResampler, (void **)&pIAudioResampler);
+        if (SUCCEEDED(hr))
+            hr=pIAudioResampler->setParameter(CMD_DESTINATION_FREQUENCY, gTranscodeAudioSampleRate);
+        }
 
     if (gTranscodeAudio)
         {
@@ -446,8 +448,17 @@ HRESULT CreateAudioOnlyPreviewGraph()
         if (SUCCEEDED(hr))
             hr=TryConnectingFilters(gpIGraphBuilder, pAudioResampler, 0, pTee, 0, TRUE);
 
-        if (SUCCEEDED(hr))
-            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
+        if (gRecNoPreview)
+            {
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DumpAudio, &pAudioRenderer, L"AudioRenderer");
+            }
+        else
+            {
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
+            }
+
         if (SUCCEEDED(hr))
             hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioRenderer, 0, TRUE);
         }
@@ -458,20 +469,29 @@ HRESULT CreateAudioOnlyPreviewGraph()
         if (SUCCEEDED(hr))
             hr=TryConnectingFilters(gpIGraphBuilder, gpVCap, 4, pTee, 0, TRUE);
 
-        if (SUCCEEDED(hr))
-            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_MPADecoder, &pAudioDecoder, L"AudioDecoder");
-        if (SUCCEEDED(hr))
-            hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioDecoder, 0, TRUE);
+        if (gRecNoPreview)
+            {
+            //if (SUCCEEDED(hr))
+            //    hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DumpAudio, &pAudioRenderer, L"AudioRenderer");
+            //if (SUCCEEDED(hr))
+            //    hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioRenderer, 0, TRUE);
+            }
+        else
+            {
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_MPADecoder, &pAudioDecoder, L"AudioDecoder");
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioDecoder, 0, TRUE);
 
-        if (SUCCEEDED(hr))
-            hr=TryConnectingFilters(gpIGraphBuilder, pAudioDecoder, 0, pAudioResampler, 0, TRUE);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pAudioDecoder, 0, pAudioResampler, 0, TRUE);
 
-        if (SUCCEEDED(hr))
-            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
-        if (SUCCEEDED(hr))
-            hr=TryConnectingFilters(gpIGraphBuilder, pAudioResampler, 0, pAudioRenderer, 0, TRUE);
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pAudioResampler, 0, pAudioRenderer, 0, TRUE);
+            }
         }
-
 
     RELEASE(pIAudioResampler);
     RELEASE(pAudioResampler);
@@ -503,7 +523,10 @@ HRESULT CreatePreviewGraph()
 
     if (gCaptureAudioOnly)
         {
+        int tmp=gRecNoPreview;
+        gRecNoPreview=FALSE;
         hr=CreateAudioOnlyPreviewGraph();
+        gRecNoPreview=tmp;
         return(hr);
         }
 
@@ -700,8 +723,17 @@ HRESULT CreateAudioOnlyCaptureGraph()
 
         if (SUCCEEDED(hr))
             hr=gpIGraphBuilder->FindFilterByName(L"InfTee", &pTee);
-        if (SUCCEEDED(hr))
-            hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pFileWriter, 0, TRUE);
+
+        if (gRecNoPreview)
+            {
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pFileWriter, 0, TRUE);
+            }
+        else
+            {
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pFileWriter, 0, TRUE);
+            }
         }
     else
         {
