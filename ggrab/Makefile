@@ -8,6 +8,10 @@
 # GG_LIBS= -lpthread -lnsl -lrt -lsocket
 # LDFLAGS= -s
 #
+# CYGWIN
+# GG_LIBS=-lpthread  
+#
+#
 
 CPPFLAGS=-DREENTRANT -D_LARGEFILE64_SOURCE  -Wall -Wshadow -W
 
@@ -20,7 +24,7 @@ TARGETS=ggrab sserver vlog
 
 GG_INCS=list.h tools.h cbuffer.h Makefile
 GG_OBJS=list.o cbuffer.o tools.o ggrab.o 
-GG_LIBS=-lpthread -lnsl 
+GG_LIBS=-lpthread  
 
 all: $(TARGETS) 
 
