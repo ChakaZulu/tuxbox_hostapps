@@ -279,11 +279,21 @@ void c32_15(unsigned char r, unsigned char g , unsigned char b , unsigned char* 
 	http://www.informatik.fh-muenchen.de/~schieder/graphik-01-02/slide0264.html
 	*/
 
-#define FS_CALC_ERROR(color, index) \
+#define FS_CALC_ERROR_COMMON(color, index) \
 				p1 = p2 = (ptr[index] + (this_line_error_##color[ix]>>4)); \
 				if(p1>255)p1=255; if(p1<0)p1=0; \
 				color = (p1 & 0xF8) | 0x4; \
 				error = p2 - color; \
+
+#define FS_CALC_ERROR_RIGHT(color, index) \
+				FS_CALC_ERROR_COMMON(color,index) \
+				this_line_error_##color[ix+1] += (error * 7); \
+				next_line_error_##color[ix-1] += (error * 3); \
+				next_line_error_##color[ix]   += (error * 5); \
+				next_line_error_##color[ix+1] += error;
+				
+#define FS_CALC_ERROR_LEFT(color, index) \
+				FS_CALC_ERROR_COMMON(color,index) \
 				this_line_error_##color[ix-1] += (error * 7); \
 				next_line_error_##color[ix+1] += (error * 3); \
 				next_line_error_##color[ix]   += (error * 5); \
@@ -348,9 +358,9 @@ unsigned char * to555_floyd_steinberg_err_diff(unsigned char * orgin,int x, int 
 		{
 			for(ix=1 ; ix <= x ; ix++)
 			{
-				FS_CALC_ERROR(r,0);
-				FS_CALC_ERROR(g,1);
-				FS_CALC_ERROR(b,2);
+				FS_CALC_ERROR_RIGHT(r,0);
+				FS_CALC_ERROR_RIGHT(g,1);
+				FS_CALC_ERROR_RIGHT(b,2);
 				c32_15(r,g,b,dst);
 				ptr+=3;
 				dst+=2;
@@ -363,9 +373,9 @@ unsigned char * to555_floyd_steinberg_err_diff(unsigned char * orgin,int x, int 
 			dst+=(x-1)*2;
 			for(ix=x ; ix >= 1 ; ix--)
 			{
-				FS_CALC_ERROR(r,0);
-				FS_CALC_ERROR(g,1);
-				FS_CALC_ERROR(b,2);
+				FS_CALC_ERROR_LEFT(r,0);
+				FS_CALC_ERROR_LEFT(g,1);
+				FS_CALC_ERROR_LEFT(b,2);
 				c32_15(r,g,b,dst);
 				ptr-=3;
 				dst-=2;
