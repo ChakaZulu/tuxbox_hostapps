@@ -256,19 +256,13 @@ int main( int argc, char *argv[] ) {
 		return -1;
 	}
 	
-	if (gudp) {
-		port = 31340;
-	}
-	else {
-		port = 31338;
-	}
 		
 
 	// Max size - 3 MB because cut at next Sequence start
 	max_file_size -= 1024 * 1024 * 3;
 
 	
-	toggle_sectionsd(dbox2name) ;
+//	toggle_sectionsd(dbox2name) ;
 
 	vfd = openStream (dbox2name, port, vpid, 30000, vfd_udp);
 	afd = openStream (dbox2name, port, apid, 30001, afd_udp);
@@ -327,7 +321,9 @@ int main( int argc, char *argv[] ) {
 					close(vfd);
 					close(afd);
 					fclose(fp);
-					toggle_sectionsd(dbox2name);
+
+					fprintf(stderr,"\n\nhaaaaallllll\n");
+//					toggle_sectionsd(dbox2name);
 					exit (0);
 				}
 			}
@@ -854,7 +850,12 @@ int openStream(char * name, int port, int pid, int udpport, int & udpsocket) {
 	}
 	
 	char buffer[100];		
-	sprintf(buffer, "GET /%x %d HTTP/1.0\r\n\r\n", pid, udpport);
+	if (gudp) {
+		sprintf(buffer, "GET /%x,%d HTTP/1.0\r\n\r\n", pid, udpport);
+	}
+	else {
+		sprintf(buffer, "GET /%x HTTP/1.0\r\n\r\n", pid);
+	}
 	write(sock, buffer, strlen(buffer));
 
 	return sock;
@@ -927,6 +928,10 @@ void  * readvstream (void * p_arg) {
 					gvpackloss = pnr++ - ntohl(*((int *) (a_buf + r)));
 					p_act = a_buf;
 				}
+				if (!(pnr % 100)) {
+					write (vfd, pBuf, 1);
+				}
+					
 			}
 			if (rest) {
 				if (rest > 0) {
@@ -1029,6 +1034,9 @@ void  * readastream (void * p_arg) {
 					}
 					gapackloss = pnr++ - ntohl(*((int *) (&(a_buf[r]))));
 					p_act = a_buf;
+				}
+				if (!(pnr % 100)) {
+					write (afd, pBuf, 1);
 				}
 			}
 			if (rest) {

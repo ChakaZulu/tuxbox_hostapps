@@ -31,10 +31,6 @@ Tool heraus, um Muster vom Stream aufzuzeichnen. Bitte sendet mir
 keine megabytegroßen Mails mit Videosequenzen....
 
 
-Btw.
-wenn mir jemand ein paar Tips für den "korrekten" Aufbau von MPEG files geben kann,
-wäre ich sehr dankbar.
-
 Zusätzlich ist ein einfacher Streamingserver (sserver) enthalten.
 Der Streamingserver muß im gleichen Verzeichnis wie ggrab liegen.
 Nach starten des Streamingserves kann mit der Fernbedienung aufgenommen werden.
@@ -76,7 +72,24 @@ noch nicht realisiert:
 Option: -nomux 
 
 Experimentelles Feature:
-Streaeming per udp
+Streaming per udp. Im Verzeichnis streamudp ist ein Ersatz für strempes enthalten.
+Es ist kompatibel zum bisherigen streampes. Normaler Aufruf:
+GET /<pid>
+Hier efolgt, wie bisher das Streamen per TCP
+Neu:
+GET /<pid>,<udpport>
+Hier wird zum Port <udpport> gestreamt. Der Port wird im Gegensatz zu <pid> dezimal angegeben.
+(udpport >= 1024)
+
+Die UDP-Message-Länge ist 1444 Byte. 1440 Byte sind PES-Daten, die letzten 4 Byte sind ein Paket-Zähler, 
+der bei 0 beginnt, so daß fehlende Pakete bemerkt werden können. Dieser Zähler ist in
+Network Byte Order.
+
+Bisheriger Vorteil hier:
+-Weniger Prozessorlast (ca 8% bei 5000 kBit/s)
+-(Etwas) weniger Netzlast
+-Keine Kollisionen mehr -> Das sollte gut tun, bei Halbduplex
+
 
 Kontakt:
 Forum "wingrab" bei tuxbox.berlios.de (mein Nick ist Gandalfx)

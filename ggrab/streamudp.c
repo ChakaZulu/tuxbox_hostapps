@@ -22,14 +22,18 @@
 
 int main(int argc, char **argv)
 {
-	int fd, pid, port;
-	int pnr = 0;
-	struct dmxPesFilterParams flt; 
-	char buffer[BSIZE], *bp;
+	int 			fd, pid, port, flags;
+	int 			pnr = 0;
+	struct 			dmxPesFilterParams flt; 
+	char 			buffer[BSIZE];
+	char *			bp;
 	int                     sockfd;
         struct sockaddr_in      cli_addr, serv_addr;
-	int	addr_len = sizeof (serv_addr);
+	int			addr_len = sizeof (serv_addr);
+	int			last;
+	int			act;
 
+	last = time(0);
 	
 	bp=buffer;
 	while (bp-buffer < BSIZE)
@@ -48,29 +52,38 @@ int main(int argc, char **argv)
 		bp+=5;
 	}
 	fflush(stdout);
-	sscanf(bp, "%x %d", &pid, &port);
 
-	if(getpeername(0, (struct sockaddr *) &serv_addr, &addr_len)) {
-		perror("getpeername");
+	port = 0;
+	sscanf(bp, "%x", &pid);
+	if ((bp=strchr(bp,',')) != 0) {
+		bp++;
+		sscanf(bp, "%d", &port);
+		fprintf(stderr, "aaa %d\n",port);
 	}
+
+	if (port > 1023) {
+		flags = fcntl(0, F_GETFL, 0);
+		flags |= O_NONBLOCK;
+		fcntl(0, F_SETFL, flags );
+
+		if(getpeername(0, (struct sockaddr *) &serv_addr, &addr_len)) {
+			perror("getpeername");
+		}
 	
 
-	serv_addr.sin_family      = AF_INET;
-        serv_addr.sin_port        = htons(port);
+		serv_addr.sin_family      = AF_INET;
+	        serv_addr.sin_port        = htons(port);
 
-	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-                perror("client: can't open datagram socket");
+		if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+        	        perror("client: can't open datagram socket");
 
-        /*
-         * Bind any local address for us.
-         */
-
-        memset((char *) &cli_addr,0, sizeof(cli_addr));    /* zero out */
-        cli_addr.sin_family      = AF_INET;
-        cli_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        cli_addr.sin_port        = htons(0);
-        if (bind(sockfd, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0)
-                perror("client: can't bind local address");
+        	memset((char *) &cli_addr,0, sizeof(cli_addr));    /* zero out */
+	        cli_addr.sin_family      = AF_INET;
+        	cli_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	        cli_addr.sin_port        = htons(0);
+        	if (bind(sockfd, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0)
+	               	perror("client: can't bind local address");
+	}
 
 	fd=open("/dev/dvb/card0/demux0", O_RDWR);
 	if (fd<0)
@@ -79,13 +92,11 @@ int main(int argc, char **argv)
 		return -fd;
 	}
 	ioctl(fd, DMX_SET_BUFFER_SIZE, 1024*1024);
-	printf("pid: %x\n", pid);
 	flt.pid=pid;
 	flt.input=DMX_IN_FRONTEND;
 	flt.output=DMX_OUT_TAP;
 	flt.pesType=DMX_PES_OTHER;
 	flt.flags=0;
-	printf("pid %x\n", pid);
 	if (ioctl(fd, DMX_SET_PES_FILTER, &flt)<0)
 	{
 		perror("DMX_SET_PES_FILTER");
@@ -97,27 +108,53 @@ int main(int argc, char **argv)
 		return errno;
 	}
 
-	while (1)
-	{
-		int pr=0, r;
-		int tr=1440;
-		while (tr)
+	if (port > 1023) {
+		while (1)
 		{
-			if ((r=read(fd, buffer+pr, tr))<=0)
-				continue;
-			pr+=r;
-			tr-=r;
+			int pr=0, r;
+			int tr=1440;
+			while (tr)
+			{
+				if ((r=read(fd, buffer+pr, tr))<=0)
+					continue;
+				pr+=r;
+				tr-=r;
+			}
+			*((int *)(&(buffer[1440])))=pnr++;	
+			sendto(sockfd, buffer, 1444, 0, (struct sockaddr *) &serv_addr, addr_len);
+			act = time(0);
+			if (act != last) {
+				if (read(0,buffer,1400) < 0) {
+					if (errno != EAGAIN) {
+						 exit(0);
+					}
+				}
+				last=act;	
+			}
 		}
-        	*((int *)(&(buffer[1440])))=pnr++;	
-		sendto(sockfd, buffer, 1444, 0, (struct sockaddr *) &serv_addr, addr_len);
-
-//		if(!(pnr%1000)) {
-//			fprintf(stdout,"i\n");
-//			fflush(stdout);
-//		}
+		close(sockfd);
 	}
-        close(sockfd);
-	
+	else {
+
+		while (1)
+		{
+			int pr=0, r;
+			int tr=BSIZE;
+			while (tr)
+			{
+				if ((r=read(fd, buffer+pr, tr))<=0)
+					continue;
+				pr+=r;
+				tr-=r;
+			}
+
+			if (write(1, buffer, r)!=r)
+			{
+				perror("output");
+				break;
+			}
+		}
+	}		
 	close(fd);
 	return 0;
 }
