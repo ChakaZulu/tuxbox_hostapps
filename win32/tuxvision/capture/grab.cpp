@@ -400,15 +400,19 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
                 break;
                 }
 
-//            p1=MYstrstr(rbuffer,"\n\n");
 // ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
+
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -505,15 +509,18 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
             ZeroMemory(rbuffer,sizeof(rbuffer));
             ret=recv(sock,rbuffer,sizeof(rbuffer),0);
 
-//            p1=MYstrstr(rbuffer,"\n\n");
 // ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -611,10 +618,14 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -630,11 +641,14 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
                 p2=MYstrstr(p1,"\n");
             if (p2!=NULL)
                 {
-                p2--;
-                *p2=0;
-                lstrcpyn(info, p1, 264);
-                break;
-                //dprintf(p1);
+                if (lstrlen(p2)>1)  //ignore trailing cr or lf
+                    {
+                    p2--;
+                    *p2=0;
+                    lstrcpyn(info, p1, 264);
+                    break;
+                    //dprintf(p1);
+                    }
                 }
             }
         ret=WaitForSocketData(sock, &avail, 250);
@@ -705,10 +719,14 @@ HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *i
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -724,9 +742,12 @@ HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *i
                 p2=MYstrstr(p1,"\n");
             if (p2!=NULL)
                 {
-                lstrcpyn(info, p2, 264);
-                break;
-                //dprintf(p1);
+                if (lstrlen(p2)>1)
+                    {
+                    lstrcpyn(info, p2, 264);
+                    break;
+                    //dprintf(p1);
+                    }
                 }
             }
         ret=WaitForSocketData(sock, &avail, 250);
@@ -850,15 +871,18 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
             //dprintf("------");
             //dprintf(rbuffer);
 
-//            p1=MYstrstr(rbuffer,"\n\n");
 // ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -1031,15 +1055,18 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
             //dprintf("------");
             //dprintf(rbuffer);
 
-//            p1=MYstrstr(rbuffer,"\n\n");
 // ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else
@@ -1168,15 +1195,18 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                 //dprintf("------");
                 //dprintf(rbuffer);
 
-                //p1=MYstrstr(rbuffer,"\n\n");
 // ---------------------------------------------------    
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
                 }
             else
                 {
                 p2=MYstrstr(rbuffer,"\n\n");
+                if (p2==NULL)
+                    p2=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p2!=NULL)
                     p1=p2;
                 else

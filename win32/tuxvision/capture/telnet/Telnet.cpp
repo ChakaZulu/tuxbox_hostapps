@@ -39,24 +39,31 @@ HRESULT WriteTerminal(SOCKET sock, char *waitfor, char *str)
     char rBuffer[4096]={0};
     int retry=150;
 
-    while(lstrcmp(rBuffer,waitfor))
+    if (lstrlen(waitfor)>0)
         {
-        lstrcpy(rBuffer, gpTelnetInputBuffer);
-        strrev(rBuffer);
-        rBuffer[lstrlen(waitfor)]=0;
-        strrev(rBuffer);
+        while(lstrcmp(rBuffer,waitfor))
+            {
+            lstrcpy(rBuffer, gpTelnetInputBuffer);
+            strrev(rBuffer);
+            rBuffer[lstrlen(waitfor)]=0;
+            strrev(rBuffer);
 
-        retry--;
-        if (retry<=0)
-            return(E_FAIL);
-        Sleep(100);
+            retry--;
+            if (retry<=0)
+                return(E_FAIL);
+            Sleep(100);
+            }
         }
+    else
+        Sleep(250);
 
     lstrcpy(tBuffer,str);
     lstrcat(tBuffer,"\r\n");
 	nRet = send(sock,tBuffer,strlen(tBuffer),0);
     if (nRet>0)
         {
+        if (lstrlen(waitfor)==0)
+            Sleep(250);
         return(NOERROR);
         }
     return(E_FAIL);
@@ -83,6 +90,10 @@ HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigne
     hr=WriteTerminal(hSocket, "ogin: ", login);
     if (SUCCEEDED(hr))
         hr=WriteTerminal(hSocket, "sword: ", passwd);
+
+    if (SUCCEEDED(hr))
+        hr=WriteTerminal(hSocket, "", "export PS1='> '");
+
     if (SUCCEEDED(hr))
         hr=WriteTerminal(hSocket, CMD_PROMPT, cmd);
 
