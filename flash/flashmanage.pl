@@ -95,6 +95,7 @@ sub part_write_zero
 
 if ( not defined ( $operation ) )
 {
+  pod2usage ( 1 );
   die "don't know what to do";
 }
 elsif ( $operation eq "build" )
@@ -177,5 +178,7 @@ flashmanage [OPTIONS]
   -o, --operation ARG   what to do (build, extract, replace, print)
   -p, --part NAME=FILE  partition files
       --help            brief help message
+
+example: flashimage -i flashimage.img -o replace -p root=root.img
 
 =cut
