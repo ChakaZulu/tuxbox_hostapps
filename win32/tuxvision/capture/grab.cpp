@@ -19,6 +19,8 @@
 * along with this program; see the file COPYING.  If not, write to
 * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 */
+
+// CVS-TestCheckin ...
  
 #include <winsock2.h>
 #include <streams.h>
@@ -1567,7 +1569,6 @@ void __cdecl AVReadThread(void *thread_arg)
                         CRemuxer->supply_audio_data(bufferAudio, ret);
                         wait=FALSE;
                         firstAudio=TRUE;
-                        Sleep(0);
                         }
                     else
                         break;
@@ -1647,7 +1648,7 @@ void __cdecl AVReadThread(void *thread_arg)
         #endif
         
         if (wait)
-            Waitms(2);
+            Waitms(1);
         }
 
     gfThreadAborted=TRUE;

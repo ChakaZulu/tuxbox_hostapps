@@ -200,7 +200,7 @@ If you find this software usefull, it was written by
 Bernd Scharping (BSE) bernd@transputer.escape.de
 
 If not, I don´t know who the autor was :)
-
+(Looks like nobody is reading this doc anyway ...)
 -------------------------------------------------------------------------------------------------
 
 Have fun, and enjoy your DBoxII running Linux !
