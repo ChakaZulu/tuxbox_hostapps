@@ -390,6 +390,8 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
     m_SkipPreparation=FALSE;
 
+    m_UDPEnable=FALSE;
+
     m_StartSucceeded=TRUE;
 
     m_VPid=0;
@@ -546,6 +548,10 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             hr=SetRadioTVMode(m_DBOXAddress, m_DBOXHTTPPort, (int)data1);
             break;
 
+        case CMD_UDP_TCP_MODE:
+            m_UDPEnable=(int)data1;
+            hr=NOERROR;
+            break;
         }
 	return(hr);
 }
@@ -775,6 +781,11 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             *data1=(__int64)val;
             break;
             } 
+
+        case CMD_UDP_TCP_MODE:
+            *data1=(__int64)m_UDPEnable;
+            hr=NOERROR;
+            break;
 
         }
 	return(hr);

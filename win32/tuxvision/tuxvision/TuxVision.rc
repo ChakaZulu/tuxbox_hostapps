@@ -54,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,2,2
- PRODUCTVERSION 0,0,2,2
+ FILEVERSION 0,0,2,3
+ PRODUCTVERSION 0,0,2,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -73,14 +73,14 @@ BEGIN
             VALUE "Comments", "VisionApp for the TuxBox\0"
             VALUE "CompanyName", "BS\0"
             VALUE "FileDescription", "TV-Viewing App for the DBOXII\0"
-            VALUE "FileVersion", "0, 0, 2, 2\0"
+            VALUE "FileVersion", "0, 0, 2, 3\0"
             VALUE "InternalName", "TuxVision\0"
             VALUE "LegalCopyright", "Copyright © 2002 BSE\0"
             VALUE "LegalTrademarks", "BS PRIVATE\0"
             VALUE "OriginalFilename", "TuxVision.exe\0"
             VALUE "PrivateBuild", "YES\0"
             VALUE "ProductName", "NN\0"
-            VALUE "ProductVersion", "0, 0, 2, 2\0"
+            VALUE "ProductVersion", "0, 0, 2, 3\0"
             VALUE "SpecialBuild", "Alpha\0"
         END
     END
@@ -128,14 +128,16 @@ BEGIN
     EDITTEXT        IDC_LOGIN,100,43,100,12,ES_AUTOHSCROLL | WS_GROUP
     EDITTEXT        IDC_PASSWORD,100,67,100,12,ES_AUTOHSCROLL | WS_GROUP
     CONTROL         "Disable Playback",IDC_STOPPLAYBACK,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,94,78,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,89,78,10
     LTEXT           "IPAddress",IDC_STATIC,14,20,69,10,SS_SUNKEN
     LTEXT           "Login",IDC_STATIC,14,44,69,10,SS_SUNKEN
     LTEXT           "Password",IDC_STATIC,14,68,69,10,SS_SUNKEN
     LTEXT           "DBOX Status:",IDC_STATUS,96,122,140,10,SS_SUNKEN
     PUSHBUTTON      "Test Configuration",IDC_TEST,14,120,64,14
     CONTROL         "Skip Preparation",IDC_SKIPPREPARATION,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,100,94,92,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,100,89,92,10
+    CONTROL         "UDP Streaming",IDC_UDP,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,14,104,78,10
 END
 
 ABOUT DIALOG DISCARDABLE  0, 0, 238, 146

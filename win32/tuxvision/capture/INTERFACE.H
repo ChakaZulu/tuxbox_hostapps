@@ -67,3 +67,4 @@ STDMETHOD(getParameter) (THIS_ __int64 command, __int64 *data1, __int64 *data2) 
 #define CMD_GETNEWAUDIOSEG      21  // set/get *__int64 in data1 TRUE signals new audio segment detected
 #define CMD_SETNEWAUDIOEVENT    22  // set      __int64 in data1 sets the event handle for new AudioSegments
 #define CMD_TVRADIOMODE         23  // set/get  __int64 in data1 sets/gets Radio(0) or TV(1) mode of the box
+#define CMD_UDP_TCP_MODE        24  // set/get  __int64 in data1 sets/gets streaming mode (0:TCP, 1:UDP)

@@ -76,6 +76,9 @@ if (hr == NOERROR)
                         var.lVal=(long)i64val;
 					    hr = pBag->Write(L"SkipPreparation", &var);
 
+                        getParameter(CMD_UDP_TCP_MODE, &i64val, NULL); 
+                        var.lVal=(long)i64val;
+					    hr = pBag->Write(L"UDPStreaming", &var);
 
 					    var.vt = VT_BSTR;
                         var.bstrVal=wBuffer;
@@ -152,6 +155,10 @@ if (hr == NOERROR)
 					    hr = pBag->Read(L"SkipPreparation", &var, NULL);
 						if (SUCCEEDED(hr))
 							setParameter(CMD_SKIPPREPARATION, var.lVal);
+
+					    hr = pBag->Read(L"UDPStreaming", &var, NULL);
+						if (SUCCEEDED(hr))
+							setParameter(CMD_UDP_TCP_MODE, var.lVal);
 
 					    var.vt = VT_BSTR;
                         var.bstrVal=wBuffer;

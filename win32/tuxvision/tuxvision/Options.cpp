@@ -88,6 +88,9 @@ BOOL CALLBACK DlgProc_DBOX(
 			        pIDBOXIICapture->getParameter(CMD_SKIPPREPARATION, &val, NULL);
 			        SendMessage( GetDlgItem(hdlg,IDC_SKIPPREPARATION), BM_SETCHECK, (unsigned int)val, 0 );
 
+			        pIDBOXIICapture->getParameter(CMD_UDP_TCP_MODE, &val, NULL);
+			        SendMessage( GetDlgItem(hdlg,IDC_UDP), BM_SETCHECK, (unsigned int)val, 0 );
+
                     pIDBOXIICapture->getParameter(CMD_IPADDRESS, (__int64 *)szStr, NULL);
                     SetWindowText(GetDlgItem(hdlg,IDC_IPADDRESS), szStr);
 
@@ -148,6 +151,9 @@ BOOL CALLBACK DlgProc_DBOX(
 
                         val=SendMessage( GetDlgItem(hdlg,IDC_SKIPPREPARATION), BM_GETCHECK, 0, 0 );
                         pIDBOXIICapture->setParameter(CMD_SKIPPREPARATION, (__int64)val);
+
+                        val=SendMessage( GetDlgItem(hdlg,IDC_UDP), BM_GETCHECK, 0, 0 );
+                        pIDBOXIICapture->setParameter(CMD_UDP_TCP_MODE, (__int64)val);
 
                         GetWindowText(GetDlgItem(hdlg,IDC_IPADDRESS), szStr, 264);
                         pIDBOXIICapture->setParameter(CMD_IPADDRESS, (__int64)szStr);

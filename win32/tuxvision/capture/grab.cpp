@@ -36,7 +36,7 @@
 #include "grab.h"
 
 //!!BS (n/t)httpd is really a bloody bastard ...
-#if 0
+#if 1
     #define _CRLFCRLF_ "\r\n\r\n"
     #define _CRLF_     "\r\n"
 #else
@@ -73,6 +73,13 @@ __int64         gLastAudioDataCount=0;
 long            gLastAVBitrateRequest=0;
 
 BOOL            gFakeisDataAvailable=FALSE;
+int             m_UDPEnable=FALSE;
+
+int UDPPortVideo=30000;
+int UDPPortAudio=30001;
+
+unsigned short UDPSocketVideo=0;
+unsigned short UDPSocketAudio=0;
 
 void Waitms(unsigned long delay)
 {
@@ -219,7 +226,7 @@ int  GetBufTCP (SOCKET hSock, int nBigBufSize, int nOptval)
     return (nFinalSize);
 } /* end GetBuf() */
 
-int openPES(const char * name, unsigned short port, int pid, int bsize)
+int openPES(const char * name, unsigned short port, unsigned short udpport, int pid, int bsize, unsigned short &udpsocket)
 {
     int ret=0;
 	dprintf("opening PES %s:%d PID %d", name, (int)port, pid);
@@ -231,6 +238,16 @@ int openPES(const char * name, unsigned short port, int pid, int bsize)
 
     if (hp==NULL)
         return(SOCKET_ERROR);
+
+	if (udpport) 
+        {
+		udpsocket = socket(AF_INET, SOCK_DGRAM, 0);
+		memset(&adr, 0, sizeof(adr));
+		adr.sin_family = AF_INET;
+		adr.sin_addr.s_addr = htonl(INADDR_ANY);
+		adr.sin_port = htons(udpport);
+		bind(udpsocket, (sockaddr *)&adr, sizeof(struct sockaddr_in));
+	    }
 				
 	adr.sin_family = AF_INET;
 	adr.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
@@ -253,10 +270,20 @@ int openPES(const char * name, unsigned short port, int pid, int bsize)
 	    }
 	
 	char buffer[264];		
-	wsprintf(buffer, "GET /%x HTTP/1.0"_CRLFCRLF_, pid);
+	if (udpport) 
+		wsprintf(buffer, "GET /%x,%d HTTP/1.0"_CRLFCRLF_, pid, udpport);
+    else
+	    wsprintf(buffer, "GET /%x HTTP/1.0"_CRLFCRLF_, pid);
+
 	
     ret=GetBufTCP (sock, bsize, SO_RCVBUF);
-    dprintf("Requested Buffer:%lu, granted Buffer:%lu",bsize,ret);
+    dprintf("Requested TCP-Buffer:%lu, granted Buffer:%lu",bsize,ret);
+
+    if (udpsocket)
+        {
+        ret=GetBufTCP (udpsocket, bsize, SO_RCVBUF);
+        dprintf("Requested UDP-Buffer:%lu, granted Buffer:%lu",bsize,ret);
+        }
 
     ret=send(sock, buffer, strlen(buffer),0);
 
@@ -1391,9 +1418,15 @@ void __cdecl AVReadThread(void *thread_arg)
     BOOL firstVideo=FALSE;
     DWORD smode = 1;
     
+    unsigned long PacketCountAudio=0;
+    unsigned long PacketCountVideo=0;
+    unsigned long PacklossAudio=0;
+    unsigned long PacklossVideo=0;
 
-    bufferVideo=(unsigned char *)malloc(bufferlenVideo);
-    bufferAudio=(unsigned char *)malloc(bufferlenAudio);
+    // HACK: multiplied by 4 to achive 64k Buffer (even for audio) 
+    // in case of LARGE UDP messages
+    bufferVideo=(unsigned char *)malloc(bufferlenVideo*4);
+    bufferAudio=(unsigned char *)malloc(bufferlenAudio*4);
 
     dprintf("AVReadThread started ...");
 
@@ -1418,6 +1451,11 @@ void __cdecl AVReadThread(void *thread_arg)
             ioctlsocket(gSocketVideoPES, FIONBIO , &smode ) ;     // set nonblocking mode
         if (gSocketAudioPES>0)
             ioctlsocket(gSocketAudioPES, FIONBIO , &smode ) ;     // set nonblocking mode
+
+        if (UDPSocketVideo>0)
+            ioctlsocket(UDPSocketVideo, FIONBIO , &smode ) ;     // set nonblocking mode
+        if (UDPSocketAudio>0)
+            ioctlsocket(UDPSocketAudio, FIONBIO , &smode ) ;     // set nonblocking mode
         }
 
 
@@ -1439,28 +1477,60 @@ void __cdecl AVReadThread(void *thread_arg)
                 break;
                 }
             
-            if (CRemuxer->resync)
-                minlen=bufferlenVideo;
-            else
-                minlen=bufferlenVideo>>3;
-
-            while (isDataAvailable(gSocketVideoPES, minlen))
+            if (UDPSocketVideo)
                 {
-                ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
-                if (ret>0)
+                minlen=64*1024; //1444;
+                while (isDataAvailable(UDPSocketVideo, minlen))
                     {
-                    //dprintf("Receive Video: %ld",ret);
-                    gTotalVideoDataCount+=ret;
-                    CRemuxer->supply_video_data(bufferVideo, ret);
-                    wait=FALSE;
-                    firstVideo=TRUE;
-                    c+=ret;
+                    ret=recvfrom(UDPSocketVideo, (char *)bufferVideo, minlen, 0, NULL, NULL);
+                    if (ret>0)
+                        {
+                        PacklossVideo = PacketCountVideo++ - ntohl(*((unsigned long *) (bufferVideo + ret - 4 )));
+                        /*
+                        if (ret!=1444)
+                            {
+                            dprintf("oooooh,  Video!");
+                            }
+                        */
+                        c+=ret;
+                        ret-=4;
+                        //dprintf("Receive Video: %ld",ret);
+                        gTotalVideoDataCount+=ret;
+                        CRemuxer->supply_video_data(bufferVideo, ret);
+                        wait=FALSE;
+                        firstVideo=TRUE;
+                        }
+                    else
+                        break;
+                    if (c>(bufferlenVideo<<2))
+                        break;
                     }
-                else
-                    break;
-                if (c>(bufferlenVideo<<2))
-                    break;
                 }
+            else
+                {
+                if (CRemuxer->resync)
+                    minlen=bufferlenVideo;
+                else
+                    minlen=bufferlenVideo>>3;
+
+                while (isDataAvailable(gSocketVideoPES, minlen))
+                    {
+                    ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
+                    if (ret>0)
+                        {
+                        //dprintf("Receive Video: %ld",ret);
+                        gTotalVideoDataCount+=ret;
+                        CRemuxer->supply_video_data(bufferVideo, ret);
+                        wait=FALSE;
+                        firstVideo=TRUE;
+                        c+=ret;
+                        }
+                    else
+                        break;
+                    if (c>(bufferlenVideo<<2))
+                        break;
+                    }
+                } 
             }
         else
             firstVideo=TRUE;
@@ -1475,33 +1545,81 @@ void __cdecl AVReadThread(void *thread_arg)
                 break;
                 }
 
-            if (CRemuxer->resync)
-                minlen=bufferlenAudio;
-            else
-                minlen=bufferlenAudio>>3;
-
-            while (isDataAvailable(gSocketAudioPES, minlen))
+            if (UDPSocketAudio)
                 {
-                ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
-                if (ret>0)
+                minlen=64*1024; //1444;
+                while (isDataAvailable(UDPSocketAudio, minlen))
                     {
-                    //dprintf("Receive Audio: %ld",ret);
-                    gTotalAudioDataCount+=ret;
-                    CRemuxer->supply_audio_data(bufferAudio, ret);
-                    wait=FALSE;
-                    firstAudio=TRUE;
-                    c+=ret;
+                    ret=recvfrom(UDPSocketAudio, (char *)bufferAudio, minlen, 0, NULL, NULL);
+                    if (ret>0)
+                        {
+                        PacklossAudio = PacketCountAudio++ - ntohl(*((unsigned long *) (bufferAudio + ret - 4 )));
+                        /*
+                        if (ret!=1444)
+                            {
+                            dprintf("oooooh,  Audio!");
+                            }
+                        */
+                        c+=ret;
+                        ret-=4;
+                        //dprintf("Receive Audio: %ld",ret);
+                        gTotalAudioDataCount+=ret;
+                        CRemuxer->supply_audio_data(bufferAudio, ret);
+                        wait=FALSE;
+                        firstAudio=TRUE;
+                        Sleep(0);
+                        }
+                    else
+                        break;
+                    if (c>(bufferlenAudio<<2))
+                        break;
                     }
+                }
+            else
+                {
+                if (CRemuxer->resync)
+                    minlen=bufferlenAudio;
                 else
-                    break;
-                if (c>(bufferlenAudio<<2))
-                    break;
+                    minlen=bufferlenAudio>>3;
+
+                while (isDataAvailable(gSocketAudioPES, minlen))
+                    {
+                    ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
+                    if (ret>0)
+                        {
+                        //dprintf("Receive Audio: %ld",ret);
+                        gTotalAudioDataCount+=ret;
+                        CRemuxer->supply_audio_data(bufferAudio, ret);
+                        wait=FALSE;
+                        firstAudio=TRUE;
+                        c+=ret;
+                        }
+                    else
+                        break;
+                    if (c>(bufferlenAudio<<2))
+                        break;
+                    }
                 }
             }
         else
             firstAudio=TRUE;
+
+        if (PacklossVideo)
+            {
+            dprintf("VideoPacket lost !");
+            PacketCountVideo+=PacklossVideo;
+            CRemuxer->perform_resync();        
+            PacklossVideo=0;    
+            }
         
-        
+        if (PacklossAudio)
+            {
+            dprintf("AudioPacket lost !");
+            PacketCountAudio+=PacklossAudio;
+            CRemuxer->perform_resync();  
+            PacklossAudio=0;          
+            }
+
         #if USE_REMUX
         //if (!wait)
         if (firstAudio && firstVideo)
@@ -1544,18 +1662,22 @@ void DeInitStreaming()
     Waitms(500);
     
     if (gSocketVideoPES>0)
-        {
         closesocket(gSocketVideoPES);
-        }
     gSocketVideoPES=0;
 
     if (gSocketAudioPES>0)
-        {
         closesocket(gSocketAudioPES);
-        }
     gSocketAudioPES=0;
 
-  
+    if (UDPSocketVideo)
+        closesocket(UDPSocketVideo);
+    UDPSocketVideo=0;
+
+    if (UDPSocketAudio)
+        closesocket(UDPSocketAudio);
+    UDPSocketAudio=0;
+
+
     if (CMultiplexBuffer)
         {
         CMultiplexBuffer->Interrupt();
@@ -1595,10 +1717,26 @@ HRESULT InitPSStreaming(int vpid, int apid, char *IPAddress, int Port)
 
 HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port) 
 {
+    UDPSocketVideo=0;
+    UDPSocketAudio=0;
+    gSocketVideoPES=0;
+    gSocketAudioPES=0;
+
+
+    if (m_UDPEnable)
+        {
+        UDPPortVideo=30000;
+        UDPPortAudio=30001;
+        }
+    else
+        {
+        UDPPortVideo=0;
+        UDPPortAudio=0;
+        }
 
     if (vpid>0)
         {
-	    gSocketVideoPES = openPES(IPAddress, Port, vpid, VIDEO_BUFFER_SIZE);
+	    gSocketVideoPES = openPES(IPAddress, Port, UDPPortVideo, vpid, VIDEO_BUFFER_SIZE, UDPSocketVideo);
 	    if (gSocketVideoPES < 0) 
             return(E_FAIL);
         }
@@ -1609,7 +1747,7 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
 
     if (apid>0)
         {
-	    gSocketAudioPES = openPES(IPAddress, Port, apid, AUDIO_BUFFER_SIZE);
+	    gSocketAudioPES = openPES(IPAddress, Port, UDPPortAudio, apid, AUDIO_BUFFER_SIZE, UDPSocketAudio);
 	    if (gSocketAudioPES < 0) 
             return(E_FAIL);
         }

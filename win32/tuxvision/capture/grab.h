@@ -80,4 +80,6 @@ extern BOOL  gIsAudioConnected;
 extern BOOL  gIsPSPinConnected;
 extern BOOL  gfThreadAborted;
 
+extern int   m_UDPEnable;
+
 extern DWORD GetWindowsVersion(void);
