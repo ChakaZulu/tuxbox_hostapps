@@ -1,6 +1,6 @@
 Kleine Anleitung zum Wingrab-Compilieren. Wir haben das nur in der Eile zusammengestellt. Wenn was nicht tut, dann tut mir das leid, aber von Delphi hab ich nunmal null Plan. :)
 
-1) Sicherstellen, dass Indy installiert ist (http://www.indyproject.org/dowload/Indy9.html)
+1) Sicherstellen, dass Indy installiert ist (http://www.indyproject.org/dowload/Indy9.html) (Sollte bei Delphi 7 schon dabei sein)
 2) Sicherstellen, dass JCL installiert ist (http://sourceforge.net/projects/jcl/)
 3) Entweder Verzeichnisse c:\programming\dcu, exe anlegen oder Pfade im Projekt ändern...
 4) Zum Testen mal die WinGrabCmd compilieren... Wenn's nicht tut, Elmi hauen ;)
@@ -8,3 +8,11 @@ Kleine Anleitung zum Wingrab-Compilieren. Wir haben das nur in der Eile zusammen
 6) Jetzt das TeControls-Dingen öffnen und im Project-Manager rechte Maustaste auf das D70 bzw. D60-Gewürge und Install wählen. Bei nicht-Funktion wieder Elmi hauen. :)
 7) tools -> env. options -> library -> lib. path und dort den pfad zum TeControl-Verzeichnis rein.
 8) Wingrab sollte jetzt compilieren... Wenn nicht... Naja, ihr wisst schon. :)
+
+Das Compilieren tut's uebrigens prima mit der kostenlosen Delphi 6 Personal Edition:
+
+http://info.borland.com/delphi/personal/del6personal_keyanddown_steps.html
+
+Wenn das da nicht richtig mit dem Download klappt, dann einfach an anderer Stelle für diesen Borland-Download-Bereich einloggen und dann auf den obigen Link gehen.
+
+Have fun und tausend Dank an Elmi für das geniale Wingrab. :)
