@@ -36,7 +36,7 @@
 #include "grab.h"
 
 //!!BS (n/t)httpd is really a bloody bastard ...
-#if 1
+#if 0
     #define _CRLFCRLF_ "\r\n\r\n"
     #define _CRLF_     "\r\n"
 #else

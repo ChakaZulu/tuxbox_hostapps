@@ -52,6 +52,7 @@
 #define STREAM_REST_VIDEO	0xE0
 
 extern int     m_NewAudioSegmentDetected;
+extern int     m_NewAudioSegmentDetectedIntern;
 extern HANDLE  m_NewAudioSegmentEvent;
 
 // #######################################################

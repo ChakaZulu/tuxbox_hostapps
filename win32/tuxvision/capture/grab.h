@@ -22,6 +22,7 @@
 #define MAX_LIST_ITEM       (16384)
 #define MTU_DBOX            ( 1500)
 
+#define AUDIO_FRAME_SIZE    1152
 #if 1
 #define VIDEO_BUFFER_SIZE   (6*16*1024)
 #define AUDIO_BUFFER_SIZE   (1*16*1024)

@@ -34,6 +34,7 @@
 
 #pragma warning (disable : 4244)
 int     m_NewAudioSegmentDetected=0;
+int     m_NewAudioSegmentDetectedIntern=0;
 HANDLE  m_NewAudioSegmentEvent=NULL;
 
 
@@ -1598,6 +1599,7 @@ int Remuxer::write_mpp(FILE * mppfile) {
                 {
 				dprintf ("MPEG_Audio sync found !");
                 m_NewAudioSegmentDetected=TRUE;
+                m_NewAudioSegmentDetectedIntern=TRUE;
                 if (m_NewAudioSegmentEvent!=NULL)
                     SetEvent(m_NewAudioSegmentEvent);
 		    	}

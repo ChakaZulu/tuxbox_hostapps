@@ -388,6 +388,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     m_VPid=0;
     m_APid=0;
     m_NewAudioSegmentDetected=0;
+    m_NewAudioSegmentDetectedIntern=0;
     m_NewAudioSegmentEvent   =NULL;
 
     LoadInternalData();
@@ -771,6 +772,7 @@ STDMETHODIMP CDBOXIICapture::Stop()
     m_VPid=0;
     m_APid=0;
     m_NewAudioSegmentDetected=0;
+    m_NewAudioSegmentDetectedIntern=0;
 
     return(hr);
 }
@@ -786,6 +788,7 @@ STDMETHODIMP CDBOXIICapture::Pause()
         int apid=0;
         
         m_NewAudioSegmentDetected=0;
+        m_NewAudioSegmentDetectedIntern=0;
 
         m_StartSucceeded=TRUE;
 
@@ -1318,7 +1321,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
             {
             if (CMultiplexBuffer!=NULL)
                 {
-                while (!CMultiplexBuffer->canRead(0, AUDIO_BUFFER_SIZE))
+                while (!CMultiplexBuffer->canRead(0, AUDIO_FRAME_SIZE))
                     {
                     Sleep(5);
                     if ((errorCount--<=0)||gfThreadAborted)
@@ -1337,10 +1340,19 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 te=ts;
                 pms->SetTime(&ts,&te);
                 pms->SetMediaTime(&ms, &me);
+
+                if (m_NewAudioSegmentDetectedIntern)
+                    {
+                    pms->SetDiscontinuity(TRUE);
+                    m_NewAudioSegmentDetectedIntern=FALSE;
+                    }
+                else
+                    pms->SetDiscontinuity(FALSE);
+
                 }
 
-                CMultiplexBuffer->Read(0, pData, AUDIO_BUFFER_SIZE);
-			    pms->SetActualDataLength(AUDIO_BUFFER_SIZE);
+                CMultiplexBuffer->Read(0, pData, AUDIO_FRAME_SIZE);
+			    pms->SetActualDataLength(AUDIO_FRAME_SIZE);
                 pms->SetSyncPoint(TRUE);
                 }
             }
