@@ -301,7 +301,7 @@ End Function
 Public Sub scantimer()
     Dim Ausgabe As Date
     
-    If Aktivierauswahl.scan_aktiv.value = "0" Then
+    If Aktivierauswahl.scan_aktiv.Value = "0" Then
         frmMain.Label23.Caption = deaktlng
         frmMain.Timer1.Enabled = "0"
         Exit Sub
@@ -326,22 +326,22 @@ Public Sub scantimer()
 
     If timedays >= 30 Then timedays = 0
 
-    If Scannen.sec_wahl.value = "1" Then
+    If Scannen.sec_wahl.Value = "1" Then
         Ausgabe = "00:00:" + Str$(Scannen.Slider_takt.CurPosition - timeSeconds)
         frmMain.tage.Caption = vbNullString
     End If
 
-    If Scannen.min_wahl.value = "1" Then
+    If Scannen.min_wahl.Value = "1" Then
         Ausgabe = "00:" + Str$(Scannen.Slider_takt.CurPosition - 1 - timeMinutes) + ":" + Str$(59 - timeSeconds)
         frmMain.tage.Caption = vbNullString
     End If
 
-    If Scannen.hour_wahl.value = "1" Then
+    If Scannen.hour_wahl.Value = "1" Then
         Ausgabe = Str$(Scannen.Slider_takt.CurPosition - 1 - timehours) + ":" + Str$(59 - timeMinutes) + ":" + Str$(59 - timeSeconds)
         frmMain.tage.Caption = vbNullString
     End If
 
-    If Scannen.day_wahl.value = "1" Then
+    If Scannen.day_wahl.Value = "1" Then
         Ausgabe = Str$(23 - timehours) + ":" + Str$(59 - timeMinutes) + ":" + Str$(59 - timeSeconds)
         frmMain.tage.Caption = Str$(Scannen.Slider_takt.CurPosition - 1 - timedays) + " Tage"
     End If
@@ -393,7 +393,7 @@ Public Function GetMP3Length(ByVal strFileName As String) As Date
     iSec = iSec - (iMin * 60)
     istd = iMin / 60
     If iMin > 60 Then iMin = iMin - 60
-    GetMP3Length = format(istd, "00") & ":" & format(iMin, "00") & ":" & format(iSec, "00")
+    GetMP3Length = Format(istd, "00") & ":" & Format(iMin, "00") & ":" & Format(iSec, "00")
 End Function
 Public Sub suche(suchparameter As String, suchpfad As String, ByRef files() As String, Optional subsearch As Boolean) 'Dateisuche
     ReDim files(1 To 1)
@@ -411,7 +411,7 @@ Public Sub GetAllFiles(ByVal Root As String, ByVal such As String, ByRef Field()
     End If
     
     Do
-        If frmMain.turbo.value = "0" Then DoEvents
+        If frmMain.turbo.Value = "0" Then DoEvents
         file = Left$(FD.cFileName, InStr(FD.cFileName, Chr(0)) - 1)
         
         If (FD.dwFileAttributes And &H10) = &H10 Then
@@ -433,9 +433,9 @@ Public Function SetFileDateTime(ByVal filename As String, ByVal TheDate As Strin
     Dim lFileHnd As Long, lret As Long, typFileTime As FILETIME, typLocalTime As FILETIME, typSystemTime As SystemTime
 
     With typSystemTime
-        .wYear = year(TheDate)
+        .wYear = Year(TheDate)
         .wMonth = Month(TheDate)
-        .wDay = day(TheDate)
+        .wDay = Day(TheDate)
         .wDayOfWeek = Weekday(TheDate) - 1
         .wHour = Hour(TheTime)
         .wMinute = Minute(TheTime)
@@ -484,7 +484,7 @@ Public Function datab(file As String) As Integer
         RS!Kanalmode = genie.GetOggChannelMode
         RS!bitrate = genie.GetOggBitRateNominal
         RS!samplerate = genie.GetOggSampleRate
-        RS!format = extension
+        RS!Format = extension
         GoTo erkannt
     End If
     
@@ -528,7 +528,7 @@ Public Function datab(file As String) As Integer
         RS!layer = genie.GetMPEGLayer
         RS!samplerate = genie.GetMPEGSampleRate
         RS!version = genie.GetMPEGVersion
-        RS!format = extension
+        RS!Format = extension
         GoTo erkannt
     End If
     
@@ -549,7 +549,7 @@ Public Function datab(file As String) As Integer
         RS!layer = genie.GetMPEGLayer
         RS!samplerate = genie.GetMPEGSampleRate
         RS!version = genie.GetMPEGVersion
-        RS!format = extension
+        RS!Format = extension
         GoTo erkannt
     End If
     
@@ -585,7 +585,7 @@ erkannt:
     If yeardb <> vbNullString Then RS!jahr = yeardb
     If genreinfodb <> vbNullString Then RS!Genre = genreinfodb
     If commentdb <> vbNullString Then RS!kommentar = commentdb
-    RS!Dateigrösse = format((FileLen(file) / 1024), "0.0") 'Filegrösse
+    RS!Dateigrösse = Format((FileLen(file) / 1024), "0.0") 'Filegrösse
     RS.Update
     Set F = Nothing
     Set fso = Nothing
@@ -603,8 +603,8 @@ Public Function data_songexists(file As String, Optional akttimedate As Date, Op
     RS.FindFirst "[Dateiname] = """ + it + """" 'Suche nach Daten
     
     If Not RS.NoMatch Then
-        If allgemeine.igext.value = "0" Then
-            If RS.format.value = extension Then
+        If allgemeine.igext.Value = "0" Then
+            If RS.Format.Value = extension Then
                 data_songexists = "1"  'Falls Daten vorhanden
                 GoTo gefunden
             End If
@@ -617,7 +617,7 @@ Public Function data_songexists(file As String, Optional akttimedate As Date, Op
     RS.FindNext "[Dateiname] = """ + it + """"  'Neue Suche nach Daten
     
     If Not RS.NoMatch Then
-        If RS.format.value = extension Then
+        If RS.Format.Value = extension Then
             data_songexists = "1"  'Falls Daten vorhanden
             GoTo gefunden
         End If
@@ -626,7 +626,7 @@ Public Function data_songexists(file As String, Optional akttimedate As Date, Op
     RS.FindNext "[Dateiname] = """ + it + """"  'Neue Suche nach Daten
     
     If Not RS.NoMatch Then
-        If RS.format.value = extension Then
+        If RS.Format.Value = extension Then
             data_songexists = "1"  'Falls Daten vorhanden
             GoTo gefunden
         End If
@@ -639,8 +639,8 @@ Public Function data_songexists(file As String, Optional akttimedate As Date, Op
     Exit Function
     
 gefunden:
-    If data_songexists = "1" And allgemeine.bevorzugen.value = "1" Then
-        dbtime = Right$(RS.aufnahmezeit.value, 8) 'Aufnahmezeit auslesen
+    If allgemeine.bevorzugen.Value = "1" Then
+        dbtime = Right$(RS.aufnahmezeit.Value, 8) 'Aufnahmezeit auslesen
             
         If akttime > "22:00:00" And akttime <= "00:00:00" Or akttime >= "00:00:00" And akttime < "06:00:00" Then 'And dbtime < "22:00:00" And dbtime > "06:00:00" Then 'Abfrage auf unzensierten Song
             If dbtime > "06:00:00" And dbtime < "22:00:00" Then
@@ -648,8 +648,6 @@ gefunden:
                 data_songexists = "0" 'Song nicht vorhanden (nur zensiert)
             End If
         End If
-    Else
-        data_songexists = "0" 'Song nicht vorhanden
     End If
     
     RS.Close
@@ -679,9 +677,9 @@ Public Function plvergleich(vergleich As String, mode As String) As Boolean
     For i = 0 To 20
         If vergleich = PL_Verwendung.auswahlpl(i).Caption Then
             If mode = "offline" Then
-                plvergleich = PL_Verwendung.uselogged(i).value
+                plvergleich = PL_Verwendung.uselogged(i).Value
             Else
-                plvergleich = PL_Verwendung.useonline(i).value
+                plvergleich = PL_Verwendung.useonline(i).Value
             End If
         End If
     Next i
@@ -701,7 +699,7 @@ Public Sub IsFileOpen(ByRef Path As String, Optional xls As Boolean)
         F = FreeFile
 
         Open Path For Append Lock Write As #F
-            ErrorNr = err.number
+            ErrorNr = Err.Number
         Close #F
   
         DoEvents
@@ -711,8 +709,8 @@ End Sub
 Public Sub filter(ByRef Interpret As String, ByRef titel As String, ByRef album As String, ByRef Genre As String)
     Dim trennzei As String, i As Integer
     
-    If sort.komma.value = "1" And InStr(Interpret, ",") <> 0 Then Interpret = Mid$(Interpret, 1, InStr(Interpret, ",") - 1) 'Wenn "Komma" aktiviert, dann Interpret nach "," abschneiden
-    If sort.artikel.value = "1" Then If Mid$(Interpret, 1, 4) = "The " Or Mid$(Interpret, 1, 4) = "Die " Or Mid$(Interpret, 1, 4) = "Das " Or Mid$(Interpret, 1, 4) = "Der " Then Interpret = Mid$(Interpret, 5, Len(Interpret) - 4)
+    If sort.komma.Value = "1" And InStr(Interpret, ",") <> 0 Then Interpret = Mid$(Interpret, 1, InStr(Interpret, ",") - 1) 'Wenn "Komma" aktiviert, dann Interpret nach "," abschneiden
+    If sort.artikel.Value = "1" Then If Mid$(Interpret, 1, 4) = "The " Or Mid$(Interpret, 1, 4) = "Die " Or Mid$(Interpret, 1, 4) = "Das " Or Mid$(Interpret, 1, 4) = "Der " Then Interpret = Mid$(Interpret, 5, Len(Interpret) - 4)
             
     'Trennzeichen wird bestimmt
     If tagging.korrsymbol.Text = "Line:         ""-""" Then trennzei = "-"
