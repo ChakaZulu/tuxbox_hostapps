@@ -32,6 +32,7 @@ program: ggrab version 0.09 by Peter Menzebach <pm-ggrab at menzebach.de>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <math.h>
 #include "cbuffer.h"
 #include "tools.h"
 #include "list.h"
@@ -517,33 +518,6 @@ generate_next_video_pp (class xlist * vlist) {
 			l_act      =  velem.lptr;
 			v_restlen  =  velem.len;
 		
-			if (b_restlen < 0) {
-				memmove (p_pes + 9 + p_pes[8] + b_restlen, p_pes + 8 + p_pes[8], p_act - (p_pes + 9 + p_pes[8]));
-				memset (p_pes + 9 + p_pes[8], 0xff, b_restlen);
-				p_pes[8] += b_restlen;
-				flag_set_pts = true;
-				b_restlen = 0;
-			}			
-			
-			if (b_restlen && (b_restlen < 30)) {
-//					p_act[0]= 0;
-//					p_act[1]= 0;
-//					p_act[2]= 1;
-//					p_act[3]= 0xbe;
-//					p_act[4]= (b_restlen >> 8) & 0xff;
-//					p_act[5]= b_restlen & 0xff;
-//					memset (p_act + 6, 0xff, b_restlen-6);
-					memset (p_act,0,b_restlen);
-					b_restlen = 0;
-					flag_set_pts = true;
-			}
-			if (b_restlen && (p_pes[8] == 0)) {
-				memmove (p_pes + 9 + 5, p_pes + 9, p_act - (p_pes + 9));
-				p_act     += 5;
-				b_restlen -= 5;
-				fill_pes_pts(p_pes, velem.pts-vcorrect);
-			}
-					
 			if (velem.startflag == START_SEQ) {
 				if (fabs(velem.pts - vcorrect - VIDEO_FORERUN - src_wanted) > 90000) {
 					fprintf(stderr, "video pts gap = %10.1f s\n", fabs(velem.pts-vcorrect-VIDEO_FORERUN-src_wanted)/90000);
@@ -557,16 +531,23 @@ generate_next_video_pp (class xlist * vlist) {
 				
 				seqstart = velem.startflag;
 				if (b_restlen) {
-//					p_act[0]= 0;
-//					p_act[1]= 0;
-//					p_act[2]= 1;
-//					p_act[3]= 0xbe;
-//					p_act[4]= (b_restlen >> 8) & 0xff;
-//					p_act[5]= b_restlen & 0xff;
-//					memset (p_act + 6, 0xff, b_restlen-6);
-					b_restlen = 0;
 					flag_set_pts = true;
 					memset (p_act,0,b_restlen);
+					b_restlen = 0;
+				}
+			} 
+			else {
+				if (b_restlen && (b_restlen < 30)) {
+						memset (p_act,0,b_restlen);
+						b_restlen = 0;
+						flag_set_pts = true;
+				}
+				
+				if (b_restlen && (p_pes[8] == 0)) {
+					memmove (p_pes + 9 + 5, p_pes + 9, p_act - (p_pes + 9));
+					p_act     += 5;
+					b_restlen -= 5;
+					fill_pes_pts(p_pes, velem.pts-vcorrect);
 				}
 			}
 		}
