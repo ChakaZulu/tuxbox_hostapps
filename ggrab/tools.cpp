@@ -6,6 +6,7 @@ extern bool gcore;
 
 double pes_pts(const unsigned char * p) {
 	if (0 == (p[7] & 0x80)) {
+		fprintf(stderr,"pes_pts: Tried to get PTS, but none available\n");
 		return -1.0; // no PTS available
 	}
 	

@@ -15,6 +15,7 @@ void * m_fill_video (void * p_arg) {
 	bool		found=false;
 	CBUFPTR		lstart;
 	CBUFPTR		lptr = 0;
+	int		len;
 	STARTFLAG	startflag;
 	class xlist *   p_this = (class xlist *) p_arg;
 
@@ -41,23 +42,27 @@ void * m_fill_video (void * p_arg) {
 		if (p_this->m_actcount == p_this->m_maxcount) {
 			timeout.tv_sec = time(0) + 5;
 			if (pthread_cond_timedwait(& (p_this->m_condreadwait), & (p_this->m_mutexlock), & timeout) == ETIMEDOUT) {
-				errexit ("m_fill_video: timeout wait for data");
+				errexit ("m_fill_video: timeout waiting with all buffers filled");
 			}
 		}
 		pthread_mutex_unlock (& (p_this->m_mutexlock));
 	
 		lptr = p_this->m_pbuffer->SearchStreamId(lptr + 1,0,0xe0,0xf0, &sid);
-		p_this->m_pbuffer->CopyBuffer(lptr, a_buffer);
+
+		len = p_this->m_pbuffer->RemovePadding(lstart, lptr-lstart);
 	
 		pthread_mutex_lock (& (p_this->m_mutexlock));
 	
 		p_this->m_list[p_this->m_actcount].pts		= pts;
 		p_this->m_list[p_this->m_actcount].lptr		= lstart;
 		p_this->m_list[p_this->m_actcount].startflag	= startflag;
-		p_this->m_list[p_this->m_actcount].len		= lptr-lstart;
+		p_this->m_list[p_this->m_actcount].len		= len;
 		p_this->m_actcount ++;
+
 		pthread_mutex_unlock (& (p_this->m_mutexlock));
+		pthread_cond_broadcast(&(p_this->m_condreadwait));
 		
+		p_this->m_pbuffer->CopyBuffer(lptr, a_buffer);
 		pts = pes_pts(a_buffer);
 		startflag = NO_START;
 		
@@ -72,7 +77,6 @@ void * m_fill_video (void * p_arg) {
 			startflag = START_GOP;
 		}
 		
-		pthread_cond_broadcast(&(p_this->m_condreadwait));
 	}	
 }
 
@@ -110,7 +114,7 @@ void  * m_fill_audio (void * p_arg) {
 		if (p_this->m_actcount == p_this->m_maxcount) {
 			timeout.tv_sec = time(0) + 5;
 			if (pthread_cond_timedwait(& (p_this->m_condreadwait), & (p_this->m_mutexlock), & timeout) == ETIMEDOUT) {
-				errexit ("m_fill_video: timeout wait for data");
+				errexit ("m_fill_audio: timeout waiting with all buffers filled");
 			}
 		}
 		p_this->m_list[p_this->m_actcount].pts		= pts;
@@ -118,7 +122,9 @@ void  * m_fill_audio (void * p_arg) {
 		p_this->m_list[p_this->m_actcount].startflag	= NO_START;
 		p_this->m_list[p_this->m_actcount].len		= len;
 		p_this->m_actcount ++;
+
 		pthread_mutex_unlock (& (p_this->m_mutexlock));
+		pthread_cond_broadcast(&(p_this->m_condreadwait));
 
 		lptr = lstart + len;
 		found = false;
@@ -126,15 +132,22 @@ void  * m_fill_audio (void * p_arg) {
 			lptr = p_this->m_pbuffer->SearchStreamId(lptr,0,sid,0xff);
 			p_this->m_pbuffer->CopyBuffer(lptr, a_buffer);
 			pts = pes_pts(a_buffer);
-			p_this->m_pbuffer->CopyBuffer(lptr+pes_len(a_buffer) + 6, a_buffer);
-			if (a_buffer[3] == sid) {
-				found = true;	
-				lstart = lptr + 9 + a_buffer[8];
-				len = pes_len(a_buffer) - 3 - a_buffer[8];
+			if (pes_len(a_buffer) > 9000) {
+				fprintf(stderr,"m_fill_audio: not plausible audio length: %u\n",pes_len(a_buffer));
+			}
+			else {
+				p_this->m_pbuffer->CopyBuffer(lptr+pes_len(a_buffer) + 6, a_buffer);
+				if (a_buffer[3] == sid) {
+					found = true;	
+					lstart = lptr + 9 + a_buffer[8];
+					len = pes_len(a_buffer) - 3 - a_buffer[8];
+				}
+				else {
+					fprintf(stderr,"m_fill_audio: next audio frame failed, found: %02X\n", a_buffer[3]);
+				}
 			}
 			lptr ++;
 		}
-		pthread_cond_broadcast(&(p_this->m_condreadwait));
 	}	
 }
 
@@ -198,7 +211,7 @@ xlist::get_elem (void) {
 unsigned char 
 xlist::sid(void) {
 	static struct timespec timeout;
-	unsigned char sid;
+	unsigned char mysid;
 	pthread_mutex_lock (& m_mutexlock);  
 	while (m_actcount == 0) {
 		timeout.tv_sec = time(0) + 5;
@@ -206,13 +219,15 @@ xlist::sid(void) {
 			errexit ("xlist::sid: timeout wait for data");
 		}
 	}
+	
 	pthread_mutex_unlock (& m_mutexlock);
+
 	if (m_sid != 0xbd) {
-		sid = 0xc0;
+		mysid = 0xc0;
 	}
 	else {
-		sid = 0xbd;
+		mysid = 0xbd;
 	}
 	
-	return(sid);
+	return(mysid);
 }

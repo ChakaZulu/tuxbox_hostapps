@@ -6,12 +6,14 @@
 #include <errno.h>
 #include "cbuffer.h"
 
+int	gpadding;
+
 CBuffer::CBuffer(int size) {
 	
 	m_pBuf=(unsigned char *) malloc(size+3);
 	
 	if (!m_pBuf) {
-		errexit("Fehler malloc Puffer");
+		errexit("CBuffer::CBuffer: Fehler malloc Puffer");
 	}
 
 	m_pIn  		= m_pBuf;
@@ -121,7 +123,7 @@ CBUFPTR CBuffer::SearchStreamId (CBUFPTR ptr, int len, unsigned char pattern, un
 	}
 	
 	if ((ptr < m_lOut) || (ptr > m_lIn)) {
-		fprintf (stderr, "ptr:%lld lIn:%lld lOut:%lld\n", ptr, m_lIn, m_lOut);
+		fprintf (stderr, "ptr:%lld lIn:%lld lOut:%lld len:%d\n", ptr, m_lIn, m_lOut, len);
 		errexit ("Pufferfehler SearchStreamID");
 	}
 
@@ -174,7 +176,7 @@ CBUFPTR CBuffer::SearchStreamId (CBUFPTR ptr, int len, unsigned char pattern, un
 				  && ((p_act[3] & mask) == pattern)
 				  ) {
 					found = true;
-					lfound = m_lOut + p_act - m_pOut;
+					lfound = m_lOut + (p_act - m_pOut);
 				}
 				else {
 					p_act ++;
@@ -196,7 +198,9 @@ CBUFPTR CBuffer::SearchStreamId (CBUFPTR ptr, int len, unsigned char pattern, un
 			}
 		}
 	}
+	
 	pthread_mutex_unlock (& m_mutexlock);
+	
 	if (found && p_id) {
 		*p_id = p_act[3];
 	}
@@ -206,32 +210,41 @@ CBUFPTR CBuffer::SearchStreamId (CBUFPTR ptr, int len, unsigned char pattern, un
 
 int CBuffer::CopyBuffer(CBUFPTR ptr, unsigned char * p_buf, int len)  {
 
-
 	unsigned char * 	p_act;
 	int			len2;
 	int			lens;
 	static timespec		timeout;
+	unsigned char * 	p_help;
 	
 	pthread_mutex_lock (& m_mutexlock);
 	
 	if (ptr < m_lOut ) {
-		fprintf (stderr,"ptr:%lld, lIn:%lld, lOut:%lld\n",ptr,m_lIn,m_lOut);
+		fprintf (stderr,"ptr:%lld, lIn:%lld, lOut:%lld len:%d\n",ptr,m_lIn,m_lOut,len);
 		errexit ("CopyBuffer: data not avaiable in buffer");
 	}
 
 	while ((ptr+len) > m_lIn) {
 		timeout.tv_sec = time(0) + 5;
 		if (pthread_cond_timedwait(& m_condreadwait, & m_mutexlock, & timeout) == ETIMEDOUT) {
+			fprintf (stderr,"ptr:%lld, lIn:%lld, lOut:%lld len:%d\n",ptr,m_lIn,m_lOut,len);
 			errexit ("CopyBuffer: timeout waiting for data");
 		}
 	}
 	p_act = m_pOut + (ptr - m_lOut);
+
+	if (p_act < m_pOut) {
+		p_act = m_pOut + ((ptr - m_lOut) - m_size);
+	}
 		
 	if (p_act >= (m_pBuf + m_size)) {
 		p_act -= m_size;
 	}
 		
-	if (p_act > m_pIn) {
+	p_help = m_pIn;
+
+	pthread_mutex_unlock (& m_mutexlock);
+	
+	if (p_act > p_help) {
 		len2 = m_pBuf + m_size - p_act; 
 		lens = (len2 > len)?len:len2;
 		len  -= lens;
@@ -241,11 +254,53 @@ int CBuffer::CopyBuffer(CBUFPTR ptr, unsigned char * p_buf, int len)  {
 
 		p_act = m_pBuf;
 	}
+	
 
 	if (len > 0) { 
 		memcpy (p_buf, p_act, len);
 		len = 0;
 	}
-	pthread_mutex_unlock (& m_mutexlock);
 	return (1);
-}			
+}
+
+
+int CBuffer::RemovePadding(CBUFPTR lptr, int len) {
+	
+	int 		n = 0;
+	unsigned char * p_act;
+	
+	pthread_mutex_lock (& m_mutexlock);
+	
+	if ((lptr < m_lOut) || (lptr >= m_lIn)) {
+	
+		fprintf (stderr,"ptr:%lld, lIn:%lld, lOut:%lld len:%d\n",lptr,m_lIn,m_lOut,len);
+		errexit ("RemovePadding: data not avaiable in buffer");
+	}
+
+	p_act = m_pOut + (lptr - m_lOut) + len;	
+	
+	if (p_act >= (m_pBuf + m_size)) {
+		p_act -= m_size;
+	}
+	
+	pthread_mutex_unlock (& m_mutexlock);
+
+	while (n < len) {
+		p_act --;
+		if (p_act <  m_pBuf) {
+			p_act = m_pBuf + m_size - 1;
+		}
+		if (*p_act != 0) {
+			break;
+		}
+		n++;
+	}
+
+
+	if (n > 4) {
+		len -= n - 4;
+		gpadding += n - 4;
+	}
+	return (len);
+	
+}

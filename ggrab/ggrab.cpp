@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-program: ggrab version 0.08 by Peter Menzebach <pm-ggrab at menzebach.de>
+program: ggrab version 0.09 by Peter Menzebach <pm-ggrab at menzebach.de>
 
 */
 
@@ -48,7 +48,7 @@ int afd;
 double	      vcorrect;
 unsigned char audio_sid;
 
-class CBuffer vbuf(3000000);
+class CBuffer vbuf(4000000);
 class CBuffer abuf(300000);
 
 //Statistics
@@ -56,25 +56,26 @@ int	vrecmax;
 int	arecmax;
 int	vrecbytes;
 int	arecbytes;
+double	dtime  = 0;
+double	daudio = 0;
 
 //Signalhandler flags
 bool	flag_term;
 bool	flag_new_file;
 
 //filenames
-char    a_basename[256]="vts_01_";
-int	filenum = 1;
-char	a_filename[256]="";
-char	a_extension[20]="vob";
+char    a_basename[256]	= "vts_01_";
+int	filenum 	= 1;
+char	a_extension[20]	= "vob";
 
 
 // Default parameters
-bool		no_rt_prio = false;
-int 		nice_increment = -10;
-bool		vlog = false;
-bool		alog = false;
-bool		nosectionsd = false;
-bool		gcore = false;
+bool	no_rt_prio 	= false;
+int 	nice_increment 	= -10;
+bool	vlog 		= false;
+bool	alog 		= false;
+bool	nosectionsd 	= false;
+bool	gcore 		= false;
 
 // Reader Threads
 pthread_t hv_thread;	
@@ -98,27 +99,27 @@ int 	pes_len(const unsigned char * p) ;
 
 int main( int argc, char *argv[] ) {
 
-	int 	vpid = 0;
-	int 	apid = 0;
-	PESELEM velem;
-	PROPACK vpack;
-	PROPACK apack;
-	bool	found;
-	int	a,v;
-	time_t	last=0;
-	time_t	now;
-	int	msec;
-	FILE *  fp;
-	long long 	act_file_size = 0;
-	time_t	start_time = time(0);
-	PTS	act_src;
+	PESELEM 	velem;
+	PROPACK 	vpack;
+	PROPACK 	apack;
+	PTS		act_src;
+	bool		found;
+	int		a,v;
+	time_t		now;
+	int		msec;
+	FILE *  	fp;
+	time_t		last 		= 0;
+	int 		vpid 		= 0;
+	int 		apid 		= 0;
+	long long	act_file_size 	= 0;
+	time_t		start_time 	= time(0);
 
 	//some default parameters for arguments
 	int 		port 		= 31338;
 	bool		quiet		= false;
 	bool		nomux 		= false;
 	char  * 	dbox2name 	= "dbox";
-	long long 	max_file_size 	= 2 * 1024 * 1024 * 1024 - 1;
+	long long 	max_file_size 	= 2LL * 1024 * 1024 * 1024 - 1;
 	time_t 		record_end 	= time(0) + 24 * 3600;
 
 
@@ -148,10 +149,11 @@ int main( int argc, char *argv[] ) {
 		
 		} else if (!strcmp("-s", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need max size in MB argument for -s\n"); return -1; }
-			max_file_size = 1024LL*1024LL*((long long)atoi(argv[i]));
-			if (max_file_size < (5 * 1024 * 1024)) {
+			if (atoi(argv[i]) < 5) {
 				fprintf(stderr,"min file size 5 MB ignoring -s\n");
-				max_file_size= 5*1024 * 1024;
+			}
+			else {
+				max_file_size = 1024LL*1024LL*((long long)atoi(argv[i]));
 			}
 		
 		} else if (!strcmp("-port", argv[i])) {
@@ -163,44 +165,32 @@ int main( int argc, char *argv[] ) {
 			sscanf(argv[i], "%x", &vpid);
 			i++; if (i >= argc) { fprintf(stderr, "need two arguments for -p\n"); return -1; }
 			sscanf(argv[i], "%x", &apid);
-			
 		} else if (!strcmp("-q", argv[i])) {
 			quiet = true;
-		
 		} else if (!strcmp("-nomux", argv[i])) {
 			nomux = true;
-		
 		} else if (!strcmp("-loop", argv[i])) {
 			// obsolete	
-		
 		} else if (!strcmp("-1ptspergop", argv[i])) {
 			// obsolete	
-		
 		} else if (!strcmp("-host", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need argument for -host\n"); return -1; }
 			dbox2name = argv[i];
-
 		} else if (!strcmp("-nonfos", argv[i])) {
 			// obsolete	
-			
 		} else if (!strcmp("-nort", argv[i])) {
 			no_rt_prio = true;
-		
 		} else if (!strcmp("-vlog", argv[i])) {
 			vlog = true;
-		
 		} else if (!strcmp("-alog", argv[i])) {
 			alog = true;
-		
 		} else if (!strcmp("-nos", argv[i])) {
 			nosectionsd = true;
-		
 		} else if (!strcmp("-core", argv[i])) {
 			gcore = true;
-		
 		} else if (!strcmp("-h", argv[i])) {
 
-			fprintf(stderr, "ggrab version 0.08, Copyright (C) 2002 Peter Menzebach\n"
+			fprintf(stderr, "ggrab version 0.09, Copyright (C) 2002 Peter Menzebach\n"
 			                "ggrab comes with ABSOLUTELY NO WARRANTY; This is free software,\n"
 			                "and you are welcome to redistribute it under the conditions of the\n"
 			                "GNU Public License, see www.gnu.org\n"
@@ -211,7 +201,7 @@ int main( int argc, char *argv[] ) {
 					"------- basic options: -------------\n"
 					"-host <host>   hostname or ip address [dbox]\n"
 					"-port <port>   port number [31338]\n"
-					"-o <filename>  basename of output files [vts_01_]\n"
+					"-o <path>  	path/basename of output files [vts_01_]\n"
 					"-e <extension> extension of output files [vob]\n"
 					"-m <minutes>   number of minutes to record [24 h]\n"
 					"-s <megabyte>  maximum size per recorded file [2000]\n"
@@ -224,6 +214,7 @@ int main( int argc, char *argv[] ) {
 					"-vlog          writes raw video stream to \"log.vid\"\n"
 					"-alog          writes raw audio stream to \"log.aud\"\n"
 					"-nos           No stop of sectionsd\n"
+					"-core          generate core dump if error exit\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"
@@ -339,7 +330,7 @@ int main( int argc, char *argv[] ) {
 			act_file_size += apack.len;
 			apack = generate_next_audio_pp (&alist);
 		}
-
+//--------------Now some Staticstics
 		now = time(0);
 
 		if (now > record_end) {
@@ -354,17 +345,23 @@ int main( int argc, char *argv[] ) {
 				a=arecbytes;
 				vrecbytes=0;
 				arecbytes=0;
-				fprintf(stderr, "%02d:%02d  vid %04d kbit/s  aud %03d kbit/s  syn %d  drop %ds vh %05d ah %05d\r",
-					  (now - start_time) / 60,
-					  (now - start_time) % 60,
+				fprintf(stderr, "%02d:%02d  vid %04d kbit/s  aud %03d kbit/s  syn %d  drop %ds vh %05d ah %05d dp %5.1lf da %5.1lf pd %6d\r",
+					  (int)((now - start_time) / 60),
+					  (int)((now - start_time) % 60),
 					  (v * 8 / msec),
 					  (a * 8 / msec),
 					  0,
 					  0,
 					  vrecmax,
-					  arecmax
+					  arecmax,
+					  dtime,
+					  daudio,
+					  gpadding
 				       );
 				if (!((now-start_time) % 10)){
+					gpadding = 0;
+					vrecmax  = 0;
+					arecmax  = 0;
 					fprintf(stderr,"\n");
 				} 
 			}
@@ -408,7 +405,7 @@ generate_next_video_pp (class xlist * vlist) {
 		
 	static unsigned char *	p_pes = &(a_pp[14]);
 	static PTS	      	src_wanted = 0;
-	static PROPACK  	ppack = {a_pp, MAX_PP_LEN, 0};
+	static PROPACK  	ppack = {a_pp, MAX_PP_LEN, 0,NO_START};
 	static CBUFPTR		l_act;
 	static int		v_restlen;
 	static bool		first = true;
@@ -418,10 +415,10 @@ generate_next_video_pp (class xlist * vlist) {
 	int		      	b_restlen;
 	unsigned char * 	p_act;
 	int			copylen;
-	static double		vlast = 0;
-	static int pics=0;
+	static int		gpics;
 
 	if (first) {
+		gpics		= 0;
 		first      	= false;
 		velem 	   	= vlist->get_elem();
 		l_act      	= velem.lptr;
@@ -470,7 +467,9 @@ generate_next_video_pp (class xlist * vlist) {
 
 	memcpy (p_act, a_pes, sizeof(a_pes));
 	p_pes = p_act;
-
+	if (seqstart== START_SEQ) { 
+		p_pes[6] |= 0x04; /// Mark data alignment
+	}
 
 	fill_pes_len (p_act, MAX_PP_LEN - (p_act -  a_pp + 6));
 	
@@ -500,14 +499,14 @@ generate_next_video_pp (class xlist * vlist) {
 		p_act += copylen;
 	
 		if (!v_restlen) {
-			pics ++;
+			gpics ++;
 			vlist->discard_elem();
 			velem = vlist->get_elem();
 
 			l_act      =  velem.lptr;
 			v_restlen  =  velem.len;
 		
-			if (b_restlen < 7) {
+			if (b_restlen < 0) {
 				memmove (p_pes + 9 + p_pes[8] + b_restlen, p_pes + 8 + p_pes[8], p_act - (p_pes + 9 + p_pes[8]));
 				memset (p_pes + 9 + p_pes[8], 0xff, b_restlen);
 				p_pes[8] += b_restlen;
@@ -516,13 +515,14 @@ generate_next_video_pp (class xlist * vlist) {
 			}			
 			
 			if (b_restlen && (b_restlen < 30)) {
-					p_act[0]= 0;
-					p_act[1]= 0;
-					p_act[2]= 1;
-					p_act[3]= 0xbe;
-					p_act[4]= (b_restlen >> 8) & 0xff;
-					p_act[5]= b_restlen & 0xff;
-					memset (p_act + 6, 0xff, b_restlen-6);
+//					p_act[0]= 0;
+//					p_act[1]= 0;
+//					p_act[2]= 1;
+//					p_act[3]= 0xbe;
+//					p_act[4]= (b_restlen >> 8) & 0xff;
+//					p_act[5]= b_restlen & 0xff;
+//					memset (p_act + 6, 0xff, b_restlen-6);
+					memset (p_act,0,b_restlen);
 					b_restlen = 0;
 					flag_set_pts = true;
 			}
@@ -534,22 +534,28 @@ generate_next_video_pp (class xlist * vlist) {
 			}
 					
 			if (velem.startflag == START_SEQ) {
-				src_wanted = velem.pts - vcorrect - VIDEO_FORERUN;
-				vlast=velem.pts;
-				pics = 0;
+				if (fabs(velem.pts - vcorrect - VIDEO_FORERUN - src_wanted) > 90000) {
+					fprintf(stderr, "video pts gap = %10.1lf s\n", fabs(velem.pts-vcorrect-VIDEO_FORERUN-src_wanted)/90000);
+			
+				}
+
+				flag_set_pts = true;
+				src_wanted   = velem.pts - vcorrect - VIDEO_FORERUN;
+			
+				dtime = src_wanted / 90000 * 25 - gpics;
 				
 				seqstart = velem.startflag;
-				flag_set_pts = true;
 				if (b_restlen) {
-					p_act[0]= 0;
-					p_act[1]= 0;
-					p_act[2]= 1;
-					p_act[3]= 0xbe;
-					p_act[4]= (b_restlen >> 8) & 0xff;
-					p_act[5]= b_restlen & 0xff;
-					memset (p_act + 6, 0xff, b_restlen-6);
+//					p_act[0]= 0;
+//					p_act[1]= 0;
+//					p_act[2]= 1;
+//					p_act[3]= 0xbe;
+//					p_act[4]= (b_restlen >> 8) & 0xff;
+//					p_act[5]= b_restlen & 0xff;
+//					memset (p_act + 6, 0xff, b_restlen-6);
 					b_restlen = 0;
 					flag_set_pts = true;
+					memset (p_act,0,b_restlen);
 				}
 			}
 		}
@@ -588,17 +594,17 @@ generate_next_audio_pp (class xlist * alist) {
 		0x05
 	};
 	
-	static PROPACK ppack = {a_pp, sizeof(a_pp), 0};
-
+	static PROPACK ppack = {a_pp, sizeof(a_pp), 0, NO_START};
 	static CBUFPTR	l_act;
-	unsigned char * p_act;
-	unsigned char * p_pes;
 	static PESELEM  aelem;
 	static double	pts_per_byte;
 	static double	pes_pts;
 	static double	last_pes_pts;
-	int		b_restlen;
 	static int	a_restlen;
+	static double	xaudio = 0;
+	unsigned char * p_act;
+	unsigned char * p_pes;
+	int		b_restlen;
 	int		copylen;
 	double		pts;
 	int		i;
@@ -652,7 +658,7 @@ generate_next_audio_pp (class xlist * alist) {
 		p_pes[16] =  0x00;
 		p_pes[17] =  0x01;
 		p_act += 4;
-		pts_per_byte= 90000.0/(384000.0/8);
+		pts_per_byte= 0.032 * 90000 / 1792.0;
 	}
 	
 	b_restlen = MAX_PP_LEN - (p_act - a_pp);
@@ -663,6 +669,15 @@ generate_next_audio_pp (class xlist * alist) {
 	fill_pes_pts(p_pes,pts);
 	
 	ppack.src_wanted = pts - AUDIO_FORERUN;
+
+	if (p_pes[3] == 0xbd) {
+		xaudio += (double) b_restlen / 1792.0 * 0.032;
+	}
+	else {
+		xaudio += (double) b_restlen / 576 * 0.024;
+	}
+
+	daudio = xaudio - ((pts-VIDEO_FORERUN)/90000);
 
 	while (b_restlen) {
 		copylen = a_restlen < b_restlen ? a_restlen : b_restlen;
@@ -680,6 +695,10 @@ generate_next_audio_pp (class xlist * alist) {
 			aelem = alist->get_elem();
 			last_pes_pts = pes_pts;
 			pes_pts = aelem.pts;
+			if (fabs(last_pes_pts-pes_pts) > 90000) {
+				fprintf(stderr, "audio pts gap = %10.1lf\n", fabs(last_pes_pts - pes_pts)/90000);
+				pes_pts = last_pes_pts + pts_per_byte * (MAX_PP_LEN-28);
+			}
 			pts_per_byte = (pes_pts-last_pes_pts) / aelem.len;
 			l_act      =  aelem.lptr;
 			a_restlen  =  aelem.len;
@@ -693,7 +712,6 @@ time_since_last () {
 	static struct timeval  last;
 	static struct timeval  now;
 	static struct timezone tz;
-
 	int	               ret;
 
 	gettimeofday (&now, &tz);
@@ -818,8 +836,10 @@ void  * readvstream (void * p_arg) {
 	int r;
 	static int delay = READ_DELAY * 1000;
 	FILE * fp;
+	time_t	ltime;
+	p_arg=0;	
 
-#if !defined __CYGWIN__ && !defined __MACOSX__
+#ifdef __linux__ 
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		fprintf(stderr, "WARNING: unable to lock memory. Swapping may disturb the video read thread\n");			
 	}
@@ -850,11 +870,14 @@ void  * readvstream (void * p_arg) {
 	}
 
 	
+	ltime=time(0);
+
 	while (1) {
 		len = vbuf.GetNextFillBuffer (&pBuf);
 		
 		r=read(vfd, pBuf, len);
 		if (r > 0) {
+			ltime=time(0);
 			if (vlog) {
 				fwrite(pBuf,r,1,fp);
 			}	
@@ -865,9 +888,14 @@ void  * readvstream (void * p_arg) {
 			}
 		}
 		else {
+			if((time(0) - ltime) > 1) {
+				fprintf(stderr, "Video Read: timeout, len=%d\n",len);
+				errexit("Video Read: No Data from Box");
+			}
 			usleep (delay);
 		}
 	}
+	return(0);
 }
 
 void  * readastream (void * p_arg) {
@@ -877,8 +905,10 @@ void  * readastream (void * p_arg) {
 	int r;
 	static int delay = READ_DELAY * 1000;
 	FILE * fp;
+	time_t ltime;
+	p_arg=0;	
 
-#if !defined __CYGWIN__ && !defined __MACOSX__
+#ifdef __linux__ 
 	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
 		fprintf(stderr, "WARNING: unable to lock memory. Swapping may disturb the audio read thread\n");			
 	}
@@ -907,12 +937,14 @@ void  * readastream (void * p_arg) {
 			errexit ("cannot open Logfile log.aud");
 		}
 	}
+	ltime=time(0);
 
 	while (1) {
 		len = abuf.GetNextFillBuffer (&pBuf);
 		
 		r=read(afd, pBuf, len);
 		if (r > 0) {
+			ltime=time(0);
 			if (alog) {
 				fwrite(pBuf,r,1,fp);
 			}	
@@ -923,15 +955,20 @@ void  * readastream (void * p_arg) {
 			}
 		}
 		else {
+			if((time(0) - ltime) > 1) {
+				fprintf(stderr, "Audio Read: timeout, len=%d\n",len);
+				errexit("Audio Read: No Data from Box");
+			}
 			usleep (delay);
 		}
 	}
+	return(0);
 }
 
 void  * readkeyboard (void * p_arg) {
 
 	int i;
-
+	p_arg=0;
 	while (1) {
 
 		i = getchar();
@@ -994,7 +1031,7 @@ int toggle_sectionsd(char * p_name) {
 	r=read(sock, buffer, 100);
 	buffer[r]=0;
 	close (sock);
-
+	sleep(3);
 	return (0);
 }
 		
