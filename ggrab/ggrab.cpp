@@ -376,7 +376,7 @@ void generate_program_stream (int a_pid[], int anz_pids, char * p_boxname, int p
 
 	FILE * 			fp = 0;
 	int			i;
-	int			nextindex;
+	int			nextindex = 0;
 	long long		act_file_size=0;
 	PTS			act_scr = 0;
 	PTS			startpts;
@@ -386,7 +386,7 @@ void generate_program_stream (int a_pid[], int anz_pids, char * p_boxname, int p
 	unsigned char * 	p_act;
 	time_t			start_time = time(0);
 	time_t			now;
-	time_t			last;
+	time_t			last = 0;
 	static char		a_buffer[100];
 	int			seq = 1;
 
@@ -515,7 +515,7 @@ void generate_nomux_streams (int a_pid[], int anz_pids, char * p_boxname, int po
 	int			i;
 	time_t			start_time = time(0);
 	time_t			now;
-	time_t			last;
+	time_t			last = 0;
 	static unsigned char	a_buffer[65536];		
 	int			len;
 	unsigned char		sid;
@@ -607,7 +607,7 @@ void generate_raw_audio (int a_pid[], int anz_pids, char * p_boxname, int port, 
 	int			i;
 	time_t			start_time = time(0);
 	time_t			now;
-	time_t			last;
+	time_t			last = 0;
 	static unsigned char	a_buffer[65536];		
 	int			len;
 

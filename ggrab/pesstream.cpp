@@ -610,12 +610,12 @@ int openStream(char * name, int port, int pid, int udpport, int * udpsocket) {
 void  * readstream (class pesstream & ss) {
 
  	unsigned char * pBuf;	
-	unsigned char * p_act;
+	unsigned char * p_act = 0;
 	int 		len;
-	int 		r;
+	int 		r=0;
 	int 		rest = 0;
 	int 		pnr = 0;
-	FILE * 		fp;
+	FILE * 		fp=0;
 	
 	unsigned char * a_buf = new unsigned char[UDP_MSG_LEN];
 

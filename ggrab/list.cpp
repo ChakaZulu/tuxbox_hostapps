@@ -16,10 +16,10 @@ void * m_fill_video (void * p_arg) {
 	static	struct  timespec timeout;
 	PTS		pts = -1.0;
 	bool		found=false;
-	CBUFPTR		lstart;
+	CBUFPTR		lstart = 0;
 	CBUFPTR		lptr = 0;
 	int		len;
-	STARTFLAG	startflag;
+	STARTFLAG	startflag = START_SEQ;
 	class xlist *   p_this = (class xlist *) p_arg;
 	
 	
@@ -81,7 +81,8 @@ void * m_fill_video (void * p_arg) {
 			startflag = START_GOP;
 		}
 		
-	}	
+	}
+	return(0);
 }
 
 void  * m_fill_audio (void * p_arg) {
@@ -91,8 +92,8 @@ void  * m_fill_audio (void * p_arg) {
 	static	struct  timespec timeout;
 	PTS		pts = -1.0;
 	bool		found=false;
-	CBUFPTR		lstart;
-	int		len;
+	CBUFPTR		lstart=0;
+	int		len=0;
 	CBUFPTR		lptr = 0;
 	class xlist *   p_this = (class xlist *) p_arg;
 	
@@ -153,7 +154,8 @@ void  * m_fill_audio (void * p_arg) {
 			}
 			lptr ++;
 		}
-	}	
+	}
+	return(0);
 }
 
 xlist::xlist (struct CBuffer * pBuf, S_TYPE stype) {
