@@ -24,6 +24,10 @@
 #include <streams.h>
 #include <strmif.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <io.h>
+
 #include "guids.h"
 #include "AX_Helper.h"
 #include "Dshow.h"
@@ -589,6 +593,41 @@ HRESULT CreatePreviewGraph()
     return(NOERROR);
 }
 
+HRESULT MakeUniqueFileName(TCHAR *szSrcFileName)
+{
+    int DstNameAlreadyExists=0;
+    int count=0;
+    TCHAR szDstFileName[264];
+    TCHAR drive[264], dir[264], fname[264], ext[264], tname[264];
+    _splitpath( szSrcFileName, drive, dir, fname, ext );
+
+    lstrcpy(szDstFileName, szSrcFileName);
+    lstrcpy(tname,fname);
+    do
+        {
+        FILE *fp=NULL;
+        DstNameAlreadyExists=0;
+
+        _makepath( szDstFileName, drive, dir, fname, ext);
+
+        fp=fopen(szDstFileName,"rb");
+        if (fp!=NULL)
+            {
+            DstNameAlreadyExists=1;
+            fclose(fp);
+            wsprintf(fname,"%s#%ld",tname,count);
+            }
+        count++;
+        //!!BS: just for safety reasons ...
+        if (count>=1000)
+            break;
+        }while(DstNameAlreadyExists);
+
+    lstrcpy(szSrcFileName, szDstFileName);
+
+    return(NOERROR);
+}
+
 HRESULT ValidateFileName(TCHAR *szFile)
 {
     for(int i=0;i<lstrlen(szFile);i++)
@@ -609,7 +648,7 @@ HRESULT ValidateFileName(TCHAR *szFile)
            )
             szFile[i]=' ';
         }
-    
+
     return(NOERROR);
 }
 
@@ -641,6 +680,8 @@ HRESULT CreateAudioOnlyCaptureGraph()
         else
             _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpa" );
         }
+
+    MakeUniqueFileName(szFilename);
 
     MultiByteToWideChar(CP_ACP, 
                         0, 
@@ -780,6 +821,8 @@ HRESULT CreateCaptureGraph()
     ValidateFileName(gszDestinationFile);
 
     _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpg" );
+
+    MakeUniqueFileName(szFilename);
 
     MultiByteToWideChar(CP_ACP, 
                         0, 
@@ -1020,3 +1063,4 @@ HRESULT SetDSoundVolume(__int64 val)
 
     return hr;
 }
+

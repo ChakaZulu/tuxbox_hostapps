@@ -654,6 +654,97 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
         return(NOERROR);
 }
 
+HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *info)
+{
+    HRESULT hr=NOERROR;
+    int ret=0;
+    int i=0;
+    unsigned long avail;
+	
+    lstrcpy(info,"");
+
+    dprintf("GetChannelInfo from %s:%d ", name, (int)port);
+
+	int sock = OpenSocket(name, port);
+    if (sock==SOCKET_ERROR)
+        return(E_FAIL);
+	
+	char wbuffer[1024];		
+	char wbody[1024];		
+
+    wsprintf(wbuffer, "GET /control/epg?eventid=%s HTTP/1.0\r\n", eventid);
+    wsprintf(wbody,   "User-Agent: BS\r\n"
+                      "Host: %s\r\n"
+                      "Pragma: no-cache\r\n"
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
+                      "\r\n", name);
+	
+
+    lstrcat(wbuffer,wbody);
+    ret=send(sock, wbuffer, strlen(wbuffer),0);
+
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
+        {
+        EmptySocket(sock);
+        closesocket(sock);
+        return(hr);
+        }
+
+      while(TRUE)  
+        {
+        if ((ret==0)&&(avail>0))
+            {
+            int pos=0;
+            char *p1=NULL;
+            char *p2=NULL;
+            char rbuffer[1024];
+            ZeroMemory(rbuffer,sizeof(rbuffer));
+            ret=recv(sock,rbuffer,sizeof(rbuffer),0);
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------    
+            if (p1!=NULL)
+                p2=MYstrstr(p1,"\n");
+            if (p2!=NULL)
+                {
+                lstrcpyn(info, p2, 264);
+                break;
+                //dprintf(p1);
+                }
+            }
+        ret=WaitForSocketData(sock, &avail, 250);
+        if (ret<0)
+            break;
+        if (i++>20)
+            break;
+        }
+
+
+	EmptySocket(sock);
+    closesocket(sock);
+
+    if (lstrlen(info)==0)
+        return(E_FAIL);
+    else
+        return(NOERROR);
+}
 
 HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
 {

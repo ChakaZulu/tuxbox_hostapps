@@ -1039,13 +1039,13 @@ HRESULT SetTVChannel(HWND hwnd, unsigned long channel)
 
 HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChannel)
 {
-    char buf[264];
-    char szEPGID[264];
-    char szEPGDate[264];
-    char szEPGTime[264];
-    char szEPGLen[264];
-    char szEPGTitle[264];
-    char szTmp[1024];
+    char buf[264]="";
+    char szEPGID[264]="";
+    char szEPGDate[264]="";
+    char szEPGTime[264]="";
+    char szEPGLen[264]="";
+    char szEPGTitle[264]="";
+    char szTmp[1024]="";
     int len=0;
     HRESULT hr=NOERROR;
 
@@ -1079,6 +1079,9 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
         }
     else
         lstrcpy(szEPGTitle, "");
+
+    if (lstrlen(szEPGID)>0)
+        hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
 
     SetDlgItemText(ghWndApp,IDC_CHANNELINFO, szEPGTitle);
     lstrcpy(gszDestinationFile, szEPGTitle);

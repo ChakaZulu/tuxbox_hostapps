@@ -60,6 +60,7 @@ extern HRESULT RetrieveChannelList(const char *name, unsigned short port, char *
 extern HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel);
 extern HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel);
 extern HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long channel, char *info);
+extern HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *info);
 
 extern HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active);
 extern HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigned short port, int doReset, int isENX);

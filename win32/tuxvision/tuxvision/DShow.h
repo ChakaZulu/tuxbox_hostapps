@@ -27,6 +27,7 @@
 #define WM_GRAPHNOTIFY	(WM_USER+42)
 
 HRESULT ValidateFileName(TCHAR *szFile);
+HRESULT MakeUniqueFileName(TCHAR *szFile);
 
 HRESULT OpenInterface(HWND hwnd, HINSTANCE hinst);
 HRESULT CloseInterface(HWND hwnd);

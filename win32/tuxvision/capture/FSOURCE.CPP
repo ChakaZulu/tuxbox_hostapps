@@ -690,6 +690,13 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             *data1=CRemuxer->audio_frequency;
             hr=NOERROR;
             break;
+
+         case CMD_GETEPG:
+            if (data2==NULL)
+                return(E_POINTER);
+            hr=GetEPGInfo(m_DBOXAddress, m_DBOXHTTPPort, (char*)data1, (char*)data2);
+            break;
+
         }
 	return(hr);
 }
