@@ -1,3 +1,5 @@
+These files are in use by MCE-Manager
+
 ActSlider.ocx			(Library folder)
 AudioGenie.ocx			(www.audiogenie.de)
 Button.ocx			(Library folder)
@@ -18,3 +20,6 @@ RICHTX32.OCX			(Windows)
 Rundos.dll			(Compile from sourcecode)
 SysTray.dll			(Library folder)
 songtext.dll			(Compile from sourcecode)
+
+If any library-files are missing, then install the Setup-Version of MCE-Manager on:
+www.access-musik-db.de.vu
