@@ -22,8 +22,8 @@ GetOptions
 my %partdef =
 (
   0 => [ "ppcboot", 0, 0x20000 ],
-  1 => [ "root", 0x20000, 0x6a0000 ],
-  2 => [ "var", 0x6c0000, 0x100000 ],
+  1 => [ "root", 0x20000, 0x6c0000 ],
+  2 => [ "var", 0x6e0000, 0x100000 ],
 );
 
 sub part_read
@@ -80,11 +80,11 @@ sub part_write
 
   if ( $insize < $size )
   {
-    part_write_zero ( $out, $begin + $insize, $size - $insize );
+    part_write_pad ( $out, $begin + $insize, $size - $insize );
   }
 }
 
-sub part_write_zero
+sub part_write_pad
 {
   my $out = shift;
   my $begin = shift;
@@ -92,7 +92,7 @@ sub part_write_zero
 
   $out -> seek ( $begin, SEEK_SET );
 
-  my $buf = "\0"x$size;
+  my $buf = "\xff"x$size;
   $out -> syswrite ( $buf, $size );
 }
 
@@ -112,7 +112,7 @@ elsif ( $operation eq "build" )
     }
     else
     {
-      part_write_zero ( $out, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
+      part_write_pad ( $out, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
     }
   }
 }
