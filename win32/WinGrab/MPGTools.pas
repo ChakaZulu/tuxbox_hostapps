@@ -478,7 +478,9 @@ const
     header to identify file as such. First eight bytes (i.e #9'MP3DATA')
     are file id, and rest two bytes are version and subversion numbers.
     Do not change it. }
+{$J+}
   MPEG_DATAFILE_SIGN : string[9] = 'MP3DATA'+#01+#02;
+{$J-}
 
   { File types that unit can recognize and read }
   FT_ERROR = -1;                 { Specified file does not exist,
