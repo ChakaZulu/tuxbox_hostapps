@@ -1251,7 +1251,7 @@ begin
       if j > 0 then begin
         t := Copy(s, 1, j - 1);
         System.Delete(s, 1, j);
-        k := StrToInt64(t);
+        k := StrToInt64('$' + t);
         lbxChannelList.Items.AddObject(s, TObject(LongWord(k)));
       end;
     end;

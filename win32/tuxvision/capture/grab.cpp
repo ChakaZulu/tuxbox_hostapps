@@ -1167,7 +1167,7 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                                 break;
                                 }
                             dprintf(p1);
-                            sscanf(p1,"%lu", &lval);
+                            sscanf(p1, "%x", &lval);
                             sval=p1;
                             for(k=0;k<strlen(p1)-1;k++)   
                                 {

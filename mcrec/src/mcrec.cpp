@@ -645,7 +645,7 @@ int getDBox2Channel(const char * dbox2name)
 
 	logprintf("requesting current program ID...");
 
-	urlbuffer = getURL(dbox2name, "GET /control/getonidsid HTTP/1.0\r\n\r\n");
+	urlbuffer = getURL(dbox2name, "GET /control/zapto HTTP/1.0\r\n\r\n");
 
 	if(*urlbuffer == '\0')
 	{
@@ -813,7 +813,7 @@ int switchchannel(const char *dbox2name, int channel)
 {
 	char *urlbuffer, *urlptr, *helpptr;
 	int i, rc = 0;
-	int chid;
+	unsigned long long chid;
 	char *channelname;
 	char switchreq[100];
 
@@ -844,9 +844,12 @@ int switchchannel(const char *dbox2name, int channel)
 		helpptr = strchr(urlptr, ' ');
 		helpptr++;
 		channelname = helpptr;
-		sscanf(urlptr, "%d", &chid);
+		sscanf(urlptr, "%llx", &chid);
 		logprintf("trying to switch to %s ... ", channelname);
-		snprintf(switchreq, sizeof(switchreq), "GET /control/zapto?%d HTTP/1.0\r\n\r\n", chid);
+		snprintf(switchreq,
+			 sizeof(switchreq),
+			 "GET /control/zapto?0x%llx HTTP/1.0\r\n\r\n",
+			 chid);
 		helpptr = getURL(dbox2name, switchreq);
 		if (strstr(helpptr, "ok"))
 			logprintf("done.\n");
