@@ -1,5 +1,5 @@
 /*
- * $Id: streamvideo.c,v 1.6 2002/02/09 01:46:09 obi Exp $
+ * $Id: streamvideo.c,v 1.7 2002/02/10 20:12:23 Toerli Exp $
  * 
  * TCP Video/Audio - PES Streamer
  *
@@ -18,6 +18,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  * $Log: streamvideo.c,v $
+ * Revision 1.7  2002/02/10 20:12:23  Toerli
+ * first working version
+ *
  * Revision 1.6  2002/02/09 01:46:09  obi
  * header redesign ;)
  *
@@ -47,8 +50,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <netdb.h>
 
-#define DEST_IP   "192.168.1.10"
+
 #define DEST_PORT_AUDIO 40001
 #define DEST_PORT_VIDEO 40000
 
@@ -57,36 +61,59 @@
 
 int main(int argc, char *argv[])
 {
-  
-  char *aname=argv[2], *vname=argv[1];
+
+  char *aname , *vname, *host;
   int audiofd, videofd;
   fd_set writefds;
   int sockfda,sockfdv;
   struct sockaddr_in dest_addra, dest_addrv;
-  
+  struct hostent *he;
   unsigned char audiobuf[BLOCKSIZE_AUDIO], videobuf[BLOCKSIZE_VIDEO];
   int rbaudio;  //  Read Bytes Audio
   int rbvideo;  //         and Video
   int bytes_senta;
   int bytes_sentv;
+  int i;
+
+
+/* ------------------ cmdline ---------------------- */
+
+ if (argc==1) { printf("streamvideo\n\n");
+                printf("valid options:\n");
+                printf("-a <filename>  audio-pes\n");
+                printf("-v <filename>  video-pes\n");
+                printf("-h <host>      ip/hostname of the box\n");
+                return 0;
+              }
+  i = 0;
+  while (++i < argc) {
+  if      (!strcmp (argv[i],"-a")) aname = argv[++i];
+  else if (!strcmp (argv[i],"-v")) vname = argv[++i];
+  else if (!strcmp (argv[i],"-h")) host  = argv[++i];
+                        }
+/* --------------------------------------------------- */
+
+if ((he=gethostbyname(host)) == NULL) {  // get the host info
+            perror("gethostbyname");
+            exit(1); }
 
   audiofd = open(aname, O_RDONLY, S_IRWXU);
-  videofd = open(vname, O_RDONLY, S_IRWXU); 
+  videofd = open(vname, O_RDONLY, S_IRWXU);
 
         sockfda = socket(AF_INET, SOCK_STREAM, 0);
         dest_addra.sin_family = AF_INET;
         dest_addra.sin_port = htons(DEST_PORT_AUDIO);
-        dest_addra.sin_addr.s_addr = inet_addr(DEST_IP);
+        dest_addra.sin_addr = *((struct in_addr *)he->h_addr);
         memset(&(dest_addra.sin_zero), '\0', 8);
-	fcntl(sockfda, F_SETFL, O_NONBLOCK );
+        fcntl(sockfda, F_SETFL, O_NONBLOCK );
         connect(sockfda, (struct sockaddr *)&dest_addra, sizeof(struct sockaddr));
-	
+
         sockfdv = socket(AF_INET, SOCK_STREAM, 0);
         dest_addrv.sin_family = AF_INET;
         dest_addrv.sin_port = htons(DEST_PORT_VIDEO);
-        dest_addrv.sin_addr.s_addr = inet_addr(DEST_IP);
+        dest_addrv.sin_addr = *((struct in_addr *)he->h_addr);
         memset(&(dest_addrv.sin_zero), '\0', 8);
-	fcntl(sockfdv, F_SETFL, O_NONBLOCK );
+        fcntl(sockfdv, F_SETFL, O_NONBLOCK );
         connect(sockfdv, (struct sockaddr *)&dest_addrv, sizeof(struct sockaddr));
 
 
@@ -100,36 +127,31 @@ rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
 bytes_senta = send(sockfda, audiobuf, rbaudio, 0);
 usleep(500000);
 
-/* shouldn't be necessary */
-/*
-rbvideo=read(videofd, videobuf, BLOCKSIZE_VIDEO);
-bytes_sentv = send(sockfdv, videobuf, rbvideo, 0); 
-*/
-
  while(1) {
    if (select(7, 0, &writefds, 0 ,NULL)>0)
      {
        if (FD_ISSET(sockfda, &writefds)) {
-	 rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
-	 if(!(bytes_senta = send(sockfda, audiobuf, rbaudio, 0))) {
-	  printf("Audio: EOF reached\n");
-	  break;
-	 }
+         rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
+         if(!(bytes_senta = send(sockfda, audiobuf, rbaudio, 0))) {
+          printf("Audio: EOF reached\n");
+          break;
+         }
        }
        if (FD_ISSET(sockfdv, &writefds)) {
-	 rbvideo=read(videofd, videobuf, BLOCKSIZE_VIDEO);
-	 if(!(bytes_sentv = send(sockfdv, videobuf, rbvideo, 0))) {
-	   printf("Video: EOF reached\n");
-	   break;
-	 }
+         rbvideo=read(videofd, videobuf, BLOCKSIZE_VIDEO);
+         if(!(bytes_sentv = send(sockfdv, videobuf, rbvideo, 0))) {
+           printf("Video: EOF reached\n");
+           break;
+         }
        }
      }
    FD_SET(sockfda,&writefds);
    FD_SET(sockfdv,&writefds);
  }
- close(videofd);
- close(audiofd);
- close(sockfdv);
- close(sockfda);
+close(videofd);
+close(audiofd);
+close(sockfdv);
+close(sockfda);
 return 0;
 }
+
