@@ -1,0 +1,23 @@
+#Beispiel fuer Zeitraeume
+
+z;10.02.-21.02.;Winterferien;
+z;18.04.-25.04.;Osterferien;
+z;12.07.-27.08.;Sommerferien;
+z;20.10.-30.10.;Herbstferien;
+z;22.12.-03.01.;Winterferien;
+
+z;03.05.2003-15.05.2003;einmaliger Zeitraum;
+
+#Beispiel fuer Geburtstage
+
+g;28.05.;Karl Test;
+g;28.05.1956;Peter Lustig;
+g;17.05.;Thomas Jabi;
+g;29.05.1982;Daniel Stettner;
+g;28.05.1945;Franz Test;
+g;29.05.;Walter Kluz;
+
+#Beispiel fuer Termine
+
+t;13.05.;Reifenwechsel;
+t;12.05.2003;Einmaliger Termin;
