@@ -1,5 +1,5 @@
 /*
- * $Id: streamvideo.c,v 1.7 2002/02/10 20:12:23 Toerli Exp $
+ * $Id: streamvideo.c,v 1.8 2002/02/23 18:34:53 Toerli Exp $
  * 
  * TCP Video/Audio - PES Streamer
  *
@@ -18,6 +18,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  * $Log: streamvideo.c,v $
+ * Revision 1.8  2002/02/23 18:34:53  Toerli
+ * vi
+ *
  * Revision 1.7  2002/02/10 20:12:23  Toerli
  * first working version
  *
@@ -62,7 +65,7 @@
 int main(int argc, char *argv[])
 {
 
-  char *aname , *vname, *host;
+  char *aname=NULL, *vname=NULL, *host=NULL;  //Also das mit NULL is irgendwie kacke aber na ja.... 
   int audiofd, videofd;
   fd_set writefds;
   int sockfda,sockfdv;
@@ -93,13 +96,17 @@ int main(int argc, char *argv[])
                         }
 /* --------------------------------------------------- */
 
-if ((he=gethostbyname(host)) == NULL) {  // get the host info
+if (host != NULL ) { if ((he=gethostbyname(host)) == NULL) {  // get the host info
             perror("gethostbyname");
-            exit(1); }
+            exit(1); } }
+       else { printf("specify hostname\n"); return 0; }
 
-  audiofd = open(aname, O_RDONLY, S_IRWXU);
-  videofd = open(vname, O_RDONLY, S_IRWXU);
+if (aname != NULL)  audiofd = open(aname, O_RDONLY, S_IRWXU);
+if (vname != NULL)  videofd = open(vname, O_RDONLY, S_IRWXU);
+if (audiofd == -1) { printf("could not open audiopes:  %s \n", aname); return 0 ; }
+if (videofd == -1) { printf("could not open videopes:  %s \n", vname); return 0 ; }
 
+if (aname != NULL) {
         sockfda = socket(AF_INET, SOCK_STREAM, 0);
         dest_addra.sin_family = AF_INET;
         dest_addra.sin_port = htons(DEST_PORT_AUDIO);
@@ -107,7 +114,9 @@ if ((he=gethostbyname(host)) == NULL) {  // get the host info
         memset(&(dest_addra.sin_zero), '\0', 8);
         fcntl(sockfda, F_SETFL, O_NONBLOCK );
         connect(sockfda, (struct sockaddr *)&dest_addra, sizeof(struct sockaddr));
+		}
 
+if (vname != NULL) {
         sockfdv = socket(AF_INET, SOCK_STREAM, 0);
         dest_addrv.sin_family = AF_INET;
         dest_addrv.sin_port = htons(DEST_PORT_VIDEO);
@@ -115,43 +124,46 @@ if ((he=gethostbyname(host)) == NULL) {  // get the host info
         memset(&(dest_addrv.sin_zero), '\0', 8);
         fcntl(sockfdv, F_SETFL, O_NONBLOCK );
         connect(sockfdv, (struct sockaddr *)&dest_addrv, sizeof(struct sockaddr));
-
+   		}
 
 //Create FD_SET's for select
 FD_ZERO(&writefds);
-FD_SET(sockfda,&writefds);
-FD_SET(sockfdv,&writefds);
+if (aname != NULL) FD_SET(sockfda,&writefds);
+if (vname != NULL) FD_SET(sockfdv,&writefds);
 
 // 500ms muss der Audio vor Video kommen
+if (aname != NULL) {
 rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
 bytes_senta = send(sockfda, audiobuf, rbaudio, 0);
-usleep(500000);
+usleep(500000); }
+
 
  while(1) {
    if (select(7, 0, &writefds, 0 ,NULL)>0)
      {
-       if (FD_ISSET(sockfda, &writefds)) {
-         rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
-         if(!(bytes_senta = send(sockfda, audiobuf, rbaudio, 0))) {
-          printf("Audio: EOF reached\n");
-          break;
-         }
-       }
-       if (FD_ISSET(sockfdv, &writefds)) {
+       if  ( (vname!=NULL) && (FD_ISSET(sockfdv, &writefds)) ) {
          rbvideo=read(videofd, videobuf, BLOCKSIZE_VIDEO);
          if(!(bytes_sentv = send(sockfdv, videobuf, rbvideo, 0))) {
            printf("Video: EOF reached\n");
            break;
          }
        }
+       if ( (aname!=NULL) && (FD_ISSET(sockfda, &writefds)) ) {
+         rbaudio=read(audiofd, audiobuf, BLOCKSIZE_AUDIO);
+         if(!(bytes_senta = send(sockfda, audiobuf, rbaudio, 0))) {
+          printf("Audio: EOF reached\n");
+          break;
+         }
+       }
+
      }
-   FD_SET(sockfda,&writefds);
-   FD_SET(sockfdv,&writefds);
+if (aname != NULL)  FD_SET(sockfda,&writefds);
+if (vname != NULL)  FD_SET(sockfdv,&writefds);
  }
-close(videofd);
-close(audiofd);
-close(sockfdv);
-close(sockfda);
+if (vname != NULL) close(videofd);
+if (aname != NULL) close(audiofd);
+if (vname != NULL) close(sockfdv);
+if (aname != NULL) close(sockfda);
 return 0;
 }
 
