@@ -46,32 +46,6 @@
 
 CCircularBuffer *pHTMLCircularBuffer=NULL;
 
-#define MAXTAG      25
-#define MAXTAGDATA 100
-
-struct songinfo {
-	bool gotinfo;
-	bool valid;
-	char track[MAXTAGDATA];
-	char artist1[MAXTAGDATA];
-	char artist2[MAXTAGDATA];
-	char album[MAXTAGDATA];
-	char year[MAXTAGDATA];
-	char label[MAXTAGDATA];
-} mysonginfo;
-
-struct s_id3{
-	char tag[3];
-	char songname[30];
-	char artist[30];
-	char album[30];
-	char year[4];
-	char comment[28];
-	unsigned char empty;
-	unsigned char tracknum;
-	unsigned char genre;
-}id3;
-
 
 HRESULT InitSockets(void)
 {
@@ -174,7 +148,7 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
         return(E_UNEXPECTED);
     pHTMLCircularBuffer->Clear();
 
-    hr=WaitForSocketData(s, &avail, 1000);
+    hr=WaitForSocketData(s, &avail, 10000);
     if (FAILED(hr)||(avail==0))
         return(hr);
 
@@ -184,13 +158,20 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
             {
             char rbuffer[1024];
             ZeroMemory(rbuffer,sizeof(rbuffer));
-            ret=recv(s,rbuffer,sizeof(rbuffer),0);
+            ret=recv(s,rbuffer,sizeof(rbuffer)-1,0);
             if (ret>0)
                 {
                 if (!pHTMLCircularBuffer->canWrite(ret))
                     return(E_UNEXPECTED);
                 pHTMLCircularBuffer->Write((BYTE *)rbuffer, ret);
                 i=0;
+                if (ret>20)
+                    {
+                    if (strstr(rbuffer+ret-20,"</HTML>")!=NULL)
+                        return(NOERROR);
+                    if (strstr(rbuffer+ret-20,"</html>")!=NULL)
+                        return(NOERROR);
+                    }
                 }
             }
         ret=WaitForSocketData(s, &avail, 1000);
@@ -243,12 +224,12 @@ void decode_string(char * string)
 	*newstr = '\0';
 }
 
-HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName)
+HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, struct songinfo *mysonginfo)
 {
     HRESULT hr=NOERROR;
     int ret=0;
 	
-    dprintf("GetMCEInfo from %s:%d ", name, (int)port);
+    dprintf("GetMCEInfo from %s:%d for channel[%s]", name, (int)port, channelName);
 
 	int sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
@@ -260,7 +241,7 @@ HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName)
     ZeroMemory(wbuffer, sizeof(wbuffer));
     ZeroMemory(wbody, sizeof(wbody));
 
-#if 0
+#if 1
     wsprintf(wbuffer, "GET /EPG/%s.shtml HTTP/1.0"_CRLF_, channelName);
     wsprintf(wbody,   "User-Agent: BS"_CRLF_
                       "Host: %s"_CRLF_
@@ -298,69 +279,82 @@ HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName)
             int  i=0;
 
             while(true)
-            {
+                {
 	            if ((urlbufptr = strstr(urlbufptr, "div id")) == NULL)
 		            break;
 
 	            urlbufptr += 8;
 	            tagptr = tag;
 	            for (cpptr = urlbufptr, i = 0; *cpptr != '\"'; cpptr++, i++)
-	            {
+	                {
 		            if (i < MAXTAG-1)
 			            *tagptr++ = *cpptr;
-	            }
+	                }
 	            *tagptr = '\0';
 
 	            urlbufptr = strstr(urlbufptr, ">");
 	            urlbufptr++;
 	            tagptr = tagdata;
 	            for (cpptr = urlbufptr, i = 0; *cpptr != '<'; cpptr++, i++)
-	            {
+	                {
 		            if (i < MAXTAGDATA-1)
 			            *tagptr++ = *cpptr;
-	            }
+	                }
 	            *tagptr = '\0';
 	            decode_string(tagdata);
 
 	            if (strcmp(tag, "track") == 0)
-	            {
-		            if (strcmp(tagdata, mysonginfo.track) == 0)
-		            {
+	                {
+		            if (strcmp(tagdata, mysonginfo->track) == 0)
+	    	            {
 			            dprintf("MCE data not valid ...");
-		            }
-		            strncpy(mysonginfo.track, tagdata, MAXTAGDATA);
-	            }
+                        hr=E_FAIL;
+                        break;
+    		            }
+		            strncpy(mysonginfo->track, tagdata, MAXTAGDATA);
+	                }
 	            if (strcmp(tag, "album") == 0)
-	            {
-		            strncpy(mysonginfo.album, tagdata, MAXTAGDATA);
-	            }
+	                {
+		            strncpy(mysonginfo->album, tagdata, MAXTAGDATA);
+	                }
 	            if (strcmp(tag, "label") == 0)
-	            {
-		            strncpy(mysonginfo.label, tagdata, MAXTAGDATA);
-	            }
+	                {
+		            strncpy(mysonginfo->label, tagdata, MAXTAGDATA);
+	                }
 	            if (strcmp(tag, "year") == 0)
-	            {
-		            strncpy(mysonginfo.year, tagdata, MAXTAGDATA);
-	            }
+	                {
+		            strncpy(mysonginfo->year, tagdata, MAXTAGDATA);
+	                }
 	            if (strcmp(tag, "artist1") == 0)
-	            {
-		            strncpy(mysonginfo.artist1, tagdata, MAXTAGDATA);
-	            }
+	                {
+		            strncpy(mysonginfo->artist1, tagdata, MAXTAGDATA);
+	                }
 	            if (strcmp(tag, "artist2") == 0)
-	            {
-		            strncpy(mysonginfo.artist2, tagdata, MAXTAGDATA);
-	            }
+	                {
+		            strncpy(mysonginfo->artist2, tagdata, MAXTAGDATA);
+	                }
 
-            }
+                }
             // ---------------------------------------------------    
             //
             // ---------------------------------------------------    
             free(rbuffer);
             }
         }
+    else
+        {
+        dprintf("MCE data read error !");
+        }
+
+    if (lstrlen(mysonginfo->track)==0)
+        hr=E_FAIL;
+    if (lstrlen(mysonginfo->album)==0)
+        hr=E_FAIL;
+    if (lstrlen(mysonginfo->artist1)==0)
+        hr=E_FAIL;
 
     closesocket(sock);
 
-    return(NOERROR);
+    return(hr);
 }
 

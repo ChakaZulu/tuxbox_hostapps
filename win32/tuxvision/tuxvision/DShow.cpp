@@ -513,6 +513,8 @@ HRESULT CreateAudioOnlyPreviewGraph()
     RELEASE(pAudioRenderer);
     RELEASE(pAudioDecoder);
 
+    DumpGraph(gpIGraphBuilder,0 );
+
     return(hr);
 }    
 

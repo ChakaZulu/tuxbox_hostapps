@@ -58,6 +58,7 @@
 #define IDC_AUDIOFORMAT                 1090
 #define IDC_CTRLPORT                    1091
 #define IDC_INFO                        1092
+#define IDC_INFO_STREAM                 1093
 
 // Next default values for new objects
 // 

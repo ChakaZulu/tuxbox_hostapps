@@ -22,6 +22,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <process.h>
 #include <winbase.h>
 #include <commctrl.h>
 #include <shlobj.h>
@@ -76,6 +77,33 @@ char STREAM_TEST_DATA[]="<?xml version=\"1.0\" encoding=\"iso-8859-1\"?> \
     </record>   \
 </neutrino> \
 ";
+
+char *MCEChannels[][2]=
+                {
+                {"HITLISTE","hitlist"},
+                {"DEUTSCHE HITS","germanhits"},
+                {"ALTERNATIVE ROCK","alternative"},
+                {"HARD ROCK","heavy"},
+                {"CLASSIC ROCK","classic"},
+                {"HIP HOP/R&B","hiphoprb"},
+                {"DANCE","dance"},
+                {"CHILLOUT","chillout"},
+                {"SCHLAGER","schlager"},
+                {"LOVE SONGS","lovesongs"},
+                {"GOLD","gold"},
+                {"OLD GOLD","oldgold"},
+                {"SOUL CLASSICS","soulclassics"},
+                {"LATIN","latin"},
+                {"NEW COUNTRY","newcountry"},
+                {"COUNTRY","country"},
+                {"FILM & MUSICAL","filmmusic"},
+                {"EASY LISTENING","easy"},
+                {"JAZZ","jazz"},
+                {"KLASSIK POPULÄR","favourites"},
+                {"ORCHESTRALE WERKE","symphonic"},
+                {"",""}
+                };
+
 
 // ------------------------------------------------------------------------
 // Global Stuff
@@ -136,6 +164,11 @@ void    FeedBufferIntoListbox(char *buf, int id, int maxwidth);
 void    LoadParameter(void);
 void    SaveParameter(void);
 
+void __cdecl SongInfoThread(void *rs);
+HANDLE songevents[2];
+unsigned long  songeventThread=0;
+void MapMCEChannel(char *szChannel, char *szMCEChannel);
+
 // ------------------------------------------------------------------------
 //
 // ------------------------------------------------------------------------
@@ -165,7 +198,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	int retval=0;
 	HRESULT hr=NOERROR;
     HBRUSH hbr=CreateSolidBrush(0x000000);
-
+    char szTmp[264]="";
 
 // ------------------------------------------------------------------------
 // !!BS:TESTING only 
@@ -324,11 +357,21 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
             HTTPRun();
             }
 
+        {
         InitMCE();
+        songevents[0]=CreateEvent(NULL,FALSE,FALSE,NULL);
+        songevents[1]=CreateEvent(NULL,FALSE,FALSE,NULL);
+        songeventThread=_beginthread(SongInfoThread, 0,(void *)NULL);
 
-        //GetMCEInfo("www.musicchoice.co.uk", 80, "classic");
+        IDBOXIICapture *pIDBOXIICapture=NULL;
+        hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+        if (SUCCEEDED(hr))
+            hr=pIDBOXIICapture->setParameter(CMD_SETNEWAUDIOEVENT, (__int64)songevents[0]);
 
-    	while(GetMessage(&msg,NULL,0,0))
+        RELEASE(pIDBOXIICapture);
+        }
+    	
+        while(GetMessage(&msg,NULL,0,0))
 			{
 			TranslateMessage((LPMSG)&msg);
 			DispatchMessage((LPMSG)&msg);
@@ -340,6 +383,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         }
 
 // ------------------------------------------------------------------------
+    SetEvent(songevents[1]);
+    WaitForSingleObject((HANDLE)songeventThread, 10000);
     DeInitMCE();
 // ------------------------------------------------------------------------
     HTTPStop();
@@ -350,7 +395,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	SaveParameter();
 // ------------------------------------------------------------------------
     // Finished with OLE subsystem
-    CoUninitialize();
+    //!!BS: this will peperformed anyway when the app terminates
+    //!!BS: but this might be critical for some pending Ole stuff ...
+    // CoUninitialize();
 // ------------------------------------------------------------------------
 	return (msg.wParam);
 // ------------------------------------------------------------------------
@@ -872,6 +919,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			UpdateWindowState(hwnd);
             LogPrintf("RECORD");
             LogFlush(hwnd);
+            SetEvent(songevents[0]);
 			}
             break;
 
@@ -901,6 +949,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             UpdateWindowState(hwnd);
             LogPrintf("PREVIEW");
             LogFlush(hwnd);
+            SetEvent(songevents[0]);
 			}
             break;
 
@@ -1186,7 +1235,7 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
     if (lstrlen(szEPGID)>0)
         {
         hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
-        FeedBufferIntoListbox(buf, IDC_INFO, 80);
+        FeedBufferIntoListbox(buf, IDC_INFO, 64);
         }
 
     SetDlgItemText(ghWndApp,IDC_CHANNELINFO, szEPGTitle);
@@ -1392,4 +1441,85 @@ void SaveParameter(void)
 
 
 
+void __cdecl SongInfoThread(void *rs)
+{
+    DWORD ret;
+    struct songinfo si;
+    HRESULT hr=NOERROR;
+    int i=0;
 
+    while(TRUE)
+        {
+        //dprintf("SongInfoThread waiting ...");
+        ret=WaitForMultipleObjects(2, songevents, FALSE, 10000);
+        switch(ret)
+            {
+            case WAIT_OBJECT_0+0:
+                {
+                char szChannel[264];
+                char szMCEChannel[264];
+                dprintf("AudioSeqStart event !");
+                int sel;
+
+                ZeroMemory(szChannel, sizeof(szChannel));
+                ZeroMemory(szMCEChannel, sizeof(szMCEChannel));
+                sel=SendMessage( GetDlgItem(ghWndApp,IDC_CHANNEL), CB_GETCURSEL, 0, 0 );
+                SendMessage( GetDlgItem(ghWndApp,IDC_CHANNEL), CB_GETLBTEXT, sel, (LPARAM)szChannel );
+                
+                MapMCEChannel(szChannel, szMCEChannel);
+
+                if (lstrlen(szMCEChannel)>0)
+                    {
+                    SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+                    for(i=0;i<5;i++)
+                        {
+                        ZeroMemory(&si, sizeof(struct songinfo));
+                        hr=GetMCEInfo("www.musicchoice.co.uk", 80, szMCEChannel, &si);
+                        if (SUCCEEDED(hr))
+                            {
+                            char szStr[1024];
+                            ZeroMemory(szStr, sizeof(szStr));
+                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"You are listening to:");
+                            wsprintf(szStr,"Title : %s",si.track);
+                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                            wsprintf(szStr,"Album : %s",si.album);
+                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                            wsprintf(szStr,"Artist: %s",si.artist1);
+                            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szStr);
+                            dprintf("Title : %s",si.track);
+                            dprintf("Album : %s",si.album);
+                            dprintf("Artist: %s",si.artist1);
+                            dprintf("---------------------");
+                            break;
+                            }
+                        }                                        
+                    }
+                }
+                break;
+            case WAIT_OBJECT_0+1:
+                dprintf("Termination event !");
+                return;
+                break;
+            }
+        }
+
+    return;
+}
+
+
+void MapMCEChannel(char *szChannel, char *szMCEChannel)
+{
+    int i=0;
+    if (szMCEChannel==NULL)
+        return;
+    lstrcpy(szMCEChannel,"");
+    do
+        {
+        if (!lstrcmp(szChannel,MCEChannels[i][0]))
+            {
+            lstrcpy(szMCEChannel, MCEChannels[i][1]);
+            break;
+            }
+        i++;
+        }while(lstrlen(MCEChannels[i][0])>0);
+}
