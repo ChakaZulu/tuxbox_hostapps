@@ -388,7 +388,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     m_DBOXHTTPPort=80;
     m_DBOXTelnetPort=23;
 
-    m_SkipPreparation=TRUE;
+    m_SkipPreparation=FALSE;
 
     m_StartSucceeded=TRUE;
 
@@ -517,7 +517,7 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             {
             HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
             if (SUCCEEDED(hr))
-                hr=ExecuteCommand("killall -9 thttpd;killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+                hr=ExecuteCommand("killall -9 sectionsd;killall -9 thttpd;killall -9 nhttpd;sleep 1;/bin/sectionsd;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             break;
             }
 
@@ -774,7 +774,7 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             hr=GetRadioTVMode(m_DBOXAddress, m_DBOXHTTPPort, &val);
             *data1=(__int64)val;
             break;
-            }
+            } 
 
         }
 	return(hr);
@@ -789,6 +789,9 @@ STDMETHODIMP CDBOXIICapture::Stop()
 
     if (m_StartSucceeded)
         ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 0);
+
+    if (!m_SkipPreparation)
+        hr=ExecuteCommand("/bin/sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
 
     m_VPid=0;
     m_APid=0;
@@ -871,7 +874,7 @@ STDMETHODIMP CDBOXIICapture::Pause()
                 return(E_FAIL);
 
             if (!m_SkipPreparation)
-                hr=ExecuteCommand("killall -HUP controld;killall -HUP sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+                hr=ExecuteCommand("killall -9 sectionsd;killall -HUP controld", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
 
             if (FAILED(hr))
                 return(E_FAIL);
@@ -1195,7 +1198,7 @@ HRESULT CPushStream::OnThreadCreate()
     m_Abort=FALSE;
     //!!BS just wait for a while to acuumulate some incomming data ...
 #if USE_DBOX
-    Sleep(3500);
+    Waitms(3500);
 #endif
     return NOERROR;
 } // OnThreadCreate
@@ -1219,7 +1222,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
     BYTE *pData=NULL;
     long lMaxDataLen=0;
     HRESULT hr=E_FAIL;
-    int errorCount=2000;
+    int errorCount=3000;  //!!BS: this results in a timeout of 3000*(5ms)=15sec
     long tStart=timeGetTime();
     long tEnd=tStart;
 
@@ -1233,7 +1236,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
     if (m_Abort)
         {
         pms->SetActualDataLength(0);
-        Sleep(5);
+        Waitms(5);
         return(E_FAIL);
         }
 
@@ -1265,7 +1268,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
         /*
         tEnd=timeGetTime();
         if ((tEnd-tStart)<40)
-            Sleep(40-(tEnd-tStart));
+            Waitms(40-(tEnd-tStart));
         */
         return(NOERROR);
         }
@@ -1283,7 +1286,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, (AUDIO_BUFFER_SIZE+VIDEO_BUFFER_SIZE)))
                     {
-                    Sleep(5);
+                    Waitms(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)
@@ -1314,7 +1317,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, VIDEO_BUFFER_SIZE))
                     {
-                    Sleep(5);
+                    Waitms(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)
@@ -1346,7 +1349,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, AUDIO_FRAME_SIZE))
                     {
-                    Sleep(5);
+                    Waitms(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)

@@ -90,13 +90,13 @@ inline double pts_diff(double l, double r) {
 class Remuxer {
 public:
 
-	enum {
+	enum 
+        {
 		max_audio_packets = 200, // would be a max. of ~3MB
 		max_video_packets = 200,
 		max_aux_packets   = 200, // only one double each, holding the PTSes for the
-		
-		max_out_pp = 2*1024      // maximum size of MPEG-2 program pack we want to write
-	};
+		max_out_pp        = 2*1024      // maximum size of MPEG-2 program pack we want to write
+	    };
 	
 	
 	// ====================================================
@@ -109,7 +109,7 @@ public:
 	// ----------------------------
 	
 	unsigned char * audio_packets[max_audio_packets];
-	unsigned long audio_packets_avail;
+	volatile unsigned long audio_packets_avail;
 	
 	// ----------------------------
 	
@@ -124,7 +124,7 @@ public:
 	// ----------------------------
 	
 	unsigned char * video_packets[max_video_packets];
-	unsigned long video_packets_avail;
+	volatile unsigned long video_packets_avail;
 	
 	double frame_pts; // our last synthesized PTS for video frames
 	double oldFramePts;
@@ -168,7 +168,7 @@ public:
 	Remuxer(unsigned char _wanted_audio_stream = 0x00) 
         {
         m_framePTS=0;
-		abuf_size = 512*1024; //2*1024*1024; 
+		abuf_size = 512*1024; 
 		abuf = new unsigned char[abuf_size];
 		abuf_valid = 0;
 		
@@ -178,7 +178,7 @@ public:
 
 		// -------------
 		
-		vbuf_size = 4*1024*1024; //12*1024*1024;
+		vbuf_size = 6*1024*1024; 
 		vbuf = new unsigned char[vbuf_size];
 		vbuf_valid = 0;
 		

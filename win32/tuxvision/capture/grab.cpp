@@ -74,6 +74,23 @@ long            gLastAVBitrateRequest=0;
 
 BOOL            gFakeisDataAvailable=FALSE;
 
+void Waitms(unsigned long delay)
+{
+    MSG msg;
+    unsigned long dwStartTime = timeGetTime();
+
+    while ((timeGetTime () - dwStartTime) < delay )
+    {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);// Translates virtual key codes
+            DispatchMessage(&msg); // Dispatches message to window
+        }
+    Sleep(1);
+    }
+}
+
+
 HRESULT InitSockets(void)
 {
     int retval=-1;
@@ -118,6 +135,8 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
                 i=0;
                 }
             }
+        if (ret<0)
+            break;
         ret=WaitForSocketData(s, &avail, 50);
         if (ret<0)
             break;
@@ -140,12 +159,12 @@ HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim)
 
     for(i=0;i<count;i++)
         {
-        Sleep(10);
         ret=ioctlsocket(sock, FIONREAD, avail);
         if (ret<0)
             return(E_FAIL);
         if (*avail>0)
             break;
+        Waitms(10);
         }
 
     return(NOERROR);
@@ -1411,7 +1430,7 @@ void __cdecl AVReadThread(void *thread_arg)
                     }
                 else
                     break;
-                if (c>(bufferlenVideo))
+                if (c>(bufferlenVideo<<2))
                     break;
                 }
             }
@@ -1441,7 +1460,7 @@ void __cdecl AVReadThread(void *thread_arg)
                     }
                 else
                     break;
-                if (c>(bufferlenAudio))
+                if (c>(bufferlenAudio<<2))
                     break;
                 }
             }
@@ -1457,7 +1476,9 @@ void __cdecl AVReadThread(void *thread_arg)
             if ((gSocketVideoPES>0)&&(gSocketAudioPES>0))
                 {
                 if (gIsPSPinConnected)
+                    {
 	                result=CRemuxer->write_mpg(NULL);
+                    }
                 }
             else
             if (gSocketVideoPES>0)
@@ -1474,7 +1495,7 @@ void __cdecl AVReadThread(void *thread_arg)
         #endif
         
         if (wait)
-            Sleep(2);
+            Waitms(2);
         }
 
     gfThreadAborted=TRUE;
@@ -1486,7 +1507,7 @@ void __cdecl AVReadThread(void *thread_arg)
 void DeInitStreaming()
 {
     gfTerminateThread=TRUE;
-    Sleep(500);
+    Waitms(500);
     
     if (gSocketVideoPES>0)
         {

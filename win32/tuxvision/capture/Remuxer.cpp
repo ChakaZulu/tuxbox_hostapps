@@ -945,15 +945,16 @@ int Remuxer::supply_video_data(void * data, unsigned long len) {
 
 // ##################################################################
 
-int Remuxer::supply_aux_data(void * data, unsigned long len) {
+int Remuxer::supply_aux_data(void * data, unsigned long len) 
+{
 	
-	unsigned char * d = (unsigned char *)data;
+	unsigned char *d = (unsigned char *)data;
 	
 	// we have to assume that every 16 bytes there is one of the
 	// PTS stamps we're interested in...
 	
-	for (unsigned long idx = 0; idx+15 < len; idx += 16) {
-		
+	for (unsigned long idx = 0; idx+15 < len; idx += 16) 
+        {
 		if (aux_packets_avail >= max_aux_packets) 
             {
 			dprintf( "aux_packets buffer overrun, dropping some data");
@@ -975,7 +976,7 @@ int Remuxer::supply_aux_data(void * data, unsigned long len) {
 		*/
 		aux_packets[aux_packets_avail] = (double)p1;
 		aux_packets_avail += 1;
-	}
+    	}
 	
 	return 0;
 }
@@ -1256,6 +1257,7 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 		// try to find a new point where the PTS of a video sequence start
 		// and the PTS of the next audio frame are "near"...
 
+        Sleep(10);
         dprintf("resync - a=%ld, v=%ld", audio_packets_avail, video_packets_avail);
 
         if (video_packets_avail)
@@ -1264,59 +1266,62 @@ int Remuxer::write_mpg(FILE * mpgfile) {
         if (audio_packets_avail)
             gotAudio=TRUE;
 		
-		while (audio_packets_avail && video_packets_avail) {
-			
-			unsigned char * ap = audio_packets[0];
-			
+		while (audio_packets_avail && video_packets_avail) 
+            {
+			unsigned char *ap = audio_packets[0];
 			double audio_pts = pes_pts(ap);
-			if (audio_pts < 0) {
+			if (audio_pts < 0) 
+                {
 				// cannot use this...
 				remove_audio_packets(1);
 				continue;
-			}
-			
+			    }
 			// if AC3, make sure to start with a magic sync word...
-			if (ap[3] == STREAM_PRIVATE_1) {
+			if (ap[3] == STREAM_PRIVATE_1) 
+                {
 				unsigned long   orig_pes_size = pes_size(ap);
 				unsigned long   orig_opt_header_size = ap[8];
 				unsigned long   orig_es_size = orig_pes_size - 9 - orig_opt_header_size;
 				unsigned char * orig_es_data = ap + 9 + orig_opt_header_size;
-				if (orig_es_size < 4 || orig_es_data[0] != 0x0b || orig_es_data[1] != 0x77) {
+				if (orig_es_size < 4 || orig_es_data[0] != 0x0b || orig_es_data[1] != 0x77) 
+                    {
 					// cannot use this...
 					remove_audio_packets(1);
 					continue;
-				}
-			}
+				    }
+			    }
 			
 			
-			unsigned char * vp = video_packets[0];
+			unsigned char *vp = video_packets[0];
 						
 			double video_pts = pes_pts(vp);
-			if (video_pts < 0) {
+			if (video_pts < 0) 
+                {
 				// cannot use this...
 				remove_video_packets(1);
 				continue;
-			}
+			    }
 						
 			// we need to make sure our first video data comes
 			// before our first audio data...
 			
-			if (audio_pts <= video_pts) { 
+			if (audio_pts <= video_pts) 
+                { 
 				remove_audio_packets(1);
 				continue;
-			}
+			    }
 
-			if (0 == (vp[6] & 0x01)) {
+			if (0 == (vp[6] & 0x01)) 
+                {
 				// this is not a video sequence start... cannot use this...
 				remove_video_packets(1);
 				continue;				
-			}
+			    }
 			
 			// check for the PTS difference... 
 
 			double av_pts_diff = pts_diff(audio_pts, video_pts);
 			
-			//if (fabs(av_pts_diff) < (90000.0/22)) { // /2 ?			
             dprintf("AV ResyncDelta :%ld",(int)av_pts_diff);
             if (fabs(av_pts_diff) <= (3600.0*1.5)) 
                 { 		
@@ -1338,21 +1343,20 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 				break;
 			    }
 			
-			// alas, we cannot decide whether audio or video is incorrect -
+			// we cannot decide whether audio or video is incorrect -
 			// so we have to throw away both packets...
 			remove_audio_packets(1);
-
 			remove_video_packets(1);
-
 			// ... now try again with the next packets...
-		}
+		    }
 		
-		if (resync) {
+		if (resync) 
+            {
 			// well, we couldn't resync yet. Try again next time
 			// with more new data...
 			return 0;
-		}
-	}
+		    }
+	    }
 	
 	
 	for (;;) {

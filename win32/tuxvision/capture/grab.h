@@ -23,15 +23,9 @@
 #define MTU_DBOX            ( 1500)
 
 #define AUDIO_FRAME_SIZE    1152
-#if 1
-#define VIDEO_BUFFER_SIZE   (128*1024)
-#define AUDIO_BUFFER_SIZE   ( 16*1024)
+#define VIDEO_BUFFER_SIZE   (8*16*1024)
+#define AUDIO_BUFFER_SIZE   (  16*1024)
 #define BUFFER_COUNT               32
-#else
-#define VIDEO_BUFFER_SIZE   (64*MTU_DBOX) 
-#define AUDIO_BUFFER_SIZE   ( 8*MTU_DBOX) 
-#define BUFFER_COUNT               32
-#endif
  
 #define USE_REMUX                   1
 
@@ -52,6 +46,7 @@ extern __int64         gLastVideoDataCount;
 extern __int64         gLastAudioDataCount;
 extern long            gLastAVBitrateRequest;
 
+extern void Waitms(unsigned long delay);
 
 extern HRESULT InitSockets(void);
 extern void DeInitSockets(void);
