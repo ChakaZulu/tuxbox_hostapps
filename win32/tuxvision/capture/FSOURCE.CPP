@@ -1170,7 +1170,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
     BYTE *pData=NULL;
     long lMaxDataLen=0;
     HRESULT hr=E_FAIL;
-    int errorCount=1000;
+    int errorCount=2000;
     long tStart=timeGetTime();
     long tEnd=tStart;
 
