@@ -147,6 +147,7 @@ long          gMCEEnable=FALSE;
 TCHAR         gMCEURL[264]="www.musicchoice.co.uk";
 long          gMCETimeOut=10;
 long          gMCEInternetConnection=TRUE;
+int           gRadioTVMode=1;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -173,6 +174,8 @@ void __cdecl SongInfoThread(void *rs);
 HANDLE songevents[3];
 unsigned long  songeventThread=0;
 void MapMCEChannel(char *szChannel, char *szMCEChannel);
+int GetRadioTVMode(void);
+HRESULT SetRadioTVMode(int mode);
 
 // ------------------------------------------------------------------------
 //
@@ -376,6 +379,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
         RELEASE(pIDBOXIICapture);
         }
+
+        SetRadioTVMode(gRadioTVMode);
+
+        if (gRadioTVMode==0)
+            SendMessage(GetDlgItem(hwnd,IDC_RADIO),BM_SETCHECK, 1, 0);
+        else
+            SendMessage(GetDlgItem(hwnd,IDC_TV),BM_SETCHECK, 1, 0);
     	
         while(GetMessage(&msg,NULL,0,0))
 			{
@@ -918,21 +928,38 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 
 		case IDC_RECORD:
             {
+            HRESULT hr=NOERROR;
             __int64 val=0;
             if (gState==StatePreview)
                 {
                 StopGraph(gpIGraphBuilder);
                 DestroyGraph(gpIGraphBuilder);
                 }
+            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"Starting Record ...");
             CreateCaptureGraph();
-            gState=StateRecord;
-            SetDSoundVolume(gDSoundVoume);
-            RunGraph(gpIGraphBuilder);
-			UpdateWindowState(hwnd);
-            LogPrintf("RECORD");
-            LogFlush(hwnd);
-            SetEvent(songevents[2]);
-            SetEvent(songevents[0]);
+            hr=RunGraph(gpIGraphBuilder);
+            if (SUCCEEDED(hr))
+                {
+                gState=StateRecord;
+                SetDSoundVolume(gDSoundVoume);
+			    UpdateWindowState(hwnd);
+                LogPrintf("RECORD");
+                LogFlush(hwnd);
+                SetEvent(songevents[2]);
+                SetEvent(songevents[0]);
+                }
+            else
+                {
+                TCHAR szTmp[264]="";
+                StopGraph(gpIGraphBuilder);
+                DestroyGraph(gpIGraphBuilder);
+                wsprintf(szTmp,"Unable to start RECORD ! (PID-Trouble?, try again !)");
+                LogPrintf(szTmp);
+                LogFlush(hwnd);
+                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szTmp);
+                }
 			}
             break;
 
@@ -954,16 +981,33 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 
 		case IDC_PREVIEW:
             {
+            HRESULT hr=NOERROR;
             __int64 val=0;
+            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"Starting Preview ...");
             CreatePreviewGraph();
-            gState=StatePreview;
-            SetDSoundVolume(gDSoundVoume);
-            RunGraph(gpIGraphBuilder);
-            UpdateWindowState(hwnd);
-            LogPrintf("PREVIEW");
-            LogFlush(hwnd);
-            SetEvent(songevents[2]);
-            SetEvent(songevents[0]);
+            hr=RunGraph(gpIGraphBuilder);
+            if (SUCCEEDED(hr))
+                {
+                gState=StatePreview;
+                SetDSoundVolume(gDSoundVoume);
+                UpdateWindowState(hwnd);
+                LogPrintf("PREVIEW");
+                LogFlush(hwnd);
+                SetEvent(songevents[2]);
+                SetEvent(songevents[0]);
+                }
+            else
+                {
+                TCHAR szTmp[264]="";
+                StopGraph(gpIGraphBuilder);
+                DestroyGraph(gpIGraphBuilder);
+                wsprintf(szTmp,"Unable to start PREVIEW ! (PID-Trouble?, try again !)");
+                LogPrintf(szTmp);
+                LogFlush(hwnd);
+                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)szTmp);
+                }
 			}
             break;
 
@@ -980,11 +1024,45 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
                 HTTPInit();
                 HTTPRun();
                 }
-            if (result>0)
-                CreateChannelList(ghWndApp);
+
+            //if (result>0)
+            //    CreateChannelList(ghWndApp);
+
 			UpdateWindowState(hwnd);
             }
 			break;
+
+        case IDC_RADIO:
+            if (gRadioTVMode!=0)
+                {
+                dprintf("Switch Mode to Radio");
+                SetRadioTVMode(0);
+                CreateChannelList(ghWndApp);
+
+				unsigned long channel=0;
+				int sel=0;
+				SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETCURSEL, 0, 0 );
+				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
+				SetTVChannel(hwnd, channel, 0, 0);
+				gCurrentChannel=sel;
+                }
+            break;
+
+        case IDC_TV:
+            if (gRadioTVMode!=1)
+                {
+                dprintf("Switch Mode to TV");
+                SetRadioTVMode(1);
+                CreateChannelList(ghWndApp);
+
+				unsigned long channel=0;
+				int sel=0;
+				SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETCURSEL, 0, 0 );
+				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
+				SetTVChannel(hwnd, channel, 0, 0);
+				gCurrentChannel=sel;
+                }
+            break;
 
 		case IDC_DEINTERLACE:
             gUseDeInterlacer=SendMessage( GetDlgItem(hwnd,IDC_DEINTERLACE), BM_GETCHECK, 0, 0 );
@@ -1405,6 +1483,10 @@ void LoadParameter(void)
 
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEInternetConnection", (unsigned char *)regval, sizeof(regval)))
         gMCEInternetConnection=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TVRadioMode", (unsigned char *)regval, sizeof(regval)))
+        gRadioTVMode=atoi(regval);
+
 }
 
 void SaveParameter(void)
@@ -1479,6 +1561,9 @@ void SaveParameter(void)
 	wsprintf((char *)regval,"%ld",gMCEInternetConnection);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEInternetConnection", (unsigned char *)regval, lstrlen(regval));
 
+	wsprintf((char *)regval,"%ld",gRadioTVMode);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TVRadioMode", (unsigned char *)regval, lstrlen(regval));
+
 
 }
 
@@ -1503,7 +1588,7 @@ void __cdecl SongInfoThread(void *rs)
         switch(ret)
             {
             case WAIT_OBJECT_0+0:
-            if (gMCEEnable)
+            if ( gMCEEnable && gCaptureAudioOnly)
                 {
                 char szChannel[264];
                 char szMCEChannel[264];
@@ -1646,4 +1731,51 @@ void MapMCEChannel(char *szChannel, char *szMCEChannel)
             }
         i++;
         }while(lstrlen(MCEChannels[i][0])>0);
+}
+
+int GetRadioTVMode(void)
+{
+    int result=-1;
+    HRESULT hr=NOERROR;
+    __int64 val=-1;
+    IDBOXIICapture *pIDBOXIICapture=NULL;
+ 
+
+    if (gpVCap==NULL)
+        return(E_UNEXPECTED);
+
+    hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+    if (SUCCEEDED(hr))
+        hr=pIDBOXIICapture->getParameter(CMD_TVRADIOMODE, &val, NULL);
+    RELEASE(pIDBOXIICapture);
+
+    if (SUCCEEDED(hr))
+        result=(int)val;
+
+    return(result);
+}
+
+HRESULT SetRadioTVMode(int mode)
+{
+    int result=-1;
+    HRESULT hr=NOERROR;
+    __int64 val=(__int64)mode;
+    IDBOXIICapture *pIDBOXIICapture=NULL;
+ 
+    if (gpVCap==NULL)
+        return(E_UNEXPECTED);
+
+    hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+    if (SUCCEEDED(hr))
+        hr=pIDBOXIICapture->setParameter(CMD_TVRADIOMODE, val);
+    RELEASE(pIDBOXIICapture);
+
+    gRadioTVMode=mode;
+
+    if (gRadioTVMode==0)
+        gCaptureAudioOnly=TRUE;
+    else
+        gCaptureAudioOnly=FALSE;
+
+    return(hr);
 }

@@ -74,6 +74,8 @@ BOOL CALLBACK DlgProc_DBOX(
 			__int64 val;
             char szStr[264];
 
+            PropSheet_CancelToClose(GetParent(hdlg));
+
             SetCursor(LoadCursor(NULL, MAKEINTRESOURCE (IDC_WAIT)));
             if (gpVCap!=NULL)
                 {
@@ -186,6 +188,8 @@ BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             {
 			int i;
 			int csel;
+
+            PropSheet_CancelToClose(GetParent(hDlg));
 
             // -----------------------------------------------
 
@@ -371,6 +375,9 @@ BOOL CALLBACK DlgProc_MCE(
 		case WM_INITDIALOG:
 			{
             TCHAR txt[264]="";
+
+            PropSheet_CancelToClose(GetParent(hdlg));
+
             SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_SETCHECK, (unsigned int)gMCEEnable, 0 );
             if (!gMCEEnable)
                 {
@@ -502,6 +509,9 @@ BOOL CALLBACK DlgProc_MISC(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 switch (msg)
     {
 	case WM_INITDIALOG:
+
+        PropSheet_CancelToClose(GetParent(hDlg));
+
         switch(gApplicationPriority)
             {
             case REALTIME_PRIORITY_CLASS:
@@ -632,6 +642,7 @@ BOOL CALLBACK DlgProc_ABOUT(
 switch (msg)
     {
 	case WM_INITDIALOG:
+        PropSheet_CancelToClose(GetParent(hDlg));
 		return TRUE;
 
     case WM_COMMAND:
@@ -682,7 +693,7 @@ BOOL CreatePropertySheet(HWND hWndParent, HINSTANCE hInst, int StartPage)
 	lstrcpy(szPTitle[5],"About");
 
 	pshead.dwSize=sizeof(PROPSHEETHEADER);
-	pshead.dwFlags=PSH_PROPSHEETPAGE; //|PSH_HASHELP; /*PSH_USECALLBACK*/ /*|PSH_NOAPPLYNOW*/
+	pshead.dwFlags=PSH_PROPSHEETPAGE|PSH_NOAPPLYNOW ; //|PSH_HASHELP; /*PSH_USECALLBACK*/ /*|PSH_NOAPPLYNOW*/
 	pshead.hwndParent=hWndParent;
 	pshead.hInstance=hInst;
 	pshead.hIcon=NULL;

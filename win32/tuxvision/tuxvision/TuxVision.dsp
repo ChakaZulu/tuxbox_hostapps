@@ -124,6 +124,10 @@ SOURCE=.\guids.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\capture\INTERFACE.H
+# End Source File
+# Begin Source File
+
 SOURCE=.\logger.cpp
 # End Source File
 # Begin Source File

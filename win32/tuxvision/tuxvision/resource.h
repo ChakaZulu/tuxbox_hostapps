@@ -64,6 +64,8 @@
 #define IDC_MCE_DEFAULT                 1096
 #define IDC_MCE_URL                     1097
 #define IDC_MCE_INTERNET                1098
+#define IDC_RADIO                       1099
+#define IDC_TV                          1100
 
 // Next default values for new objects
 // 
@@ -71,7 +73,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40017
-#define _APS_NEXT_CONTROL_VALUE         1099
+#define _APS_NEXT_CONTROL_VALUE         1100
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
