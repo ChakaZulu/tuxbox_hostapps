@@ -76,6 +76,7 @@ bool	vlog 		= false;
 bool	alog 		= false;
 bool	nosectionsd 	= false;
 bool	gcore 		= false;
+bool	debug 		= false;
 
 // Reader Threads
 pthread_t hv_thread;	
@@ -188,6 +189,8 @@ int main( int argc, char *argv[] ) {
 			nosectionsd = true;
 		} else if (!strcmp("-core", argv[i])) {
 			gcore = true;
+		} else if (!strcmp("-debug", argv[i])) {
+			debug = true;
 		} else if (!strcmp("-h", argv[i])) {
 
 			fprintf(stderr, "ggrab version 0.09, Copyright (C) 2002 Peter Menzebach\n"
@@ -215,6 +218,7 @@ int main( int argc, char *argv[] ) {
 					"-alog          writes raw audio stream to \"log.aud\"\n"
 					"-nos           No stop of sectionsd\n"
 					"-core          generate core dump if error exit\n"
+					"-debug         generate core dump if error exit\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"
@@ -345,19 +349,26 @@ int main( int argc, char *argv[] ) {
 				a=arecbytes;
 				vrecbytes=0;
 				arecbytes=0;
-				fprintf(stderr, "%02d:%02d  vid %04d kbit/s  aud %03d kbit/s  syn %d  drop %ds vh %05d ah %05d dp %5.1lf da %5.1lf pd %6d\r",
+				fprintf(stderr, "%02d:%02d  vid %04d kbit/s  aud %03d kbit/s  syn %d  drop %ds ",
 					  (int)((now - start_time) / 60),
 					  (int)((now - start_time) % 60),
 					  (v * 8 / msec),
 					  (a * 8 / msec),
 					  0,
-					  0,
+					  0);
+
+				if(debug) {
+					fprintf(stderr, "vh %05d ah %05d dp %5.1f da %5.1f pd %6d vb %4d ab %4d",
 					  vrecmax,
 					  arecmax,
 					  dtime,
 					  daudio,
-					  gpadding
-				       );
+					  gpadding,
+					  vbuf.GetByteCount()/1024,
+					  abuf.GetByteCount()/1024
+				           );
+				}
+				fprintf(stderr, "\r");
 				if (!((now-start_time) % 10)){
 					gpadding = 0;
 					vrecmax  = 0;
@@ -535,7 +546,7 @@ generate_next_video_pp (class xlist * vlist) {
 					
 			if (velem.startflag == START_SEQ) {
 				if (fabs(velem.pts - vcorrect - VIDEO_FORERUN - src_wanted) > 90000) {
-					fprintf(stderr, "video pts gap = %10.1lf s\n", fabs(velem.pts-vcorrect-VIDEO_FORERUN-src_wanted)/90000);
+					fprintf(stderr, "video pts gap = %10.1f s\n", fabs(velem.pts-vcorrect-VIDEO_FORERUN-src_wanted)/90000);
 			
 				}
 
@@ -598,7 +609,7 @@ generate_next_audio_pp (class xlist * alist) {
 	static CBUFPTR	l_act;
 	static PESELEM  aelem;
 	static double	pts_per_byte;
-	static double	pes_pts;
+	static double	act_pts;
 	static double	last_pes_pts;
 	static int	a_restlen;
 	static double	xaudio = 0;
@@ -629,7 +640,7 @@ generate_next_audio_pp (class xlist * alist) {
 			alist->discard_elem();
 		}
 		a_restlen 	= aelem.len;
-		pes_pts 	= aelem.pts;
+		act_pts 	= aelem.pts;
 		l_act 		= aelem.lptr;
 		b_restlen = MAX_PP_LEN - (p_act - a_pp);
 
@@ -663,7 +674,7 @@ generate_next_audio_pp (class xlist * alist) {
 	
 	b_restlen = MAX_PP_LEN - (p_act - a_pp);
 	
-	pts = pes_pts + (aelem.len - a_restlen) * pts_per_byte - vcorrect;
+	pts = act_pts + (aelem.len - a_restlen) * pts_per_byte - vcorrect;
 
 
 	fill_pes_pts(p_pes,pts);
@@ -693,13 +704,13 @@ generate_next_audio_pp (class xlist * alist) {
 		if (!a_restlen) {
 			alist->discard_elem();
 			aelem = alist->get_elem();
-			last_pes_pts = pes_pts;
-			pes_pts = aelem.pts;
-			if (fabs(last_pes_pts-pes_pts) > 90000) {
-				fprintf(stderr, "audio pts gap = %10.1lf\n", fabs(last_pes_pts - pes_pts)/90000);
-				pes_pts = last_pes_pts + pts_per_byte * (MAX_PP_LEN-28);
+			last_pes_pts = act_pts;
+			act_pts = aelem.pts;
+			if (fabs(last_pes_pts-act_pts) > 50000) {
+				fprintf(stderr, "audio pts gap = %10.1f\n", fabs(last_pes_pts - act_pts)/90000);
+				//act_pts = last_pes_pts + pts_per_byte * (MAX_PP_LEN-28);
 			}
-			pts_per_byte = (pes_pts-last_pes_pts) / aelem.len;
+			pts_per_byte = (act_pts-last_pes_pts) / aelem.len;
 			l_act      =  aelem.lptr;
 			a_restlen  =  aelem.len;
 		}
@@ -888,8 +899,11 @@ void  * readvstream (void * p_arg) {
 			}
 		}
 		else {
+			if (r < 0) {
+				errexit("Video Read: Read Error");
+			}
 			if((time(0) - ltime) > 1) {
-				fprintf(stderr, "Video Read: timeout, len=%d\n",len);
+				fprintf(stderr, "\n\nVideo Read: timeout, len=%d\n",len);
 				errexit("Video Read: No Data from Box");
 			}
 			usleep (delay);
@@ -955,8 +969,11 @@ void  * readastream (void * p_arg) {
 			}
 		}
 		else {
+			if (r < 0) {
+				errexit("Video Read: Read Error");
+			}
 			if((time(0) - ltime) > 1) {
-				fprintf(stderr, "Audio Read: timeout, len=%d\n",len);
+				fprintf(stderr, "\n\nAudio Read: timeout, len=%d\n",len);
 				errexit("Audio Read: No Data from Box");
 			}
 			usleep (delay);

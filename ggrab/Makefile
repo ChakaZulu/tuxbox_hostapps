@@ -13,9 +13,9 @@
 #
 #
 
-CPPFLAGS=-DREENTRANT -D_LARGEFILE64_SOURCE  -Wall -Wshadow -W
+CPPFLAGS=-DREENTRANT -D_LARGEFILE64_SOURCE  -Wall -Wshadow -W  
 
-LDFLAGS=-static -ggdb 
+LDFLAGS=-static -s 
 
 INSTALL=/usr/bin/install 
 DESTDIR=/usr/local 

@@ -2,7 +2,13 @@ Einleitung
 ==========
 
 
-ggrab ist ein neues Streaming Tool unter Linux für die dbox2 mit Neutrino
+ggrab ist ein neues Streaming Tool für die Dbox2 mit Neutrino
+
+Lauffähig gemeldet unter:
+Linux
+Cygwin
+Solaris
+MacOS X
 
 es ist parameterkompatibel zum bisherigen "grab". Hier habe ich auch einiges abgeschaut...
 Somit kann es auch z.B. mit qbobsd benutzt werden. Einfach ggrab nach /usr/bin/grab kopieren...
@@ -15,7 +21,7 @@ und die Korrektur möglichst dem Player zu überlassen.
 
 Dadurch treten hier auch nicht die gefürchteten Resyncs auf,
 ich weiß allerdings nicht, wie die Player auf die Fehler reagieren.
-Ich habe hier nur Power-DVD, und das verdaut die gestremten Files sehr gut.
+Ich habe hier nur Power-DVD, und das verdaut die gestreamten Files sehr gut.
 
 Dieses ist ein Versuch, und ich benötige das Feedback, was nicht funktioniert.
 Wenn bestimmte Ferhnsehprogramme gar nicht funktionieren, bitte Rückmeldung.
@@ -37,11 +43,6 @@ Optionen von ggrab werden von sserver an ggrab weitergereicht.
 
 
 
-Lauffähig bisher unter:
-Linux
-Mac OS X
-Cygwin
-
 Installation:
 =============
 
@@ -52,13 +53,23 @@ Define __MACOSX__ gesetzt werden
 
 Aufruf:
 =======
+ggrab [optionen]
 
-ggrab -h zeigt selbterkärend alle Optionen
+ggrab -h zeigt selbsterkärend alle Optionen
+
 oder mit Streamingserver:
-./sserver
+./sserver [optionen]
 
-Beenden des Programms mit 'q'<cr> oder ^C
-Neue Datei beginnen mit 'n'<cr> oder SIGUSR2
+
+
+
+Beenden des Programms mit ^C
+Neue Datei beginnen mit kill -USR2 <pidggrab>
+
+Unter Cygwin:
+Beenden mit q<cr>
+Neue Datei mit n<cr>
+
 
 noch nicht realisiert:
 
@@ -66,6 +77,7 @@ Option: -nomux
 
 
 Kontakt:
-Forum "wingrab" bei tuxbox.berlios.dei (mein Nick ist Gandalfx)
+Forum "wingrab" bei tuxbox.berlios.de (mein Nick ist Gandalfx)
+IRC channel #dbox2 Nick meist Gandalfx, Gandalfy
 Mail: Peter Menzebach <pm-ggrab at menzebach.de>
-Download: kommt noch
+Download: auf www.menzebach.de
