@@ -140,13 +140,13 @@ return 1;
 /*------------------------------------------------------------------*/
 void write_to_file()
 {
+int i;
 FILE* pFile=fopen(outputfilename, "w");
 if (pFile == 0) {
    fprintf(stderr, "Fatal error; could not open output file ``%s''\n",
 	   outputfilename);
    exit(2);
  }
-int i;
 
 for(i=0; i< 131072; i++) putc(sector_00[i], pFile);
 fclose(pFile);
@@ -154,14 +154,14 @@ fclose(pFile);
 /*------------------------------------------------------------------*/
 unsigned int read_from_file()
 {
+int i;
+unsigned int size;
 FILE* pFile=fopen(inputfilename, "r");
 if (pFile == 0) {
    fprintf(stderr, "Fatal error; could not open input file ``%s''\n",
 	   inputfilename);
    exit(2);
 }
-int i;
-unsigned int size;
 fseek(pFile, 0, SEEK_END);
 size=(unsigned int)ftell(pFile);
 fseek(pFile, 0, 0);
