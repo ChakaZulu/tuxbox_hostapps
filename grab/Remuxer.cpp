@@ -1,5 +1,5 @@
 /*
- * $Id: Remuxer.cpp,v 1.2 2002/08/31 01:06:19 obi Exp $
+ * $Id: Remuxer.cpp,v 1.3 2002/10/30 09:44:39 obi Exp $
  *
  * MPEG2 remuxer
  *
@@ -21,6 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  * $Log: Remuxer.cpp,v $
+ * Revision 1.3  2002/10/30 09:44:39  obi
+ * bugfix by Peter Menzebach <peter@menzebach.de>
+ *
  * Revision 1.2  2002/08/31 01:06:19  obi
  * sync with grab v1.40
  *
@@ -305,8 +308,8 @@ bool Remuxer::audio_packet_wanted(unsigned char * pes) {
 		
 		if (   pes[3] == STREAM_PRIVATE_1
 		    || pes[3] == STREAM_AUDIO
-		    || pes[3] == STREAM_REST_AUDIO
-		    || pes[3] == 0xc1
+		    || (pes[3] & STREAM_MASK_AUDIO) == STREAM_REST_AUDIO   
+		    					// ISO 13818-3 Audio Streams are defined from c0-df 
 		   )
 		{
 			wanted_audio_stream = pes[3];
@@ -448,7 +451,7 @@ search_again:
 			}
 			
 			if (   data[vp_start+2] == 0x01
-			    && data[vp_start+3] == 0xe0
+			    && (data[vp_start+3] & STREAM_MASK_VIDEO) == STREAM_REST_VIDEO
 		      ) {
 				
 				// found video PES header, 
