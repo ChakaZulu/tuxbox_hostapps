@@ -35,6 +35,8 @@ sub part_read
 
   my $out = IO::File -> new ( $file, O_CREAT | O_EXCL | O_WRONLY ) or die $!;
 
+  $in -> seek ( $begin, SEEK_SET ) or die $!;
+
   my $buf;
 
   my $temp = $size;
