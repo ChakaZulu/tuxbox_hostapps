@@ -56,6 +56,7 @@
 #include "..\\render\\interface.h"
 #include "TCPServer.h"
 #include "logger.h"
+#include "MCE.h"
 #include "debug.h"
 
 
@@ -131,6 +132,7 @@ int     CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM 
 void    CreateChannelList(HWND hwnd);
 HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChannel);
 void    ComposeCaptureFileName(LPSTR szFileName);
+void    FeedBufferIntoListbox(char *buf, int id, int maxwidth);
 void    LoadParameter(void);
 void    SaveParameter(void);
 
@@ -279,6 +281,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
     LogPrintf("Application started");
     LogFlush(hwnd);
+    SendMessage(GetDlgItem(hwnd,IDC_INFO), LB_RESETCONTENT, 0, 0);
 // ------------------------------------------------------------------------
 
 	if (SUCCEEDED(hr))
@@ -302,9 +305,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
         SetTimer(ghWndApp,1,1000,NULL);
 
-
         CreateChannelList(ghWndApp);
-
    
         ghPopUpMenu=CreatePopupMenu();
         AppendMenu(ghPopUpMenu,	 MF_STRING, ID_ALWAYSONTOP, "Allways on top");
@@ -323,6 +324,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
             HTTPRun();
             }
 
+        InitMCE();
+
+        //GetMCEInfo("www.musicchoice.co.uk", 80, "classic");
+
     	while(GetMessage(&msg,NULL,0,0))
 			{
 			TranslateMessage((LPMSG)&msg);
@@ -333,6 +338,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         {
         MessageBox(NULL,"Unable to open capture driver, program will exit !","TuxVision has a severe problem ...",MB_OK|MB_ICONSTOP);
         }
+
+// ------------------------------------------------------------------------
+    DeInitMCE();
 // ------------------------------------------------------------------------
     HTTPStop();
     HTTPDeInit();
@@ -964,6 +972,7 @@ int UpdateWindowState(HWND hWnd)
             EnableWindow(GetDlgItem(hWnd,IDC_DESTINATION),TRUE);
 			EnableWindow(GetDlgItem(hWnd,IDC_CHANNEL),TRUE);
 			EnableWindow(GetDlgItem(hWnd,IDC_GETCHANNELLIST),TRUE);
+			EnableWindow(GetDlgItem(hWnd,IDC_RESET_NHTTPD),TRUE);
 			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),TRUE);
 			EnableWindow(GetDlgItem(hWnd,IDC_NOPREVIEW),TRUE);
 //			EnableWindow(GetDlgItem(hWnd,IDC_PLAY),TRUE);
@@ -976,6 +985,7 @@ int UpdateWindowState(HWND hWnd)
             EnableWindow(GetDlgItem(hWnd,IDC_DESTINATION),TRUE);
 			EnableWindow(GetDlgItem(hWnd,IDC_CHANNEL),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_GETCHANNELLIST),FALSE);
+			EnableWindow(GetDlgItem(hWnd,IDC_RESET_NHTTPD), FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_NOPREVIEW), FALSE);
 //			EnableWindow(GetDlgItem(hWnd,IDC_PLAY),FALSE);
@@ -987,6 +997,7 @@ int UpdateWindowState(HWND hWnd)
             EnableWindow(GetDlgItem(hWnd,IDC_DESTINATION),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_CHANNEL),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_GETCHANNELLIST),FALSE);
+			EnableWindow(GetDlgItem(hWnd,IDC_RESET_NHTTPD), FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_NOPREVIEW), FALSE);
 //			EnableWindow(GetDlgItem(hWnd,IDC_PLAY),FALSE);
@@ -998,6 +1009,7 @@ int UpdateWindowState(HWND hWnd)
             EnableWindow(GetDlgItem(hWnd,IDC_DESTINATION),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_CHANNEL),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_GETCHANNELLIST),FALSE);
+			EnableWindow(GetDlgItem(hWnd,IDC_RESET_NHTTPD), FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_RECORD),FALSE);
 			EnableWindow(GetDlgItem(hWnd,IDC_NOPREVIEW), FALSE);
 //			EnableWindow(GetDlgItem(hWnd,IDC_PLAY),FALSE);
@@ -1170,13 +1182,88 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
     else
         lstrcpy(szEPGTitle, "");
 
-//    if (lstrlen(szEPGID)>0)
-//        hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
+    SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
+    if (lstrlen(szEPGID)>0)
+        {
+        hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
+        FeedBufferIntoListbox(buf, IDC_INFO, 80);
+        }
 
     SetDlgItemText(ghWndApp,IDC_CHANNELINFO, szEPGTitle);
     lstrcpy(gszDestinationFile, szEPGTitle);
  
     return(hr);
+}
+
+void FeedBufferIntoListbox(char *buf, int id, int maxwidth)
+{
+    char tbuf[1024]="";
+    int i=0;
+    HWND hwnd=GetDlgItem(ghWndApp,id);
+    int srclen=lstrlen(buf);
+    int isEnd=FALSE;
+    if (hwnd!=NULL)
+        {
+        for(i=0;i<srclen;i++)
+            {
+            if ( (buf[i]<0x20) && (buf[i]>=0x00) && (buf[i]!=0x0A) )
+                buf[i]=' ';
+            }
+        lstrcpy(tbuf, buf);
+        while(TRUE)
+            {
+            if ( (lstrlen(tbuf)<=maxwidth) || isEnd )
+                {
+                #if 1
+                    char *p=NULL;
+                    p=strstr(tbuf,"\n");
+                    while(p!=NULL)  
+                        {
+                        *p=0;
+                        SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                        lstrcpy(tbuf, p+1);
+                        p=strstr(tbuf,"\n");
+                        }
+                    if (lstrlen(tbuf)>0)
+                        SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                #else
+                    SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                #endif
+                break;
+                }
+            else
+                {
+                for(i=maxwidth;i<lstrlen(tbuf);i++)
+                    {
+                    isEnd=TRUE;
+                    if (tbuf[i]==' ')
+                        {
+                        tbuf[i]=0;
+
+                        #if 1
+                            char *p=NULL;
+                            p=strstr(tbuf,"\n");
+                            while(p!=NULL)  
+                                {
+                                *p=0;
+                                SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                                lstrcpy(tbuf, p+1);
+                                p=strstr(tbuf,"\n");
+                                }
+                            if (lstrlen(tbuf)>0)
+                                SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                        #else
+                            SendMessage(hwnd, LB_ADDSTRING, 0, (LONG)(LPSTR)tbuf );
+                        #endif
+
+                        lstrcpy(tbuf, buf+i+1);
+                        lstrcpy(buf,tbuf);
+                        isEnd=FALSE;
+                        }
+                    }
+                }
+            }
+        }
 }
 
 void LoadParameter(void)

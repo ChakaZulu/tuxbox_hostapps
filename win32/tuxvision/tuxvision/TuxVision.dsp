@@ -96,6 +96,14 @@ SOURCE=.\AX_HELPER.H
 # End Source File
 # Begin Source File
 
+SOURCE=.\CCIRCULARBUFFER.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\CCIRCULARBUFFER.H
+# End Source File
+# Begin Source File
+
 SOURCE=.\DEBUG.C
 # End Source File
 # Begin Source File
@@ -121,6 +129,14 @@ SOURCE=.\logger.cpp
 # Begin Source File
 
 SOURCE=.\logger.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MCE.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MCE.h
 # End Source File
 # Begin Source File
 

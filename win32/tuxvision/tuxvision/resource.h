@@ -25,6 +25,7 @@
 #define IDC_VIDEO_FRAME                 1024
 #define IDC_OPTIONS                     1025
 #define IDC_EXIT                        1026
+#define IDC_VIDEO_FRAME2                1027
 #define IDC_PLAY                        1028
 #define IDC_CHANNEL                     1056
 #define IDC_AUDIOSAMPLEFREQUENCY        1057
@@ -56,6 +57,7 @@
 #define IDC_AUDIORECODE                 1089
 #define IDC_AUDIOFORMAT                 1090
 #define IDC_CTRLPORT                    1091
+#define IDC_INFO                        1092
 
 // Next default values for new objects
 // 
@@ -63,7 +65,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40017
-#define _APS_NEXT_CONTROL_VALUE         1092
+#define _APS_NEXT_CONTROL_VALUE         1093
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
