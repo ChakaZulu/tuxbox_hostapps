@@ -513,7 +513,7 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             {
             HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
             if (SUCCEEDED(hr))
-                hr=ExecuteCommand("killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+                hr=ExecuteCommand("killall -9 thttpd;sleep 1;/bin/thttpd -C /etc/thttpd.conf", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             break;
             }
 
@@ -1176,7 +1176,10 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
 
 
     if (m_Abort)
+        {
+        Sleep(5);
         return(NOERROR);
+        }
 
     pms->GetPointer(&pData);
     lMaxDataLen = pms->GetSize();
@@ -1224,7 +1227,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, (AUDIO_BUFFER_SIZE+VIDEO_BUFFER_SIZE)))
                     {
-                    Sleep(10);
+                    Sleep(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)
@@ -1255,7 +1258,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, VIDEO_BUFFER_SIZE))
                     {
-                    Sleep(10);
+                    Sleep(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)
@@ -1276,7 +1279,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                 {
                 while (!CMultiplexBuffer->canRead(0, AUDIO_BUFFER_SIZE))
                     {
-                    Sleep(10);
+                    Sleep(5);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)

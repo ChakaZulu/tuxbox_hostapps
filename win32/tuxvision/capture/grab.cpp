@@ -1306,7 +1306,7 @@ void __cdecl AVReadThread(void *thread_arg)
 
         
         #if USE_REMUX
-        if (!wait)
+        //if (!wait)
             {
             if ((gSocketVideoPES>0)&&(gSocketAudioPES>0))
                 {
@@ -1462,7 +1462,8 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
     gfThreadAborted=FALSE;
     gfTerminateThread=FALSE;
 	ghAVReadThread=_beginthread(AVReadThread , 0, NULL);
-    SetThreadPriority((HANDLE)ghAVReadThread, THREAD_PRIORITY_ABOVE_NORMAL);
+
+//    SetThreadPriority((HANDLE)ghAVReadThread, THREAD_PRIORITY_ABOVE_NORMAL);
 //    SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS);
 
 

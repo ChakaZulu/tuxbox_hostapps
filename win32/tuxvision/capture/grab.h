@@ -20,11 +20,14 @@
 * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 #define MAX_LIST_ITEM       (16384)
+#define MTU_DBOX            ( 1500)
 
-#define VIDEO_BUFFER_SIZE   (128*1024)
-#define AUDIO_BUFFER_SIZE   (  8*1024)
-#define BUFFER_COUNT               32
-
+//#define VIDEO_BUFFER_SIZE   (128*1024)
+//#define AUDIO_BUFFER_SIZE   (  8*1024)
+#define VIDEO_BUFFER_SIZE   (64*MTU_DBOX) 
+#define AUDIO_BUFFER_SIZE   ( 8*MTU_DBOX) 
+#define BUFFER_COUNT               64
+ 
 #define USE_REMUX                   1
 
 extern char   *gChannelNameList[MAX_LIST_ITEM];
