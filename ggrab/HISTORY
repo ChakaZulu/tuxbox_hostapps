@@ -13,6 +13,8 @@ ggrab---------------------------------------------
 				Added Options vlog und alog für logging stream directly
 10.11.2002	Version 0.08	Correction Audiostream (slow playback, streamingserver added, 
 				stopping of sectionsd during recording
+17.11.2002	Version 0.09	Mpeg stream improved (no warning in xine any more).
+				Several other improvements. 
 
 TODO:
 - Implementierung der -nomux Option
