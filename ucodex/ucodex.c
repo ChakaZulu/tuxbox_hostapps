@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.12 2003/10/31 00:14:03 obi Exp $
+ * $Id: ucodex.c,v 1.13 2003/11/03 11:29:51 alexw Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -21,7 +21,9 @@
  *
  */
 
+#ifndef _WIN32 
 #include <dirent.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -287,6 +289,9 @@ int process_path(const char *directory, const char *filename) {
 	}
 
 	if (filestat.st_mode & S_IFDIR) {
+#ifdef _WIN32 
+		fprintf(stderr, "Sorry, scanning Dirs is not supported in the win version\n");
+#else
 		struct dirent *entry;
 		DIR *dir = opendir(path);
 
@@ -307,6 +312,7 @@ int process_path(const char *directory, const char *filename) {
 
 		free(path);
 		return EXIT_SUCCESS;
+#endif
 	}
 
 	free(path);
