@@ -46,6 +46,7 @@
 #include <initguid.h>
 
 #include "guids.h"
+#include "MCE.h"
 #include "Dshow.h"
 #include "TuxVision.h"
 #include "resource.h"
@@ -55,9 +56,9 @@
 #include "Registry.h"
 #include "..\\capture\\interface.h"
 #include "..\\render\\interface.h"
+#include "..\\audiofilerenderer\\interface.h"
 #include "TCPServer.h"
 #include "logger.h"
-#include "MCE.h"
 #include "debug.h"
 
 
@@ -139,9 +140,12 @@ long          gTranscodeAudio=FALSE;
 long          gTranscodeAudioFormat=AUDIO_MPEG1L2;
 long          gTranscodeAudioBitRate=192000;
 long          gTranscodeAudioSampleRate=44100;
-long          gEnableTCPServer=FALSE;
+long          gEnableTCPServer=TRUE;
 long          gHTTPPort=8080;
 long          gSTREAMPort=4000;
+long          gMCEEnable=FALSE;
+TCHAR         gMCEURL[264]="www.musicchoice.co.uk";
+long          gMCETimeOut=10;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -954,19 +958,22 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             break;
 
 		case IDC_OPTIONS:
+            {
+            DWORD result=0;
             HTTPStop();
             HTTPDeInit();
 
-			CreatePropertySheet(ghWndApp, ghInstApp, gLastPropertyPage);
+			result=CreatePropertySheet(ghWndApp, ghInstApp, gLastPropertyPage);
 
             if (gEnableTCPServer)
                 {
                 HTTPInit();
                 HTTPRun();
                 }
-
-            CreateChannelList(ghWndApp);
+            if (result>0)
+                CreateChannelList(ghWndApp);
 			UpdateWindowState(hwnd);
+            }
 			break;
 
 		case IDC_DEINTERLACE:
@@ -1235,7 +1242,7 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
     if (lstrlen(szEPGID)>0)
         {
         hr=pIDBOXIICapture->getParameter(CMD_GETEPG, (__int64*)szEPGID, (__int64*)buf);
-        FeedBufferIntoListbox(buf, IDC_INFO, 64);
+        FeedBufferIntoListbox(buf, IDC_INFO, 50);
         }
 
     SetDlgItemText(ghWndApp,IDC_CHANNELINFO, szEPGTitle);
@@ -1376,6 +1383,16 @@ void LoadParameter(void)
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "STREAMPort", (unsigned char *)regval, sizeof(regval)))
         gSTREAMPort=atoi(regval);
 
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEEnable", (unsigned char *)regval, sizeof(regval)))
+        gMCEEnable=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCETimeOut", (unsigned char *)regval, sizeof(regval)))
+        gMCETimeOut=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEURL", (unsigned char *)regval, sizeof(regval)))
+        lstrcpy(gMCEURL,regval);
+
 }
 
 void SaveParameter(void)
@@ -1437,6 +1454,15 @@ void SaveParameter(void)
 	wsprintf((char *)regval,"%ld",gSTREAMPort);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "STREAMPort", (unsigned char *)regval, lstrlen(regval));
 
+
+	wsprintf((char *)regval,"%ld",gMCEEnable);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEEnable", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gMCETimeOut);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCETimeOut", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%s",gMCEURL);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "MCEURL", (unsigned char *)regval, lstrlen(regval));
 }
 
 
@@ -1444,22 +1470,28 @@ void SaveParameter(void)
 void __cdecl SongInfoThread(void *rs)
 {
     DWORD ret;
-    struct songinfo si;
+    struct SongInfo si;
     HRESULT hr=NOERROR;
     int i=0;
+
+    ZeroMemory(&si, sizeof(struct SongInfo));
 
     while(TRUE)
         {
         //dprintf("SongInfoThread waiting ...");
         ret=WaitForMultipleObjects(2, songevents, FALSE, 10000);
+        
         switch(ret)
             {
             case WAIT_OBJECT_0+0:
+            if (gMCEEnable)
                 {
                 char szChannel[264];
                 char szMCEChannel[264];
                 dprintf("AudioSeqStart event !");
                 int sel;
+
+                SendSplitEventToAudioFileRenderer();
 
                 ZeroMemory(szChannel, sizeof(szChannel));
                 ZeroMemory(szMCEChannel, sizeof(szMCEChannel));
@@ -1473,10 +1505,11 @@ void __cdecl SongInfoThread(void *rs)
                     SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_RESETCONTENT, 0, 0);
                     for(i=0;i<5;i++)
                         {
-                        ZeroMemory(&si, sizeof(struct songinfo));
-                        hr=GetMCEInfo("www.musicchoice.co.uk", 80, szMCEChannel, &si);
+                        //ZeroMemory(&si, sizeof(struct SongInfo));
+                        hr=GetMCEInfo(gMCEURL, 80, szMCEChannel, &si);
                         if (SUCCEEDED(hr))
                             {
+                            struct ID3 id3;
                             char szStr[1024];
                             ZeroMemory(szStr, sizeof(szStr));
                             SendMessage(GetDlgItem(ghWndApp,IDC_INFO), LB_ADDSTRING, 0, (LONG)(LPSTR)"You are listening to:");
@@ -1490,7 +1523,28 @@ void __cdecl SongInfoThread(void *rs)
                             dprintf("Album : %s",si.album);
                             dprintf("Artist: %s",si.artist1);
                             dprintf("---------------------");
+
+                            ZeroMemory(&id3, sizeof(id3));
+                       		id3.tag[0] = 'T';
+                            id3.tag[1] = 'A';
+                            id3.tag[2] = 'G';
+		                    strncpy(id3.songname, si.track, sizeof(id3.songname));
+		                    strncpy(id3.artist, si.artist1, sizeof(id3.artist));
+  	                        strncpy(id3.album, si.album, sizeof(id3.album));
+		                    strncpy(id3.year, si.year, sizeof(id3.year));
+		                    strncpy(id3.comment, si.label, sizeof(id3.comment));
+
+		                    id3.empty = '\0';
+		                    id3.tracknum = '\0';
+		                    id3.genre = (unsigned char)0xFF;
+
+                            SendSplitDataToAudioFileRenderer(&id3);
+
                             break;
+                            }
+                        else
+                            {
+                            Sleep(10);
                             }
                         }                                        
                     }

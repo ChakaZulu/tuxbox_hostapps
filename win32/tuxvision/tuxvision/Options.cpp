@@ -40,6 +40,7 @@
 #include "TuxVision.h"
 #include "resource.h"	// application resources
 #include "options.h"
+#include "MCE.h"
 #include "DShow.h"
 #include "..\\capture\\interface.h"
 #include "debug.h"
@@ -172,6 +173,7 @@ BOOL CALLBACK DlgProc_DBOX(
     }
     return FALSE;
 }
+
 
 // ------------------------------------------------------------------------
 //
@@ -358,6 +360,122 @@ BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 // ------------------------------------------------------------------------
 //
 // ------------------------------------------------------------------------
+BOOL CALLBACK DlgProc_MCE(
+    HWND    hdlg,
+    UINT    msg,
+    WPARAM  wParam,
+    LPARAM  lParam)
+{
+	switch (msg)
+		{
+		case WM_INITDIALOG:
+			{
+            TCHAR txt[264]="";
+            SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_SETCHECK, (unsigned int)gMCEEnable, 0 );
+            SetWindowText(GetDlgItem(hdlg,IDC_MCE_URL), gMCEURL);
+            itoa(gMCETimeOut, txt, 10);
+            SetWindowText(GetDlgItem(hdlg,IDC_MCE_TIMEOUT), txt);
+
+            if (gMCEEnable)
+                {
+                EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
+                EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
+                }
+            else
+                {
+                EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),FALSE);
+                EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),FALSE);
+                }
+                
+            }
+			return TRUE;
+
+		case WM_COMMAND:
+			switch (GET_WM_COMMAND_ID (wParam, lParam))
+				{
+				case IDC_TEST:
+                    NMHDR nmh;
+                    nmh.code=PSN_APPLY;
+                    SendMessage(hdlg,WM_NOTIFY,0,(LPARAM)&nmh);
+                    SendMessage(hdlg,WM_INITDIALOG,0,0);
+					break;
+
+				case IDC_MCE_ENABLE:
+                    {
+                    gMCEEnable=SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_GETCHECK, 0, 0 );
+                    if (gMCEEnable)
+                        {
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
+                        }
+                    else
+                        {
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),FALSE);
+                        EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),FALSE);
+                        }
+                    }
+                break;
+
+				case IDC_MCE_DEFAULT:
+                    {
+                    TCHAR txt[264]="";
+                    gMCEEnable=TRUE;
+                    SendMessage( GetDlgItem(hdlg,IDC_MCE_ENABLE), BM_SETCHECK, (unsigned int)gMCEEnable, 0 );
+                    lstrcpy(gMCEURL, "www.musicchoice.co.uk");
+                    SetWindowText(GetDlgItem(hdlg,IDC_MCE_URL), gMCEURL);
+                    gMCETimeOut=10;
+                    itoa(gMCETimeOut, txt, 10);
+                    SetWindowText(GetDlgItem(hdlg,IDC_MCE_TIMEOUT), txt);
+
+                    EnableWindow(GetDlgItem(hdlg,IDC_MCE_URL),TRUE);
+                    EnableWindow(GetDlgItem(hdlg,IDC_MCE_TIMEOUT),TRUE);
+                    }
+                    break;
+				}
+			return TRUE;
+		break;
+
+
+	case WM_NOTIFY:
+		{
+		LPNMHDR pnmh=(LPNMHDR)lParam;
+		switch(pnmh->code)
+			{
+            case PSN_HELP:
+                break;
+
+			case PSN_APPLY:
+                {
+                TCHAR txt[264]="";
+                GetWindowText(GetDlgItem(hdlg,IDC_MCE_URL), gMCEURL, 264);
+                GetWindowText(GetDlgItem(hdlg,IDC_MCE_TIMEOUT), txt, 264);
+                gMCETimeOut=atoi(txt);
+                if (gMCETimeOut>60)
+                    gMCETimeOut=60;
+                if (gMCETimeOut<10)
+                    gMCETimeOut=10;
+                itoa(gMCETimeOut, txt, 10);
+                SetWindowText(GetDlgItem(hdlg,IDC_MCE_TIMEOUT), txt);
+				PropSheet_UnChanged(GetParent(hdlg),hdlg);
+                }
+			    break;
+
+			case PSN_SETACTIVE:
+                gLastPropertyPage=2;
+				break;
+
+			case PSN_KILLACTIVE:
+				break;
+			}
+		return TRUE;
+		}
+    }
+    return FALSE;
+}
+
+// ------------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------
 BOOL CALLBACK DlgProc_MISC(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 switch (msg)
@@ -469,7 +587,7 @@ switch (msg)
 				PropSheet_UnChanged(GetParent(hDlg),hDlg);
 			    break;
 			case PSN_SETACTIVE:
-                gLastPropertyPage=2;
+                gLastPropertyPage=3;
 				break;
 			case PSN_KILLACTIVE:
 				PropSheet_UnChanged(GetParent(hDlg),hDlg);
@@ -511,7 +629,7 @@ switch (msg)
 			    break;
 
 			case PSN_SETACTIVE:
-                gLastPropertyPage=3;
+                gLastPropertyPage=4;
 				break;
 
 			case PSN_KILLACTIVE:
@@ -532,14 +650,15 @@ BOOL CreatePropertySheet(HWND hWndParent, HINSTANCE hInst, int StartPage)
 {
 	TCHAR szPTitle[10][32];
 	PROPSHEETHEADER pshead;
-	PROPSHEETPAGE	pspage[4];
+	PROPSHEETPAGE	pspage[5];
 	ZeroMemory(&pshead,sizeof(PROPSHEETHEADER));
 
 	lstrcpy(szPTitle[0],"Options");
 	lstrcpy(szPTitle[1],"DBox");
 	lstrcpy(szPTitle[2],"Audio");
-	lstrcpy(szPTitle[3],"Misc");
-	lstrcpy(szPTitle[4],"About");
+	lstrcpy(szPTitle[3],"MCE");
+	lstrcpy(szPTitle[4],"Misc");
+	lstrcpy(szPTitle[5],"About");
 
 	pshead.dwSize=sizeof(PROPSHEETHEADER);
 	pshead.dwFlags=PSH_PROPSHEETPAGE; //|PSH_HASHELP; /*PSH_USECALLBACK*/ /*|PSH_NOAPPLYNOW*/
@@ -547,12 +666,12 @@ BOOL CreatePropertySheet(HWND hWndParent, HINSTANCE hInst, int StartPage)
 	pshead.hInstance=hInst;
 	pshead.hIcon=NULL;
 	pshead.pszCaption=szPTitle[0];
-	pshead.nPages=4;
+	pshead.nPages=5;
 	pshead.nStartPage=StartPage;
 	pshead.ppsp=pspage;
 	pshead.pfnCallback=NULL;
 
-	ZeroMemory(&pspage,4*sizeof(PROPSHEETPAGE));
+	ZeroMemory(&pspage,pshead.nPages*sizeof(PROPSHEETPAGE));
 
     pspage[0].dwSize=sizeof(PROPSHEETPAGE);
     pspage[0].dwFlags  =PSP_DEFAULT|PSP_USETITLE;
@@ -570,16 +689,21 @@ BOOL CreatePropertySheet(HWND hWndParent, HINSTANCE hInst, int StartPage)
     pspage[1].pszTitle=szPTitle[2];
 
     memcpy(&pspage[2],&pspage[0],sizeof(PROPSHEETPAGE));
-    pspage[2].pszTemplate=MAKEINTRESOURCE(MISC);
-    pspage[2].pfnDlgProc=DlgProc_MISC;
+    pspage[2].pszTemplate=MAKEINTRESOURCE(MCE);
+    pspage[2].pfnDlgProc=DlgProc_MCE;
     pspage[2].pszTitle=szPTitle[3];
 
     memcpy(&pspage[3],&pspage[0],sizeof(PROPSHEETPAGE));
-    pspage[3].pszTemplate=MAKEINTRESOURCE(ABOUT);
-    pspage[3].pfnDlgProc=DlgProc_ABOUT;
+    pspage[3].pszTemplate=MAKEINTRESOURCE(MISC);
+    pspage[3].pfnDlgProc=DlgProc_MISC;
     pspage[3].pszTitle=szPTitle[4];
 
-return(PropertySheet(&pshead));
+    memcpy(&pspage[4],&pspage[0],sizeof(PROPSHEETPAGE));
+    pspage[4].pszTemplate=MAKEINTRESOURCE(ABOUT);
+    pspage[4].pfnDlgProc=DlgProc_ABOUT;
+    pspage[4].pszTitle=szPTitle[5];
+
+    return(PropertySheet(&pshead));
 }
 
 

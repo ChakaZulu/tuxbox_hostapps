@@ -33,6 +33,7 @@
 #include "debug.h"
 #include "ccircularbuffer.h"
 #include "MCE.h"
+#include "tuxvision.h"
 
 //!!BS (n/t)httpd is really a bloody bastard ...
 #if 1
@@ -177,7 +178,7 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
         ret=WaitForSocketData(s, &avail, 1000);
         if (ret<0)
             break;
-        if (i++>10)
+        if (i++>gMCETimeOut)
             break;
         }
 
@@ -224,7 +225,7 @@ void decode_string(char * string)
 	*newstr = '\0';
 }
 
-HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, struct songinfo *mysonginfo)
+HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, struct SongInfo *mysonginfo)
 {
     HRESULT hr=NOERROR;
     int ret=0;
@@ -284,7 +285,13 @@ HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, str
 		            break;
 
 	            urlbufptr += 8;
-	            tagptr = tag;
+                
+                //!!BS: looks we like to crash here ...
+                if (urlbufptr>(rbuffer+len))
+                    break;
+                //!!BS: looks we like to crash here ...
+	            
+                tagptr = tag;
 	            for (cpptr = urlbufptr, i = 0; *cpptr != '\"'; cpptr++, i++)
 	                {
 		            if (i < MAXTAG-1)

@@ -30,10 +30,12 @@
 
 #include "guids.h"
 #include "AX_Helper.h"
+#include "MCE.h"
 #include "Dshow.h"
 #include "TuxVision.h"
 #include "..\\capture\\interface.h"
 #include "..\\render\\interface.h"
+#include "..\\audiofilerenderer\\interface.h"
 #include "debug.h"
 
 #define MAX_DEVICES  64
@@ -41,6 +43,10 @@ IGraphBuilder        *gpIGraphBuilder       =NULL;
 ICaptureGraphBuilder *gpICaptureGraphBuilder=NULL;
 IBaseFilter          *gpVCap                =NULL;
 TCHAR                gszCaptureFilterName[264];
+
+
+#define AUDIO_RENDERER CLSID_DBOXIIAudioRawFileRenderer
+//#define AUDIO_RENDERER CLSID_RAWWriter
 
 //---------------------------------------------------------
 //
@@ -731,7 +737,7 @@ HRESULT CreateAudioOnlyCaptureGraph()
 
     if (!gTranscodeAudio)
         {
-        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+        hr=LoadFilterByCLSID(gpIGraphBuilder, AUDIO_RENDERER, &pFileWriter, L"FileWriter");
         if (SUCCEEDED(hr))
             hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
         if (SUCCEEDED(hr))
@@ -781,7 +787,7 @@ HRESULT CreateAudioOnlyCaptureGraph()
                 hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pMPEGAudioEncoder, 0, TRUE);
 
             if (SUCCEEDED(hr))
-                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+                hr=LoadFilterByCLSID(gpIGraphBuilder, AUDIO_RENDERER, &pFileWriter, L"FileWriter");
             if (SUCCEEDED(hr))
                 hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
             if (SUCCEEDED(hr))
@@ -804,7 +810,7 @@ HRESULT CreateAudioOnlyCaptureGraph()
                 hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pMPEGAudioEncoder, 0, TRUE);
 
             if (SUCCEEDED(hr))
-                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+                hr=LoadFilterByCLSID(gpIGraphBuilder, AUDIO_RENDERER, &pFileWriter, L"FileWriter");
             if (SUCCEEDED(hr))
                 hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
             if (SUCCEEDED(hr))
@@ -1112,3 +1118,99 @@ HRESULT SetDSoundVolume(__int64 val)
     return hr;
 }
 
+HRESULT SendSplitEventToAudioFileRenderer(void)
+{
+    HRESULT hr=NOERROR;
+    IBaseFilter*  pFilter=NULL;
+    IDBOXIIAudioRawFileRenderer *pIDBOXIIAudioRawFileRenderer=NULL;
+
+    if (gpIGraphBuilder==NULL)
+        return(E_FAIL);
+
+//!!BS: we have to wait a little bit here to compensate bufferlatency ...
+//    if (gTranscodeAudio)
+//        Sleep(2000);
+//!!BS: we have to wait a little bit here to compensate bufferlatency ...
+
+    hr = gpIGraphBuilder->FindFilterByName (L"FileWriter", &pFilter);
+    if ( SUCCEEDED(hr) )
+        {
+        hr=pFilter->QueryInterface(IID_IDBOXIIAudioRawFileRenderer, (void **)&pIDBOXIIAudioRawFileRenderer);
+        if (SUCCEEDED(hr))
+            hr=pIDBOXIIAudioRawFileRenderer->setParameter(CMD_SPLITEVENT, 0, 0, 0);
+        }
+
+    RELEASE(pIDBOXIIAudioRawFileRenderer);
+    RELEASE(pFilter);
+
+    return(hr);
+}
+
+HRESULT SendSplitDataToAudioFileRenderer(ID3 *id3)
+{
+    char  szID3File[264];
+    char  szFilename[264];
+    WCHAR wszFilename[264];
+    HRESULT hr=NOERROR;
+    IBaseFilter*  pFilter=NULL;
+    IDBOXIIAudioRawFileRenderer *pIDBOXIIAudioRawFileRenderer=NULL;
+
+    if (gpIGraphBuilder==NULL)
+        return(E_FAIL);
+
+    // ------------------------------------------------------------------------------------
+    ZeroMemory(wszFilename,sizeof(wszFilename));
+
+    lstrcpy(szID3File, id3->artist);
+    lstrcat(szID3File, " - ");
+    lstrcat(szID3File, id3->songname);
+    
+    ValidateFileName(szID3File);
+
+    if (!gTranscodeAudio)
+        _makepath(szFilename, NULL, gszDestinationFolder, szID3File, "mpa" );
+    else
+        {
+        if (gTranscodeAudioFormat==AUDIO_PCM)
+            {
+            //_makepath(szFilename, NULL, gszDestinationFolder, szID3File, "wav" );
+            return(E_FAIL);
+            }
+        else
+            _makepath(szFilename, NULL, gszDestinationFolder, szID3File, "mpa" );
+        }
+
+    MakeUniqueFileName(szFilename);
+
+    MultiByteToWideChar(CP_ACP, 
+                        0, 
+                        szFilename, 
+                        lstrlen(szFilename),
+                        wszFilename,  
+                        264);
+
+    // ------------------------------------------------------------------------------------
+
+    hr = gpIGraphBuilder->FindFilterByName (L"FileWriter", &pFilter);
+    if ( SUCCEEDED(hr) )
+        {
+        hr=pFilter->QueryInterface(IID_IDBOXIIAudioRawFileRenderer, (void **)&pIDBOXIIAudioRawFileRenderer);
+        if (SUCCEEDED(hr))
+            hr=pIDBOXIIAudioRawFileRenderer->setParameter(CMD_SPLITDATA, (__int64)id3, (__int64)wszFilename, 0);
+#if 1
+        if (!gTranscodeAudio)
+            {
+            hr=pIDBOXIIAudioRawFileRenderer->setParameter(CMD_SPLITMODE, OPT_SPLIT_DISCONTINUITY, 0, 0);
+            }
+        else
+            {
+            hr=pIDBOXIIAudioRawFileRenderer->setParameter(CMD_SPLITMODE, OPT_SPLIT_EVENT, 0, 0);
+            }
+#endif            
+        }
+
+    RELEASE(pIDBOXIIAudioRawFileRenderer);
+    RELEASE(pFilter);
+
+    return(hr);
+}

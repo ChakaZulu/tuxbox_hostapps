@@ -2,7 +2,7 @@
 #define MAXTAG      25
 #define MAXTAGDATA 100
 
-struct songinfo {
+struct SongInfo {
 	bool gotinfo;
 	bool valid;
 	char track[MAXTAGDATA];
@@ -13,7 +13,7 @@ struct songinfo {
 	char label[MAXTAGDATA];
 };
 
-struct id3{
+struct ID3{
 	char tag[3];
 	char songname[30];
 	char artist[30];
@@ -26,5 +26,5 @@ struct id3{
 };
 
 HRESULT InitMCE();
-HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, struct songinfo *mysonginfo);
+HRESULT GetMCEInfo(const char *name, unsigned short port, char *channelName, struct SongInfo *mysonginfo);
 HRESULT DeInitMCE();

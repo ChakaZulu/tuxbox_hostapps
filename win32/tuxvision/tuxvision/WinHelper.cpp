@@ -28,6 +28,7 @@
 #include "WinHelper.h"
 #include "TuxVision.h"
 #include "resource.h"
+#include "MCE.h"
 #include "DShow.h"
 #include "debug.h"
 

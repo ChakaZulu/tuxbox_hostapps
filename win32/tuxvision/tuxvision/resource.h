@@ -11,9 +11,11 @@
 #define IDB_BITMAP_SPLASH               114
 #define MISC                            114
 #define AUDIO                           115
+#define MCE                             116
 #define IDC_IPADDRESS                   1001
 #define IDC_IPADDRESS2                  1002
 #define IDC_HTTPPORT                    1002
+#define IDC_MCE_TIMEOUT                 1002
 #define IDC_STOPPLAYBACK                1003
 #define IDC_LOGIN                       1004
 #define IDC_PASSWORD                    1005
@@ -58,7 +60,9 @@
 #define IDC_AUDIOFORMAT                 1090
 #define IDC_CTRLPORT                    1091
 #define IDC_INFO                        1092
-#define IDC_INFO_STREAM                 1093
+#define IDC_MCE_ENABLE                  1093
+#define IDC_MCE_DEFAULT                 1096
+#define IDC_MCE_URL                     1097
 
 // Next default values for new objects
 // 
@@ -66,7 +70,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40017
-#define _APS_NEXT_CONTROL_VALUE         1093
+#define _APS_NEXT_CONTROL_VALUE         1098
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

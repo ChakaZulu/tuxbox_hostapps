@@ -23,5 +23,6 @@
 BOOL CreatePropertySheet(HWND hWndParent, HINSTANCE hInst, int StartPage);
 BOOL CALLBACK DlgProc_DBOX(HWND hDlg, UINT msg, WPARAM  wParam, LPARAM  lParam);
 BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM  wParam, LPARAM  lParam);
+BOOL CALLBACK DlgProc_MCE(HWND hDlg, UINT msg, WPARAM  wParam, LPARAM  lParam);
 BOOL CALLBACK DlgProc_MISC(HWND hDlg, UINT msg, WPARAM  wParam, LPARAM  lParam);
 BOOL CALLBACK DlgProc_ABOUT(HWND hDlg, UINT msg, WPARAM  wParam, LPARAM  lParam);

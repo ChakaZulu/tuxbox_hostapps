@@ -53,4 +53,7 @@ HRESULT GetCurrentBitrates(__int64 *val, __int64 *val2);
 HRESULT GetDSoundVolume(__int64 *val);
 HRESULT SetDSoundVolume(__int64 val);
 
+HRESULT SendSplitEventToAudioFileRenderer(void);
+HRESULT SendSplitDataToAudioFileRenderer(ID3 *id3);
+
 #endif
