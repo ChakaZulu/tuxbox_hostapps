@@ -1,0 +1,5 @@
+
+DBOXII Capture Filter was written by Bernd Scharping, bernd@transputer.escape.de
+- Remultiplexing path was adopted from "grab" written by Peter Niemayer
+- Telnet path was adopted from ???
+-
