@@ -66,7 +66,6 @@ bool	flag_new_file;
 
 //filenames
 char    a_basename[256]	= "vts_01_";
-int	filenum 	= 1;
 char	a_extension[20]	= "vob";
 
 
@@ -78,6 +77,7 @@ bool	alog 		= false;
 bool	nosectionsd 	= false;
 bool	gcore 		= false;
 bool	debug 		= false;
+bool	gloop 		= false;
 
 // Reader Threads
 pthread_t hv_thread;	
@@ -172,7 +172,7 @@ int main( int argc, char *argv[] ) {
 		} else if (!strcmp("-nomux", argv[i])) {
 			nomux = true;
 		} else if (!strcmp("-loop", argv[i])) {
-			// obsolete	
+			gloop = true;	
 		} else if (!strcmp("-1ptspergop", argv[i])) {
 			// obsolete	
 		} else if (!strcmp("-host", argv[i])) {
@@ -206,6 +206,7 @@ int main( int argc, char *argv[] ) {
 					"-host <host>   hostname or ip address [dbox]\n"
 					"-port <port>   port number [31338]\n"
 					"-o <path>  	path/basename of output files [vts_01_]\n"
+					"-o -           output to stdout\n"
 					"-e <extension> extension of output files [vob]\n"
 					"-m <minutes>   number of minutes to record [24 h]\n"
 					"-s <megabyte>  maximum size per recorded file [2000]\n"
@@ -220,6 +221,7 @@ int main( int argc, char *argv[] ) {
 					"-nos           No stop of sectionsd\n"
 					"-core          generate core dump if error exit\n"
 					"-debug         generate core dump if error exit\n"
+					"-loop          Looping output files basename1/2\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"
@@ -758,21 +760,30 @@ FILE *
 open_next_output_file (FILE * fp) {
 
 	static  char a_filename [256];
-	bool	found=false;
+        static  int  filenum 	= 1;
 	struct  stat stats;
 
+	if (!strcmp(a_basename,"-")) {
+		return (stdout);
+	}
+	
 	if (fp) {
 		fclose(fp);
 	}
 
-	while (!found) {
-		sprintf(a_filename,"%s%d.%s",a_basename, filenum, a_extension);
-		filenum ++;
-		if (!stat(a_filename,&stats)) {
-		 	fprintf(stderr,"file %s exists, trying next\n",a_filename);
-		}
-		else {
-			found = true;
+	sprintf(a_filename,"%s%d.%s",a_basename, filenum, a_extension);
+
+	if (gloop) { 
+		filenum = (filenum > 1)?1:2;
+	}
+	else {
+		while (1) {
+			sprintf(a_filename,"%s%d.%s",a_basename, filenum, a_extension);
+			filenum ++;
+			if (stat(a_filename,&stats)) {
+				break;
+			}
+			fprintf(stderr,"file %s exists, trying next\n",a_filename);
 		}
 	}
 #ifdef _LFS64_STDIO
