@@ -17,7 +17,4 @@ ggrab---------------------------------------------
 				Several other improvements. 
 17.11.2002	Version 0.09a	Bug mit kaputten Bildern beseitigt, sserver jetzt im Pfad startbar
 07.12.2002	Version 0.10	Verschiedene Korrekturen, Experiment udp support
-15.12.2002	Version 0.11	udp-support funktioniert, siehe README
-TODO:
-- Implementierung der -nomux Option
-- Verbesserung des MPEG-Files
+20.12.2002	Version 0.20	Versionssprung: alle Innereien neu, Viele neue Funktionen, siehe Readme

@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <sys/signal.h>
@@ -154,7 +156,7 @@ void  * m_fill_audio (void * p_arg) {
 	}	
 }
 
-xlist::xlist (struct CBuffer * pBuf, int type) {
+xlist::xlist (struct CBuffer * pBuf, S_TYPE stype) {
 
 	m_pbuffer = pBuf;
 
@@ -164,8 +166,58 @@ xlist::xlist (struct CBuffer * pBuf, int type) {
 
 	m_actcount = 0;
 	m_maxcount = 100;
+	m_type     = stype;
 
-	if (type == TYPE_VIDEO) {
+	if (m_type == S_UNDEF) {
+	      	unsigned char * p_buf = new unsigned char[16];
+		CBUFPTR	lptr  	      = 0;
+		CBUFPTR	lhelp         = 0;
+		unsigned char sid1;
+		unsigned char sid2;
+		
+		while (lptr < 100000) {
+			lptr = m_pbuffer->SearchStreamId(lptr, 0, 0, 0, &sid1);
+			if (!(((sid1 & 0xe0) == 0xc0) || ((sid1 & 0xf0) == 0xe0) || (sid1 == 0xbd))) {
+				lptr++;
+				continue;
+			}
+			m_pbuffer->CopyBuffer(lptr, p_buf);
+			if (pes_len(p_buf) > 0) {
+				lhelp = lptr + pes_len(p_buf) + 6;
+				m_pbuffer->CopyBuffer(lhelp, p_buf);
+				lhelp = m_pbuffer->SearchStreamId(lhelp, 20, 0, 0, &sid2);
+				if ((lhelp > 0) && (sid2 == sid1)) {
+					if ((sid1 & 0xf0) == 0xe0) {
+				    		m_type = S_VIDEO;
+					}
+					else {
+						m_type = S_AUDIO;
+					}
+					break;
+				}
+			}
+			else {
+				lhelp = m_pbuffer->SearchStreamId(lptr, 80000, sid1, 0xff, &sid2);
+				
+				if (lhelp > 0) {
+					if ((sid1 & 0xf0) == 0xe0) {
+			    			m_type = S_VIDEO;
+					}
+					else {
+						m_type = S_AUDIO;
+					}
+					break;
+				}
+			}
+			lptr++;
+		}
+		if (m_type == S_UNDEF) {
+			errexit ("xlist::Type of Stream not found");
+		}
+		delete p_buf;
+	}		
+
+	if (m_type == S_VIDEO) {
 		pthread_create( & m_hthread,0, m_fill_video, this);
 	}
 	else {
@@ -214,7 +266,6 @@ xlist::get_elem (void) {
 unsigned char 
 xlist::sid(void) {
 	static struct timespec timeout;
-	unsigned char mysid;
 	pthread_mutex_lock (& m_mutexlock);  
 	while (m_actcount == 0) {
 		timeout.tv_sec = time(0) + 5;
@@ -225,12 +276,15 @@ xlist::sid(void) {
 	
 	pthread_mutex_unlock (& m_mutexlock);
 
-	if (m_sid != 0xbd) {
-		mysid = 0xc0;
-	}
-	else {
-		mysid = 0xbd;
-	}
-	
-	return(mysid);
+	return(m_sid);
+}
+
+S_TYPE 
+xlist::type() {
+	return(m_type);
+}
+
+int 
+xlist::actcount() {
+	return(m_actcount);
 }

@@ -44,6 +44,7 @@ int main(int argc, char * argv[])
 	int ListenSocket, ConnectionSocket;
 	u_short Port = 4000;
 	char buf[BUFLEN];
+	char * p_act;
 	int rc;
 	int pid = 0;
 	time_t t;
@@ -78,11 +79,29 @@ int main(int argc, char * argv[])
 #ifdef __CYGWIN__
 	strcat(a_grabname,".exe");
 #endif
-	n = 9; 
+	n = 9;
+	
 	for (i = 1; i < argc; i++) {
 		if (!strcmp("-o",argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need path for -o\n"); return -1; }
 			strcpy (a_path, argv[i]);
+		}
+		else if (!strcmp("-sport",argv[i])) {
+			i++; if (i >= argc) { fprintf(stderr, "need port for -sport\n"); return -1; }
+			Port = atoi(argv[i]);
+		} else if (!strcmp("-h", argv[i])) {
+			fprintf(stderr, "sserver version 0.03, Copyright (C) 2002 Axel Buehning\n"
+			                "sserver comes with ABSOLUTELY NO WARRANTY; This is free software,\n"
+			                "and you are welcome to redistribute it under the conditions of the\n"
+			                "GNU Public License, see www.gnu.org\n"
+					"------- mandatory options: ---------\n"
+					"-p <pid1> <pid2> <pidn> video and audio pids to receive [none]\n"
+					"\n"
+					"------- basic options: -------------\n"
+					"-sport <port>            port for streaming server [4000]\n"
+					"\n" 
+					"for other options see ggrab -h\n");
+					exit(0);
 		}
 		else {
 			a_arg[n++]=argv[i];
@@ -158,12 +177,27 @@ int main(int argc, char * argv[])
 
 						if (strlen(recdata.channelname) > 0)
 						{
+							p_act = recdata.channelname;
+							do {
+								p_act +=  strcspn(p_act, "/ \"%&-\t`'´!,:;");
+								if (*p_act) {
+									*p_act++ = '_';
+								}
+							} while (*p_act);
+								
 							strcat(a_filename, recdata.channelname);
 							strcat(a_filename, "_");
 						}
 
 						if (strlen(recdata.epgtitle) > 0)
 						{
+							p_act = recdata.epgtitle;
+							do {
+								p_act +=  strcspn(p_act, "/ \"%&-\t`'´!,:;");
+								if (*p_act) {
+									*p_act++ = '_';
+								}
+							} while (*p_act);
 							strcat(a_filename, recdata.epgtitle);
 							strcat(a_filename, "_");
 						}

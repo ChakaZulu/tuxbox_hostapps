@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "tools.h"
 
-extern bool gcore;
+bool gcore;
+bool gloop;
+
 
 double pes_pts(const unsigned char * p) {
 	if (0 == (p[7] & 0x80)) {
@@ -113,3 +117,44 @@ void errexit (char * str) {
 	}
 	exit (1);
 }
+
+FILE * open_next_output_file (FILE * fp,char * p_basename, char * p_ext, int & seq) {
+
+	char a_filename [256];
+	struct  stat stats;
+
+	if (!strcmp(p_basename,"-")) {
+		return (stdout);
+	}
+	
+	if (fp) {
+		fclose(fp);
+	}
+
+	sprintf(a_filename,"%s%d.%s",p_basename, seq, p_ext);
+
+	if (gloop) { 
+		seq = (seq > 1)?1:2;
+	}
+	else {
+		while (1) {
+			sprintf(a_filename,"%s%d.%s",p_basename, seq, p_ext);
+			seq ++;
+			if (stat(a_filename,&stats)) {
+				break;
+			}
+			fprintf(stderr,"file %s exists, trying next\n",a_filename);
+		}
+	}
+#ifdef _LFS64_STDIO
+	if (!(fp = fopen64(a_filename,"w"))) {
+#else
+	if (!(fp = fopen(a_filename,"w"))) {
+#endif
+		fprintf(stderr,"cannot open %s\n",a_filename);
+		errexit("cannot open output file");
+	}
+
+	return(fp);
+}
+

@@ -7,12 +7,10 @@
 
 AM_CPPFLAGS = -DREENTRANT -D_LARGEFILE64_SOURCE 
 
-bin_PROGRAMS = ggrab sserver vlog
+bin_PROGRAMS = ggrab sserver 
 
-EXTRA_DIST = cbuffer.h list.h sserver.h tools.h
+EXTRA_DIST = cbuffer.h list.h sserver.h tools.h pesstream.h
 
-ggrab_SOURCES = cbuffer.cpp ggrab.cpp list.cpp tools.cpp
+ggrab_SOURCES = cbuffer.cpp ggrab.cpp list.cpp tools.cpp pesstream.cpp
 ggrab_LDADD = -lpthread -lnsl
 sserver_SOURCES = sserver.cpp
-vlog_SOURCES = vlog.c
-
