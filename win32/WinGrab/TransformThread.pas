@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: TransformThread.pas,v $
+// Revision 1.3  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.2  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -342,6 +348,7 @@ var
   sCmdParam : String;
   sCmdVerb  : String;
   iCmdShow  : Integer;
+  sAviPath  : String;
   sIso      : String;
   sTrace    : String;
   TmpList   : TStringList;
@@ -354,11 +361,12 @@ begin
         DbgMsg('file:[' + ExtractFileName(sAviFile) + '] is 0 byte -> cancel');
         exit;
       end;
-
+      sAviPath := ExtractFilePath(sAviFile);
       m_Trace.DBMSG(TRACE_DETAIL, 'to ISO '+sAviFile);
+      
       SerializeIsoThread;
       try
-        sTrace := 'copy [' + ExtractFileName(sAviFile) + '] to [' + m_RecordingData.sMoviXPath + 'src\ ... ]';
+{        sTrace := 'copy [' + ExtractFileName(sAviFile) + '] to [' + m_RecordingData.sMoviXPath + 'src\ ... ]';
         DbgMsg(PChar(sTrace));
 
         if Length(ExtractFileName(sAviFile)) > 64 then
@@ -386,18 +394,18 @@ begin
             SHCopyFile(PChar(ChangeFileExt(sAviFile, EpgFileExt)), PChar(m_RecordingData.sMoviXPath + 'src\' + ExtractFileName(ChangeFileExt(sAviFile, EpgFileExt)) ));
           end;
         end;
-
+}
         TmpList := TStringList.Create;
         try
           TmpList.Add('@echo on');
-          TmpList.Add('start ' + ExtractFileName(sAviFile));
-          TmpList.SaveToFile(m_RecordingData.sMoviXPath + 'src\' + 'Autorun.bat');
+          TmpList.Add('start /WAIT "" "' + ExtractFileName(sAviFile) + '"');
+          TmpList.SaveToFile(sAviPath + 'Autorun.bat');
 
           TmpList.Clear;
           TmpList.Add('[autorun]');
           TmpList.Add('open=autorun.bat');
           TmpList.Add('icon=cdrom.ico');
-          TmpList.SaveToFile(m_RecordingData.sMoviXPath + 'src\' + 'Autorun.inf');
+          TmpList.SaveToFile(sAviPath + 'Autorun.inf');
         finally
           TmpList.Free;
         end;
@@ -405,7 +413,7 @@ begin
         sIso     := m_RecordingData.sIsoPath + ChangeFileExt(ExtractFileName(sAviFile), '.ISO');
         iCmdShow := SW_SHOWNORMAL;
         sCmdLine := m_RecordingData.sMoviXPath + 'mkisofs.exe';
-        sCmdParam:= '-o ' + sIso + ' -r -J -V "eMoviX CD" -v -no-emul-boot -boot-load-size 4 -boot-info-table -b isolinux/isolinux.bin -c isolinux/isolinux.boot -sort src\isolinux\iso.sort  -A "eMoviX CD" src';
+        sCmdParam:= '-o ' + sIso + ' -r -J -V "eMoviX CD" -v -no-emul-boot -boot-load-size 4 -boot-info-table -b isolinux/isolinux.bin -c isolinux/isolinux.boot -sort src\isolinux\iso.sort  -A "eMoviX CD" src "'+sAviPath+'"';
         sCmdVerb := 'open';
         sTrace := 'call cmd=[' + sCmdLine + '] param=[' + sCmdParam + ']';
         DbgMsg(PChar(sTrace));
@@ -416,12 +424,14 @@ begin
                           sCmdVerb,
                           iCmdShow);
 
+{
         if FileExists( m_RecordingData.sMoviXPath + 'src\' + ExtractFileName(sAviFile) ) then
         begin
           sTrace := 'del [' + ExtractFileName(m_RecordingData.sMoviXPath + 'src\' + ExtractFileName(sAviFile)) + ']';
           DbgMsg(PChar(sTrace));
           SHDeleteFile(  m_RecordingData.sMoviXPath + 'src\' + ExtractFileName(sAviFile) ,0);
         end;
+
         SHDeleteFile(  m_RecordingData.sMoviXPath + 'src\Autorun.bat' ,0);
         SHDeleteFile(  m_RecordingData.sMoviXPath + 'src\Autorun.inf' ,0);
 
@@ -431,7 +441,7 @@ begin
           DbgMsg(PChar(sTrace));
           SHDeleteFile(  m_RecordingData.sMoviXPath + 'src\' + ExtractFileName(ChangeFileExt(sAviFile, EpgFileExt)) ,0);
         end;
-
+}
         sTrace := 'ISO [' + ExtractFileName(sIso)  + '] size ' + IntToStr(FileSizeByName(sIso)) + ' bytes';
         DbgMsg(PChar(sTrace));
         if  (FileExists(sIso)
@@ -439,9 +449,6 @@ begin
         begin
           sTrace := 'create [' + ExtractFileName(sIso) + '] success';
           DbgMsg(PChar(sTrace));
-
-  //        dbMoveToRecorded(sAviFile, ChangeFileExt(sAviFile, '.HTML'));
-
         end else
         begin
           sTrace := 'create [' + ExtractFileName(sIso) + '] NOT success';
@@ -506,8 +513,11 @@ begin
       begin
 
         EditAvi(sAviFile);
-        if Success then SetToDbRecorded;
-
+        if Success then
+        begin
+          SetToDbRecorded;
+        end;
+        
         if  m_RecordingData.bMoviX
         AND Success then
         begin
@@ -734,9 +744,9 @@ begin
     m_Trace.DBMSG(TRACE_MIN, 'epgsubtitle=[' + m_RecordingData.epgsubtitle + ']');
     m_Trace.DBMSG(TRACE_MIN, 'epg        =[' + m_RecordingData.epg + ']');
 
-    coVcrDb.SaveEpgToDb(m_RecordingData.epgtitle,
-                        m_RecordingData.epgsubtitle,
-                        m_RecordingData.epg);
+    coVcrDb.UpdateEpgInDb(m_RecordingData.epgtitle,
+                          m_RecordingData.epgsubtitle,
+                          m_RecordingData.epg);
 
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);

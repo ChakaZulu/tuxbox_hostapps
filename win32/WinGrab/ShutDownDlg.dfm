@@ -12,8 +12,10 @@ object FrmShutdown: TFrmShutdown
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -24,7 +26,7 @@ object FrmShutdown: TFrmShutdown
     Height = 185
     Align = alClient
     BevelInner = bvRaised
-    BevelOuter = bvLowered
+    BevelOuter = bvSpace
     BevelWidth = 3
     TabOrder = 0
     DesignSize = (
@@ -37,6 +39,7 @@ object FrmShutdown: TFrmShutdown
       Height = 49
       Anchors = [akTop]
       BevelInner = bvSpace
+      BevelOuter = bvNone
       BevelWidth = 2
       BorderStyle = bsSingle
       Caption = 'Shutdown'
@@ -55,12 +58,13 @@ object FrmShutdown: TFrmShutdown
       Height = 49
       Anchors = [akTop]
       BevelInner = bvSpace
+      BevelOuter = bvNone
       BevelWidth = 2
       BorderStyle = bsSingle
       Caption = '30'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
+      Font.Color = clMaroon
+      Font.Height = -19
       Font.Name = 'MS Sans Serif'
       Font.Style = [fsBold]
       ParentFont = False
@@ -83,10 +87,10 @@ object FrmShutdown: TFrmShutdown
       ParentFont = False
       TabOrder = 2
       object btn_Cancel: TBitBtn
-        Left = 10
-        Top = 10
-        Width = 225
-        Height = 33
+        Left = 3
+        Top = 3
+        Width = 239
+        Height = 47
         TabOrder = 0
         OnClick = btn_CancelClick
         Kind = bkCancel

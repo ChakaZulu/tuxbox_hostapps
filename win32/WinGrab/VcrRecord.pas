@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrRecord.pas,v $
+// Revision 1.4  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.3  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -76,7 +82,7 @@ begin
 
     DateSeparator   := '-';
     ShortDateFormat := 'yyyy/m/d';
-    TimeSeparator   := '.';
+    TimeSeparator   := ':';
 
     // find next unused thread entry ...
     k:= GetNextFreeThread;
@@ -546,13 +552,27 @@ end;
 //------------------------------------------------------------------------------
 //
 //
-procedure TfrmMain.CheckShutdown;
+procedure TfrmMain.CheckShutdown(bForce: Boolean);
 var
-  k        : Integer;
-  bRunning : Boolean;
+  k           : Integer;
+  bRunning    : Boolean;
+  AYear,
+  AMonth,
+  ADay,
+  AHour,
+  AMinute,
+  ASecond,
+  AMilliSecond: Word;
 begin
   try
     m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckShutdown');
+
+    if IsDBoxRecording then
+    begin
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (recording)');
+      exit;
+    end;
+
     bRunning := false;
     for k:=0 to 9 do
     begin
@@ -584,25 +604,67 @@ begin
       end;
     end;
 
+    if m_bIsEpgReading then
+    begin
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (abort -> is already reading EPG)');
+      exit;
+    end;
+    if m_coVcrDb.IsTimerAt(IntToStr(DatetimeToUnix(IncMinute(now,15)))) > 0 then
+    begin
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (abort -> timer found)');
+      exit;
+    end;
+    GetProcessList;
+    if IsFileActive(m_sDVDxPath) then
+    begin
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (abort -> "DVDx" found)');
+      exit;
+    end;
+
     if not bRunning then
     begin
-      m_Trace.DBMSG(TRACE_DETAIL, 'VCR-PC is Idle ...' );
-
       // This subroutine decommits the unused memory blocks.
       QMemDecommitOverstock;
+
+      m_Trace.DBMSG(TRACE_DETAIL, 'VCR-PC is Idle ...' );
+      if bForce then
+      begin
+        DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
+        DoEvents;
+        Sleep(0);
+        DoEvents;
+        m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown');
+        exit;
+      end;
 
       // check the status of the DBox ...
       if not PingDBox(m_sDBoxIp) then
       begin
-        m_Trace.DBMSG(TRACE_DETAIL, '... and the DBox is down, also posible to shutdown the VCR-PC now.');
-        //
-        // ... nur dann, wenn das AUFWECKEN via LAN geht ...
-        //
-        DoShutdownDialog(Shutdown_Hibernate);
+        m_Trace.DBMSG(TRACE_DETAIL, '... and the DBox is down, also posible to hibernate the VCR-PC now.');
+        DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
         DoEvents;
-        Sleep(10000);
+        Sleep(0);
         DoEvents;
-        DoShutdownDialog(Shutdown_Standby);
+      end else
+      begin
+        DoEvents;
+        DecodeDateTime((Now),
+                       AYear,
+                       AMonth,
+                       ADay,
+                       AHour,
+                       AMinute,
+                       ASecond,
+                       AMilliSecond);
+        if (AHour > 22) OR
+           (AHour < 09) then
+        begin
+          m_Trace.DBMSG(TRACE_DETAIL, '... and the night is comming, also posible to hibernate the VCR-PC now.');
+          DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
+          DoEvents;
+          Sleep(0);
+          DoEvents;
+        end;
       end;
     end;
   except

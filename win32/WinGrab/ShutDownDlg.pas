@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: ShutDownDlg.pas,v $
+// Revision 1.4  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.3  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -24,6 +30,7 @@ uses
   JclWin32,
   JclSysInfo,
   JclDateTime,
+  MyTrace,
   DelTools;
 
 {#####################################################################}
@@ -43,11 +50,15 @@ type
     procedure CountDownTimer(Sender: TObject);
     procedure btn_CancelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
   private
-    m_iCountDown   : Integer;
-    m_ShutdownMode : integer;
+    m_Trace        : TTrace;
 
+    m_iCountDown   : Integer;
+    m_ShutdownMode : e_ShutdownMode;
+
+    function  SetSuspendState(Hibernate, ForceCritical, DisableWeakEvent: Boolean): Boolean;
     procedure System_Shutdown;
 
   public
@@ -60,7 +71,8 @@ type
 PROCEDURE DoShutdownDialog(ShutdownMode : e_ShutdownMode);
 
 var
-  FrmShutdown: TFrmShutdown;
+  FrmShutdown : TFrmShutdown;
+  bProcessing : Boolean;
 
 {#####################################################################}
 
@@ -78,6 +90,7 @@ begin
   try
     Screen.Cursor:= crDefault;
     Application.CreateForm(TFrmShutdown, FrmShutdown);
+    FrmShutdown.m_ShutdownMode := ShutdownMode;
     FrmShutdown.ShowModal;
   finally
     FrmShutdown.Free;
@@ -90,17 +103,22 @@ end;
 procedure TFrmShutdown.CountDownTimer(Sender: TObject);
 begin
   try
+    if bProcessing then exit;
+
+    bProcessing := true;
     Panel_CountDown.Caption := IntToStr(m_iCountDown);
     m_iCountDown := m_iCountDown - 1;
     if m_iCountDown <= 0 then
     begin
       CountDown.Enabled:= false;
       System_Shutdown;
+      FrmShutdown.Close;
     end;
     Sleep(0);
     Application.HandleMessage;
   except
   end;
+  bProcessing := false;
 end;
 
 {#####################################################################}
@@ -120,13 +138,53 @@ end;
 procedure TFrmShutdown.FormCreate(Sender: TObject);
 begin
   try
+    m_Trace := TTrace.Create();
+    m_Trace.DBMSG_INIT('',
+                       'TuxBox',
+                       '1.0',
+                       '',
+                       'WinGrab');
+    case m_ShutdownMode of
+      Shutdown_PcOff    : Panel2.Caption:= 'Shutdown'; //shutdown
+      Shutdown_Standby  : Panel2.Caption:= 'Standby';  //standby
+      Shutdown_Hibernate: Panel2.Caption:= 'Hibernate';//hibernate
+    end;
     m_iCountDown := 30;
     CountDown.Enabled:= true;
   except
   end;
 end;
 
+procedure TFrmShutdown.FormClose(Sender: TObject;
+                                 var Action: TCloseAction);
+begin
+  m_Trace.DBMSG_DONE;
+end;
+
+
 {#####################################################################}
+
+function TFrmShutdown.SetSuspendState(Hibernate, ForceCritical, DisableWeakEvent: Boolean): Boolean;
+var
+  _SetSuspendState: function(Hibernate, ForceCritical, DisableWeakEvent: BOOL):BOOL; stdcall;
+  LibMod: HMODULE;
+begin
+  Result:= false;
+  LibMod := LoadLibrary('POWRPROF.DLL');
+  try
+    if LibMod <> 0 then
+    begin
+      _SetSuspendState:= GetProcAddress(LibMod, 'SetSuspendState');
+      if Assigned(_SetSuspendState) then
+      begin
+        Result := _SetSuspendState(Hibernate, ForceCritical, DisableWeakEvent);
+      end;
+    end;
+  finally
+    FreeLibrary(LibMod);
+  end;
+
+end;
 
 procedure TFrmShutdown.System_Shutdown;
 var
@@ -136,6 +194,7 @@ var
 	tkp        : TOKEN_PRIVILEGES ;
 begin
   try
+{
 	  pOSversion.dwOSVersionInfoSize := sizeof(OSVERSIONINFO);
 	  GetVersionEx(pOSversion);
 	  if pOSversion.dwPlatformId = VER_PLATFORM_WIN32_NT then // Windows NT
@@ -173,16 +232,18 @@ begin
 	    // The return value of AdjustTokenPrivileges can't be tested
 	    //
 	  end;
-
-    OutPutDebugString(PChar('SHUTDOWN NOW'));
+}
+    m_Trace.DBMSG(TRACE_MIN, 'SHUTDOWN NOW');
     case m_ShutdownMode of
-      Integer(Shutdown_PcOff)    : ExitWindowsEx(EWX_POWEROFF + EWX_FORCEIFHUNG, 0); //shutdown
-      Integer(Shutdown_Standby)  : SetSystemPowerState(true,true);   //standby
-      Integer(Shutdown_Hibernate): SetSystemPowerState(false,true);  //hibernate
+      Shutdown_PcOff    : ExitWindowsEx(EWX_POWEROFF + EWX_FORCEIFHUNG, 0); //shutdown
+      Shutdown_Standby  : SetSuspendState(FALSE,FALSE,FALSE);  //standby
+      Shutdown_Hibernate: SetSuspendState(TRUE, TRUE, TRUE);  //hibernate
     end;
+    Sleep(3000);
+    Application.HandleMessage;
 
   except
-//    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );
   end;
 end;
 

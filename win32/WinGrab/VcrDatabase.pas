@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrDatabase.pas,v $
+// Revision 1.4  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.3  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -17,8 +23,6 @@
 //  DataBase - Procedures ...
 //
 procedure TfrmMain.OpenEpgDb;
-var
-  sd1,sd2:string;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> OpenEpgDb');
   try
@@ -44,31 +48,6 @@ begin
       Planner_ADOConnection.ConnectionString := m_Recorded_dbConnectionString;
       Planner_ADOConnection.Open;
       Planner_ADOTable.Active:= true;
-    except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'OpenEpgDb ( Connect ) '+ E.Message );
-    end;
-
-    try
-      Record_Planner.Visible:= true;
-      Planner_DBDaySource.Day := Now;
-      DoEvents;
-
-      { Before the planner needs to be reloaded with records from the database
-        a custom filter can be applied to minimize the nr. of records the planner
-        must check to load into the planner.
-      }
-      sd1 := DateToStr(Planner_DBDaySource.Day);
-      sd1 := #39+sd1+#39;
-
-      sd2 := DateToStr(Planner_DBDaySource.Day+7);
-      sd2 := #39+sd2+#39;
-
-      Planner_ADOTable.Filter:=  'STARTTIME > '+sd1+' AND ENDTIME < '+sd2;
-      Planner_ADOTable.Filtered := true;
-      DoEvents;
-
-      Record_Planner_UpdateHeaders;
-      DoEvents;
     except
       on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'OpenEpgDb ( Connect ) '+ E.Message );
     end;
@@ -121,6 +100,7 @@ end;
 procedure TfrmMain.CheckDbVersion;
 var
   sTmp,
+  sVersion,
   sSQL : String;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckDbVersion');
@@ -133,8 +113,8 @@ begin
       Work_ADOQuery.Active := true;
       if not Work_ADOQuery.Recordset.Eof then
       begin
-        sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['Version'].Value, '0');
-        if sTmp = '0' then
+        sVersion := VarToStrDef(Work_ADOQuery.Recordset.Fields['Version'].Value, '0');
+        if sVersion = '0' then
         begin
 {
           sSQL :=        'UPDATE T_Events ';
@@ -187,7 +167,7 @@ begin
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'OpenEpgDb '+ E.Message );
   end;
-  m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckDbVersion');
+  m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckDbVersion = '+sVersion);
 end;
 
 procedure TfrmMain.Recorded_DBGridTitleClick(Column: TColumn);
@@ -245,6 +225,7 @@ begin
   end;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< FillDbChannelListBox');
 end;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -373,7 +354,7 @@ begin
       lvChannelProg.Selected:= lvChannelProg.FindCaption(1,sEventId,false,true,true);
       Result := sEventId;
       try
-        if lvChannelProg.Visible then lvChannelProg.SetFocus;
+        if lvChannelProg.Visible AND (pclMain.ActivePage = tbsWelcome) then lvChannelProg.SetFocus;
       except
       end;
       DoEvents;
@@ -388,18 +369,20 @@ end;
 //
 procedure TfrmMain.CheckChannelsInDb;
 var
-  sDbg             : String;
+  sDbg         : String;
   sTmp,
-  sSQL             : String;
-  sChannelName     : String;
-  sChannelId : String;
+  sSQL         : String;
+  sChannelName : String;
+  sChannelId   : String;
   sEventId : String;
   sZeit    : String;
+  sEndZeit : String;
   sDatum   : String;
   sUhrzeit : String;
   sDauer   : String;
   sTitel   : String;
   sSubTitel: String;
+  sEPG     : String;
   sTimerStr: String;
   Datum    : TDateTime;
 begin
@@ -410,7 +393,7 @@ begin
     Work_ADOQuery.SQL.Clear;
     sSQL :=        'SELECT ';
     sSQL := sSQL + 'T_Events.ChannelId, T_Events.EventId, T_Channel.Name, ';
-    sSQL := sSQL + 'Titel, SubTitel, Zeit, Dauer ';
+    sSQL := sSQL + 'Titel, SubTitel, Zeit, Dauer, Epg ';
     sSQL := sSQL + 'FROM ';
     sSQL := sSQL + 'T_Events, T_Channel ';
     sSQL := sSQL + 'WHERE ';
@@ -433,6 +416,7 @@ begin
         sZeit        := VarToStrDef(Work_ADOQuery.Recordset.Fields['Zeit'].Value, '');
         sDauer       := VarToStrDef(Work_ADOQuery.Recordset.Fields['Dauer'].Value, '');
         sChannelName := VarToStrDef(Work_ADOQuery.Recordset.Fields['Name'].Value, '');
+        sEPG         := VarToStrDef(Work_ADOQuery.Recordset.Fields['Epg'].Value, '');
         if Length(sSubTitel) > 0 then
           sTmp := sTitel + ' - ' + sSubTitel
         else
@@ -453,14 +437,24 @@ begin
 
         if m_coVcrDb.IsInWhishesList(sTmp) > 0 then
         begin
-          sDbg:= '"'+sTmp+'" am '+sDatum+' '+sUhrzeit+' auf "'+sChannelName+'" gefunden';
+          sDbg:= sDatum+' '+sUhrzeit+' "'+sTmp+'" auf "'+sChannelName+'" gefunden';
           m_Trace.DBMSG(TRACE_DETAIL, sDbg);
 
-          sTimerStr :=             '/fb/timer.dbox2?action=new&type=5&alarm=' + sZeit;
-          sTimerStr := sTimerStr + '&stop=' + IntToStr( StrToInt64Def(sZeit,0) + StrToIntDef(sDauer,0) );
-          sTimerStr := sTimerStr + '&channel_id=' + sChannelId + '&rs=1';
+          sEndZeit  := IntToStr( StrToIntDef(sZeit,0) + StrToIntDef(sDauer,0) );
 
-          Whishes_Result.Items.Add(sDbg + '                                                                                                    ### ' + sTimerStr);
+          m_coVcrDb.UpdateTimerInDb( sChannelId,
+                                     sEventId,
+                                     sZeit,
+                                     sEndZeit,
+                                     sTitel,
+                                     sEPG,
+                                     0 ); //Timer InAktiv setzen...
+
+
+          sTimerStr :=             sChannelId + '|||';
+          sTimerStr := sTimerStr + sEventId;
+
+          Whishes_Result.Items.Add(sDbg + '                                                                                                                                                                                   ### ' + sTimerStr);
         end;
         Work_ADOQuery.Recordset.MoveNext;
       until(Work_ADOQuery.Recordset.Eof);

@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainSettings.pas,v $
+// Revision 1.3  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.2  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -108,6 +114,7 @@ begin
     else
       SplittSize := 0;
 
+    gbxPowersave.ItemIndex    := ReadInteger('WinGrab', 'Powersave', 2);
     gbxGrabMode.ItemIndex     := ReadInteger('WinGrab', 'GrabMode', 1);
 
     chxKillSectionsd.Checked  := ReadBool('WinGrab', 'KillSectionsd', true);
@@ -188,6 +195,8 @@ begin
       WriteString('WinGrab', 'SplittSize', cbxSplitSize.Text)
     else
       WriteString('WinGrab', 'SplittSize', '');
+
+    WriteInteger('WinGrab', 'Powersave', gbxPowersave.ItemIndex);
 
     WriteInteger('WinGrab', 'GrabMode', gbxGrabMode.ItemIndex);
 

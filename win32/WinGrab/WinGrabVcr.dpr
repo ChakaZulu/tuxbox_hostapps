@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: WinGrabVcr.dpr,v $
+// Revision 1.3  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.2  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -38,8 +44,9 @@ uses
   MyTrace in 'MyTrace.pas',
   ShutDownDlg in 'ShutDownDlg.pas' {FrmShutdown},
   VcrDivXtools in 'VcrDivXtools.pas',
-  VcrDivXchk in 'VcrDivXchk.pas' {FrmDivXchk},
-  VcrDbHandling in 'VcrDbHandling.pas';
+  VcrDbHandling in 'VcrDbHandling.pas',
+  ProcessViewer in 'ProcessViewer.pas',
+  DoRecordDlg in 'DoRecordDlg.pas' {FrmDoRecord};
 
 {$R *.RES}
 

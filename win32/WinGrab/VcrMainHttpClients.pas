@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainHttpClients.pas,v $
+// Revision 1.5  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.4  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -36,16 +42,16 @@ function  TfrmMain.SendHttpCommand(sCommand: String): String;
 var
   sTmp : String;
 begin
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> SendHttpCommand');
+  m_Trace.DBMSG(TRACE_SYNC, '> SendHttpCommand');
   if m_bHttpInProgress then
   begin
     m_Trace.DBMSG(TRACE_SYNC, 'cancel SendHttpCommand ['+sCommand+']');
-    m_Trace.DBMSG(TRACE_CALLSTACK, '< SendHttpCommand');
+    m_Trace.DBMSG(TRACE_SYNC, '< SendHttpCommand');
     exit;
   end;
   if not PingDBox(m_sDBoxIp) then
   begin
-    m_Trace.DBMSG(TRACE_CALLSTACK, '< SendHttpCommand');
+    m_Trace.DBMSG(TRACE_SYNC, '< SendHttpCommand');
     exit;
   end;
   try
@@ -87,7 +93,7 @@ begin
     m_bHttpInProgress := false;
   end;
   m_bHttpInProgress := false;
-  m_Trace.DBMSG(TRACE_CALLSTACK, '< SendHttpCommand');
+  m_Trace.DBMSG(TRACE_SYNC, '< SendHttpCommand');
 end;
 
 procedure TfrmMain.RestartHttpd;
@@ -96,26 +102,55 @@ var
 begin
   try
     //restart the nhttpd
-    VcrDBoxTelnet.BoundIP := m_sDBoxIp;
+    VcrDBoxTelnet.Host    := m_sDBoxIp;
     VcrDBoxTelnet.Port    := 23;
-    Application.ProcessMessages;
-    VcrDBoxTelnet.ConnectAndGetAll;
-    // login
-    sTmp := VcrDBoxTelnet.ReadLn(#0,1000);
-    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
-    sTmp := VcrDBoxTelnet.ReadLn(#0,500);
-    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
-    VcrDBoxTelnet.WriteLn('root');
     DoEvents;
-    VcrDBoxTelnet.WriteLn('nhttpd');
+    VcrDBoxTelnet.Connect;
     DoEvents;
-    sTmp := VcrDBoxTelnet.ReadLn(#0,1000);
-    m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+    Sleep(1000);
+    try
+      if VcrDBoxTelnet.Connected then
+      begin
+        //restart nhttpd
+        VcrDBoxTelnet.WriteLn('nhttpd');
+        DoEvents;
+        Sleep(300);
+      end;
+    finally
+      VcrDBoxTelnet.Disconnect;
+    end;
     DoEvents;
-    VcrDBoxTelnet.Disconnect;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'RestartHttpd '+E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'RestartHttpd ['+E.Message+']');
   end;
+end;
+procedure TfrmMain.VcrDBoxTelnetDataAvailable(Buffer: String);
+begin
+  m_Trace.DBMSG(TRACE_SYNC, 'Telnet receive ['+Buffer+']');
+end;
+procedure TfrmMain.VcrDBoxTelnetConnect;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, 'Telnet connect ...');
+end;
+procedure TfrmMain.VcrDBoxTelnetConnected(Sender: TObject);
+begin
+  m_Trace.DBMSG(TRACE_SYNC, 'Telnet connected');
+  // login
+  VcrDBoxTelnet.WriteLn('root');
+  DoEvents;
+  Sleep(300);
+  //restart nhttpd
+  VcrDBoxTelnet.WriteLn('nhttpd');
+  DoEvents;
+  Sleep(300);
+end;
+procedure TfrmMain.VcrDBoxTelnetDisconnect;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, 'Telnet disconnect ...');
+end;
+procedure TfrmMain.VcrDBoxTelnetDisconnected(Sender: TObject);
+begin
+  m_Trace.DBMSG(TRACE_SYNC, 'Telnet disconnected');
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +264,7 @@ begin
 
     DateSeparator   := '-';
     ShortDateFormat := 'yyyy/m/d';
-    TimeSeparator   := '.';
+    TimeSeparator   := ':';
     try
       sTmp := SendHttpCommand('/control/epg?' + ChannelId);
       if Length(sTmp) > 0 then
@@ -331,8 +366,11 @@ begin
             sLine    := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
             sTitel   := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
 //            sEpg     := SaveEpgText(IntToHex(StrToInt64Def(sEventId,0),10), '', sTitel, sSubTitel).Text;
-
-            lvChannelProg.Selected:= lvChannelProg.FindCaption(1,sEventId,false,true,true);
+            try
+              if lvChannelProg.Visible then
+                lvChannelProg.Selected:= lvChannelProg.FindCaption(1,sEventId,false,true,true);
+            except
+            end;
             Result := sEventId;
           end;
         end;
@@ -486,138 +524,158 @@ begin
       exit;
     end;
 
+    if m_bIsEpgReading then
+    begin
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (is already reading EPG)');
+      exit;
+    end;
+
     if not PingDBox(m_sDBoxIp) then
     begin
       m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels');
       exit;
     end else
     begin
-
-      m_Trace.DBMSG(TRACE_SYNC, 'CheckChannels');
+      m_bIsEpgReading            := true;
+      m_bAbortWishesSeek         := false;
+      btnWishesSeek.Caption      := 'Abbrechen';
+      btnWishesSeekDb.Enabled    := False;
+      Whishes_DBNavigator.Visible:= false;
       try
-        lbl_check_EPG.Caption:= 'alte Einträge werden aus der Datenbank gelöscht';
-        DoEvents;
-        m_coVcrDb.TruncDbEvent;
-        DoEvents;
-      except
-        on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'CheckChannels '+E.Message);
-      end;
+        m_Trace.DBMSG(TRACE_SYNC, 'Update Channels collection');
+        InitChannels;
 
-      Whishes_Result.Items.Clear;
-      sTmp := '';
-      DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
-      Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
-      Whishes_Result.Items.Add('Speichern aller verfügbaren EPGs der einzelnen Sender in der Datenbank ...');
-      DoEvents;
-      if bSwitchChannels then
-      begin
-        Whishes_Result.Items.Add('- Durchschalten der vorgemerkten Sender zum Lesen der EPGs vom SAT');
-        DoEvents;
-
-        CurrentChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
-        lbl_check_EPG.Caption:= 'aktueller Kanal "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
-        DoEvents;
-
+        m_Trace.DBMSG(TRACE_SYNC, 'CheckChannels');
         try
-          j:= Pred(lbxChannelList.Items.Count);
-          for i := 0 to j do
-          begin
-            if IsDBoxRecording or m_bAbortWishesSeek then
-            begin
-              m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
-              m_bAbortWishesSeek := false;
-              Whishes_Result.Items.Add('... abgebrochen');
-              sTmp := '';
-              DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
-              Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
-              exit;
-            end;
-            try
-              ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
-              if m_coVcrDb.GetDbChannelSwitchFlag(ChannelId) > 0 then
-              begin
-                m_Trace.DBMSG(TRACE_SYNC, 'Kanalwechsel zu "'+lbxChannelList.Items.Strings[i]+'"');
-                sLabel:= 'Kanalwechsel zu "' + m_coVcrDb.GetDbChannelName(ChannelId) + '"';
-                DoEvents;
-                SendHttpCommand('/fb/switch.dbox2?zapto=' + ChannelId );
-                for x:= 1 to 10 do
-                begin
-                  DoEvents;
-                  try
-                    if IsDBoxRecording then
-                    begin
-                      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
-                      exit;
-                    end;
-                    case x of
-                      1: lbl_check_EPG.Caption:= sLabel + ' .';
-                      2: lbl_check_EPG.Caption:= sLabel + ' ..';
-                      3: lbl_check_EPG.Caption:= sLabel + ' ...';
-                      4: lbl_check_EPG.Caption:= sLabel + ' ....';
-                      5: lbl_check_EPG.Caption:= sLabel + ' .....';
-                      6: lbl_check_EPG.Caption:= sLabel + ' ......';
-                      7: lbl_check_EPG.Caption:= sLabel + ' .......';
-                      8: lbl_check_EPG.Caption:= sLabel + ' ........';
-                      9: lbl_check_EPG.Caption:= sLabel + ' .........';
-                     10: lbl_check_EPG.Caption:= sLabel + ' ..........';
-                     else
-                       lbl_check_EPG.Caption:= sLabel + ' ';
-                    end;
-                  except
-                  end;
-                  DoEvents;
-                  Sleep(1000);
-                end;
-              end;
-            except
-            end;
-            DoEvents;
-          end;
-        finally
-          lbl_check_EPG.Caption:= 'Wechsel zurück zu  "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
+          lbl_check_EPG.Caption:= 'alte Einträge werden aus der Datenbank gelöscht';
           DoEvents;
-          SendHttpCommand('/fb/switch.dbox2?zapto=' + CurrentChannelId );
-        end;
-      end;
-
-      Whishes_Result.Items.Add('- Lesen und Speichern der EPGs ...');
-      DoEvents;
-      j:= Pred(lbxChannelList.Items.Count);
-      for i := 0 to j do
-      begin
-        try
-          ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
-          m_Trace.DBMSG(TRACE_SYNC, 'Check Channel "'+lbxChannelList.Items.Strings[i]+'"');
-          if m_coVcrDb.GetDbChannelEpgFlag( ChannelId ) > 0 then
-          begin
-            lbl_check_EPG.Caption:= 'lese EPGs von "' + lbxChannelList.Items.Strings[i] + '"';
-            Whishes_Result.Items.Add('  '+lbxChannelList.Items.Strings[i]);
-            DoEvents;
-            CheckChannelProg(ChannelId, sTmp);
-            DoEvents;
-            if IsDBoxRecording or m_bAbortWishesSeek then
-            begin
-              m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
-              m_bAbortWishesSeek := false;
-              Whishes_Result.Items.Add('... abgebrochen');
-              sTmp := '';
-              DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
-              Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
-              exit;
-            end;
-          end;
+          m_coVcrDb.TruncDbEvent;
+          DoEvents;
         except
+          on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'CheckChannels '+E.Message);
         end;
-        DoEvents;
-      end;
-      Whishes_Result.Items.Add('... fertig');
-      sTmp := '';
-      DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
-      Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
-      m_LastEpgUpdate := Now;
-      SaveSettings;
-    end;
 
+        Whishes_Result.Items.Clear;
+        sTmp := '';
+        DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+        Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
+        Whishes_Result.Items.Add('Speichern aller verfügbaren EPGs der einzelnen Sender in der Datenbank ...');
+        DoEvents;
+        if bSwitchChannels then
+        begin
+          Whishes_Result.Items.Add('- Durchschalten der vorgemerkten Sender zum Lesen der EPGs vom SAT');
+          DoEvents;
+
+          CurrentChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+          lbl_check_EPG.Caption:= 'aktueller Kanal "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
+          DoEvents;
+
+          try
+            j:= Pred(lbxChannelList.Items.Count);
+            for i := 0 to j do
+            begin
+              if IsDBoxRecording or m_bAbortWishesSeek then
+              begin
+                m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
+                m_bAbortWishesSeek := false;
+                Whishes_Result.Items.Add('... abgebrochen');
+                sTmp := '';
+                DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+                Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
+                exit;
+              end;
+              try
+                ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
+                if m_coVcrDb.GetDbChannelSwitchFlag(ChannelId) > 0 then
+                begin
+                  m_Trace.DBMSG(TRACE_SYNC, 'Kanalwechsel zu "'+lbxChannelList.Items.Strings[i]+'"');
+                  sLabel:= 'Kanalwechsel zu "' + m_coVcrDb.GetDbChannelName(ChannelId) + '"';
+                  DoEvents;
+                  SendHttpCommand('/fb/switch.dbox2?zapto=' + ChannelId );
+                  for x:= 1 to 10 do
+                  begin
+                    DoEvents;
+                    try
+                      if IsDBoxRecording then
+                      begin
+                        m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
+                        exit;
+                      end;
+                      case x of
+                        1: lbl_check_EPG.Caption:= sLabel + ' .';
+                        2: lbl_check_EPG.Caption:= sLabel + ' ..';
+                        3: lbl_check_EPG.Caption:= sLabel + ' ...';
+                        4: lbl_check_EPG.Caption:= sLabel + ' ....';
+                        5: lbl_check_EPG.Caption:= sLabel + ' .....';
+                        6: lbl_check_EPG.Caption:= sLabel + ' ......';
+                        7: lbl_check_EPG.Caption:= sLabel + ' .......';
+                        8: lbl_check_EPG.Caption:= sLabel + ' ........';
+                        9: lbl_check_EPG.Caption:= sLabel + ' .........';
+                       10: lbl_check_EPG.Caption:= sLabel + ' ..........';
+                       else
+                         lbl_check_EPG.Caption:= sLabel + ' ';
+                      end;
+                    except
+                    end;
+                    DoEvents;
+                    Sleep(1000);
+                  end;
+                end;
+              except
+              end;
+              DoEvents;
+            end;
+          finally
+            lbl_check_EPG.Caption:= 'Wechsel zurück zu  "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
+            DoEvents;
+            SendHttpCommand('/fb/switch.dbox2?zapto=' + CurrentChannelId );
+          end;
+        end;
+
+        Whishes_Result.Items.Add('- Lesen und Speichern der EPGs ...');
+        DoEvents;
+        j:= Pred(lbxChannelList.Items.Count);
+        for i := 0 to j do
+        begin
+          try
+            ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
+            m_Trace.DBMSG(TRACE_SYNC, 'Check Channel "'+lbxChannelList.Items.Strings[i]+'"');
+            if m_coVcrDb.GetDbChannelEpgFlag( ChannelId ) > 0 then
+            begin
+              lbl_check_EPG.Caption:= 'lese EPGs von "' + lbxChannelList.Items.Strings[i] + '"';
+              Whishes_Result.Items.Add('  '+lbxChannelList.Items.Strings[i]);
+              DoEvents;
+              CheckChannelProg(ChannelId, sTmp);
+              DoEvents;
+              if IsDBoxRecording or m_bAbortWishesSeek then
+              begin
+                m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
+                m_bAbortWishesSeek := false;
+                Whishes_Result.Items.Add('... abgebrochen');
+                sTmp := '';
+                DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+                Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
+                exit;
+              end;
+            end;
+          except
+          end;
+          DoEvents;
+        end;
+      finally
+        sTmp := '';
+        DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+        Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
+        m_LastEpgUpdate := Now;
+        SaveSettings;
+        Whishes_Result.Items.Add('... fertig');
+
+        Whishes_DBNavigator.Visible:= true;
+        btnWishesSeekDb.Enabled    := True;
+        btnWishesSeek.Caption      := 'DBox neu lesen';
+        m_bIsEpgReading            := false;
+      end;
+    end;//if not PingDBox(m_sDBoxIp) then ... else ...
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'CheckChannels '+E.Message);
   end;
@@ -723,20 +781,12 @@ end;
 
 procedure TfrmMain.InitChannels;
 begin
+  m_Trace.DBMSG(TRACE_CALLSTACK, '> InitChannels');
   try
-    m_Trace.DBMSG(TRACE_CALLSTACK, '> InitChannels');
-    if not PingDBox(m_sDBoxIp) then
+    RetrieveChannelList( lbxChannelList );
+    if (lbxChannelList.ItemIndex < 0) and (lbxChannelList.Count > 0) then
     begin
-      FillDbChannelListBox;
-      m_Trace.DBMSG(TRACE_CALLSTACK, '< InitChannels');
-      exit;
-    end else
-    begin
-      RetrieveChannelList( lbxChannelList );
-      if (lbxChannelList.ItemIndex < 0) and (lbxChannelList.Count > 0) then
-      begin
-        lbxChannelList.ItemIndex := 0;
-      end;
+      lbxChannelList.ItemIndex := 0;
     end;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'InitChannels '+ E.Message );

@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: DelTools.pas,v $
+// Revision 1.4  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.3  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -223,6 +229,12 @@ function StrToIntEx(aString: string): Integer;
 function StrToInt64Ex(aString: string): Int64;
 {------------------------------------------------------------------------------}
 
+{------------------------------------------------------------------------------}
+function Soundex(OriginalWord:string):string;
+{------------------------------------------------------------------------------}
+function SoundexPlus(OriginalWord:string):string;
+{------------------------------------------------------------------------------}
+
 
 {------------------------------------------------------------------------------}
 const
@@ -235,7 +247,7 @@ const
   dtNetwork         = DRIVE_REMOTE;
   dtCDROM           = DRIVE_CDROM;
   dtRAM             = DRIVE_RAMDISK;
-   
+
 var
   m_hApp: DWORD;
   
@@ -1848,6 +1860,82 @@ begin
   except
     on E: Exception do OutputDebugString(PChar(E.Message));
   end;
+end;
+
+function Soundex(OriginalWord:string):string;
+var
+  Tempstring1,Tempstring2:string;
+  Count:integer;
+begin
+  Tempstring1:='';
+  Tempstring2:='';
+  OriginalWord:=Uppercase(OriginalWord); {Make original word uppercase}
+  Appendstr(Tempstring1,OriginalWord[1]); {Use the first letter of the word}
+  for Count:=2 to length(OriginalWord) do
+      {Assign a numeric value to each letter, except the first}
+      case OriginalWord[Count] of
+        'B','F','P','V':
+          Appendstr(Tempstring1,'1');
+        'C','G','J','K','Q','S','X','Z':
+          Appendstr(Tempstring1,'2');
+        'D','T':
+          Appendstr(Tempstring1,'3');
+        'L':
+          Appendstr(Tempstring1,'4');
+        'M','N':
+          Appendstr(Tempstring1,'5');
+        'R':
+          Appendstr(Tempstring1,'6');
+        {All other letters, punctuation and numbers are ignored}
+      end;
+
+  Appendstr(Tempstring2,OriginalWord[1]);
+
+  {Go through the result, and remove any consecutive numberic values
+   that are duplicates}
+  for Count:=2 to length(Tempstring1) do
+    if Tempstring1[Count-1]<>Tempstring1[Count] then
+        Appendstr(Tempstring2,Tempstring1[Count]);
+
+  Soundex:=Tempstring2; {This is the soundex value}
+
+end;
+
+function SoundexPlus(OriginalWord:string):string;
+var
+  Tempstring1,Tempstring2:string;
+  Count:integer;
+begin
+  Tempstring1:='';
+  Tempstring2:='';
+  OriginalWord:=Uppercase(OriginalWord); {Make original word uppercase}
+
+  for Count:=1 to length(OriginalWord) do
+      {Assign a numeric value to each letter}
+      case OriginalWord[Count] of
+        'B','F','P','V':
+          Appendstr(Tempstring1,'1');
+        'C','G','J','K','Q','S','X','Z':
+          Appendstr(Tempstring1,'2');
+        'D','T':
+          Appendstr(Tempstring1,'3');
+        'L':
+          Appendstr(Tempstring1,'4');
+        'M','N':
+          Appendstr(Tempstring1,'5');
+        'R':
+          Appendstr(Tempstring1,'6');
+        {All other letters, punctuation and numbers are ignored}
+      end;
+
+  {Go through the result, and remove any consecutive numberic values
+   that are duplicates}
+  for Count:=1 to length(Tempstring1) do
+    if Tempstring1[Count-1]<>Tempstring1[Count] then
+        Appendstr(Tempstring2,Tempstring1[Count]);
+
+  Soundexplus:=Tempstring2; {This is the soundexplus value}
+
 end;
 
 

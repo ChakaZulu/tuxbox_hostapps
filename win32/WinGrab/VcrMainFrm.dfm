@@ -1,9 +1,9 @@
 object frmMain: TfrmMain
-  Left = 190
-  Top = 107
+  Left = 235
+  Top = 139
   Width = 770
   Height = 570
-  ActiveControl = btnVlcView
+  ActiveControl = btnWishesSeekDb
   AlphaBlend = True
   AutoSize = True
   BorderIcons = [biSystemMenu, biMinimize]
@@ -47,7 +47,7 @@ object frmMain: TfrmMain
       Top = 0
       Width = 752
       Height = 533
-      ActivePage = tbsWelcome
+      ActivePage = tbsWhishes
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -55,7 +55,7 @@ object frmMain: TfrmMain
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
-      TabIndex = 0
+      TabIndex = 3
       TabOrder = 0
       OnChange = pclMainChange
       object tbsWelcome: TTabSheet
@@ -116,7 +116,7 @@ object frmMain: TfrmMain
           object lbxChannelList: TListBox
             Left = 0
             Top = 0
-            Width = 353
+            Width = 285
             Height = 232
             Style = lbOwnerDrawVariable
             Align = alLeft
@@ -133,9 +133,9 @@ object frmMain: TfrmMain
             OnDrawItem = lbxChannelListDrawItem
           end
           object Panel1: TPanel
-            Left = 360
+            Left = 288
             Top = 0
-            Width = 368
+            Width = 440
             Height = 232
             Align = alRight
             BevelInner = bvSpace
@@ -146,7 +146,7 @@ object frmMain: TfrmMain
             object EpgViewer: ThtmlLite
               Left = 4
               Top = 4
-              Width = 360
+              Width = 432
               Height = 224
               TabOrder = 0
               Align = alClient
@@ -250,330 +250,68 @@ object frmMain: TfrmMain
             Align = alTop
             BevelInner = bvLowered
             TabOrder = 0
+            object Timer_Splitter: TSplitter
+              Left = 2
+              Top = 233
+              Width = 730
+              Height = 5
+              Cursor = crVSplit
+              Align = alTop
+              AutoSnap = False
+              ResizeStyle = rsUpdate
+            end
             object Timer_WebBrowser: TWebBrowser
               Left = 2
               Top = 2
               Width = 730
-              Height = 463
+              Height = 231
               Align = alTop
               TabOrder = 0
               ControlData = {
-                4C000000734B0000DA2F00000000000000000000000000000000000000000000
+                4C000000734B0000E01700000000000000000000000000000000000000000000
                 000000004C000000000000000000000001000000E0D057007335CF11AE690800
                 2B2E126200000000000000004C0000000114020000000000C000000000000046
                 8000000000000000000000000000000000000000000000000000000000000000
                 00000000000000000100000000000000000000000000000000000000}
             end
-            object Record_Planner: TDBPlanner
+            object lvTimer: TListView
               Left = 2
-              Top = 464
+              Top = 238
               Width = 730
-              Height = 23
-              ActiveDisplay = True
-              Align = alBottom
-              AttachementGlyph.Data = {
-                F6000000424DF600000000000000760000002800000010000000100000000100
-                0400000000008000000000000000000000001000000000000000000000000000
-                8000008000000080800080000000800080008080000080808000C0C0C0000000
-                FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00888888888888
-                8888888888700078888888888708880788888888808808808888888880808080
-                8888888880808080888888888080808088888888808080808888888880808080
-                8888888880808080888888888080808088888888808080808888888888808080
-                8888888888808880888888888888000888888888888888888888}
-              Bands.ActivePrimary = 16705483
-              Bands.ActiveSecondary = 16439727
-              Bands.NonActivePrimary = clSilver
-              Bands.NonActiveSecondary = 11053224
-              Caption.Title = 'Record Planner'
-              Caption.Font.Charset = DEFAULT_CHARSET
-              Caption.Font.Color = clWhite
-              Caption.Font.Height = -13
-              Caption.Font.Name = 'MS Sans Serif'
-              Caption.Font.Style = [fsBold]
-              Caption.Alignment = taLeftJustify
-              Caption.Background = clGray
-              Caption.Height = 32
-              Caption.Visible = False
-              Color = clWindow
-              DayNames.Strings = (
-                'Sun'
-                'Mon'
-                'Tue'
-                'Wed'
-                'Thu'
-                'Fri'
-                'Sat')
-              DefaultItem.Alarm.Active = False
-              DefaultItem.Alarm.ID = 0
-              DefaultItem.Alarm.NotifyType = anCaption
-              DefaultItem.Alarm.Tag = 0
-              DefaultItem.Alarm.Time = atBefore
-              DefaultItem.Alignment = taLeftJustify
-              DefaultItem.AllowOverlap = True
-              DefaultItem.Background = False
-              DefaultItem.BrushStyle = bsSolid
-              DefaultItem.CaptionAlign = taLeftJustify
-              DefaultItem.CaptionBkg = clWhite
-              DefaultItem.CaptionFont.Charset = DEFAULT_CHARSET
-              DefaultItem.CaptionFont.Color = clWindowText
-              DefaultItem.CaptionFont.Height = -11
-              DefaultItem.CaptionFont.Name = 'MS Sans Serif'
-              DefaultItem.CaptionFont.Style = []
-              DefaultItem.CaptionType = ctNone
-              DefaultItem.Color = clWhite
-              DefaultItem.ColorTo = clBtnFace
-              DefaultItem.Completion = 0
-              DefaultItem.CompletionDisplay = cdNone
-              DefaultItem.Cursor = -1
-              DefaultItem.DBTag = 0
-              DefaultItem.FixedPos = False
-              DefaultItem.FixedPosition = False
-              DefaultItem.FixedSize = False
-              DefaultItem.FixedTime = False
-              DefaultItem.Font.Charset = DEFAULT_CHARSET
-              DefaultItem.Font.Color = clWindowText
-              DefaultItem.Font.Height = -11
-              DefaultItem.Font.Name = 'MS Sans Serif'
-              DefaultItem.Font.Style = []
-              DefaultItem.ImageID = -1
-              DefaultItem.ImagePosition = ipHorizontal
-              DefaultItem.InHeader = False
-              DefaultItem.InplaceEdit = peMemo
-              DefaultItem.ItemBegin = 16
-              DefaultItem.ItemEnd = 17
-              DefaultItem.ItemPos = 0
-              DefaultItem.Layer = 0
-              DefaultItem.Name = 'PlannerItem0'
-              DefaultItem.OwnsItemObject = False
-              DefaultItem.ReadOnly = False
-              DefaultItem.SelectColor = clInfoBk
-              DefaultItem.SelectColorTo = clNone
-              DefaultItem.SelectFontColor = clRed
-              DefaultItem.Selected = False
-              DefaultItem.Shadow = True
-              DefaultItem.Tag = 0
-              DefaultItem.TrackColor = clBlue
-              DefaultItem.TrackSelectColor = clBlue
-              DeleteGlyph.Data = {
-                36050000424D3605000000000000360400002800000010000000100000000100
-                0800000000000001000000000000000000000001000000000000000000000000
-                80000080000000808000800000008000800080800000C0C0C000C0DCC000F0CA
-                A6000020400000206000002080000020A0000020C0000020E000004000000040
-                20000040400000406000004080000040A0000040C0000040E000006000000060
-                20000060400000606000006080000060A0000060C0000060E000008000000080
-                20000080400000806000008080000080A0000080C0000080E00000A0000000A0
-                200000A0400000A0600000A0800000A0A00000A0C00000A0E00000C0000000C0
-                200000C0400000C0600000C0800000C0A00000C0C00000C0E00000E0000000E0
-                200000E0400000E0600000E0800000E0A00000E0C00000E0E000400000004000
-                20004000400040006000400080004000A0004000C0004000E000402000004020
-                20004020400040206000402080004020A0004020C0004020E000404000004040
-                20004040400040406000404080004040A0004040C0004040E000406000004060
-                20004060400040606000406080004060A0004060C0004060E000408000004080
-                20004080400040806000408080004080A0004080C0004080E00040A0000040A0
-                200040A0400040A0600040A0800040A0A00040A0C00040A0E00040C0000040C0
-                200040C0400040C0600040C0800040C0A00040C0C00040C0E00040E0000040E0
-                200040E0400040E0600040E0800040E0A00040E0C00040E0E000800000008000
-                20008000400080006000800080008000A0008000C0008000E000802000008020
-                20008020400080206000802080008020A0008020C0008020E000804000008040
-                20008040400080406000804080008040A0008040C0008040E000806000008060
-                20008060400080606000806080008060A0008060C0008060E000808000008080
-                20008080400080806000808080008080A0008080C0008080E00080A0000080A0
-                200080A0400080A0600080A0800080A0A00080A0C00080A0E00080C0000080C0
-                200080C0400080C0600080C0800080C0A00080C0C00080C0E00080E0000080E0
-                200080E0400080E0600080E0800080E0A00080E0C00080E0E000C0000000C000
-                2000C0004000C0006000C0008000C000A000C000C000C000E000C0200000C020
-                2000C0204000C0206000C0208000C020A000C020C000C020E000C0400000C040
-                2000C0404000C0406000C0408000C040A000C040C000C040E000C0600000C060
-                2000C0604000C0606000C0608000C060A000C060C000C060E000C0800000C080
-                2000C0804000C0806000C0808000C080A000C080C000C080E000C0A00000C0A0
-                2000C0A04000C0A06000C0A08000C0A0A000C0A0C000C0A0E000C0C00000C0C0
-                2000C0C04000C0C06000C0C08000C0C0A000F0FBFF00A4A0A000808080000000
-                FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00D9ED07070707
-                0707070707070707ECD9EC5E5E5E5E5E5E5E5E5E5E5E5E5E5DED070D0E161616
-                161616160E0E0E0E5E07070D161656561616161616160E0E5E07070D16AF075E
-                56561657B7EF0E0E5E07070D56AFF6075F565FAFF6AF160E5E07070D565EAFF6
-                075FEFF6AF17160E5E07070D5E5E5EAFF607F6AF161616165E07070D5E5E5E5E
-                EFF60756161616165E07070D5E5E5FEFF6EFF6075E1616165E07070D5F5F07F6
-                EF5EAFF6075616165E07070D6707F6075E5656AFF60716165E07070DA7AF075F
-                5E5E5E5EAFAF56165E07070DA7A7675F5F5E5E5E5E5E56165E07EDAF0D0D0D0D
-                0D0D0D0D0D0D0D0D5EECD9ED070707070707070707070707EDD1}
-              DirectMove = False
-              DisjunctSelect = False
-              DisjunctSelectColor = clHighlight
-              Display.ActiveStart = 96
-              Display.ActiveEnd = 240
-              Display.CurrentPosFrom = -1
-              Display.CurrentPosTo = -1
-              Display.DisplayStart = 0
-              Display.DisplayEnd = 287
-              Display.DisplayOffset = 0
-              Display.DisplayScale = 18
-              Display.DisplayUnit = 5
-              Display.DisplayText = 0
-              Display.ColorActive = clWhite
-              Display.ColorNonActive = clSilver
-              Display.ColorCurrent = clYellow
-              Display.ColorCurrentItem = clLime
-              Display.ScaleToFit = False
-              Display.ShowCurrent = True
-              Display.ShowCurrentItem = True
-              DragItem = False
-              EditRTF = False
-              EditDirect = False
-              EditScroll = ssNone
-              EnableAlarms = False
-              EnableFlashing = False
-              FlashColor = clRed
-              FlashFontColor = clWhite
-              Flat = True
-              Font.Charset = DEFAULT_CHARSET
-              Font.Color = clWindowText
-              Font.Height = -11
-              Font.Name = 'MS Sans Serif'
-              Font.Style = []
-              Footer.Alignment = taLeftJustify
-              Footer.Color = clBtnFace
-              Footer.ColorTo = clWhite
-              Footer.Completion.Level2Color = 50943
-              Footer.Completion.Font.Charset = DEFAULT_CHARSET
-              Footer.Completion.Font.Color = clWindowText
-              Footer.Completion.Font.Height = -11
-              Footer.Completion.Font.Name = 'Arial'
-              Footer.Completion.Font.Style = []
-              Footer.CustomCompletionValue = False
-              Footer.Font.Charset = DEFAULT_CHARSET
-              Footer.Font.Color = clWindowText
-              Footer.Font.Height = -11
-              Footer.Font.Name = 'MS Sans Serif'
-              Footer.Font.Style = []
-              Footer.ImagePosition = ipLeft
-              Footer.LineColor = clBlack
-              Footer.ShowCompletion = False
-              Footer.VAlignment = vtaCenter
-              Footer.Visible = False
-              GradientHorizontal = False
-              GridLeftCol = 1
-              GridTopRow = 40
-              GroupGapOnly = False
-              Header.Alignment = taLeftJustify
-              Header.Color = clBtnFace
-              Header.ColorTo = clWhite
-              Header.Height = 24
-              Header.Font.Charset = DEFAULT_CHARSET
-              Header.Font.Color = clWindowText
-              Header.Font.Height = -11
-              Header.Font.Name = 'MS Sans Serif'
-              Header.Font.Style = []
-              Header.ImagePosition = ipLeft
-              Header.ItemColor = clGray
-              Header.ItemHeight = 32
-              Header.LineColor = clGray
-              Header.TextHeight = 32
-              Header.VAlignment = vtaCenter
-              Header.Visible = True
-              HintOnItemChange = True
-              HourType = ht24hrs
-              HTMLHint = False
-              HTMLOptions.Width = 100
-              HTMLOptions.CellFontStyle = []
-              HTMLOptions.HeaderFontStyle = []
-              HTMLOptions.SidebarFontStyle = []
-              HTMLOptions.ShowCaption = False
-              InActiveDays.Sat = False
-              InActiveDays.Sun = False
-              InActiveDays.Mon = False
-              InActiveDays.Tue = False
-              InActiveDays.Wed = False
-              InActiveDays.Thu = False
-              InActiveDays.Fri = False
-              IndicateNonVisibleItems = False
-              InplaceEdit = ieAlways
-              InsertAlways = True
-              ItemGap = 11
-              Items = <>
-              ItemSelection.AutoUnSelect = True
-              ItemSelection.Button = sbLeft
-              Layer = 0
-              Mode.Clip = False
-              Mode.Month = 5
-              Mode.PeriodStartDay = 3
-              Mode.PeriodStartMonth = 5
-              Mode.PeriodStartYear = 2004
-              Mode.PeriodEndDay = 20
-              Mode.PeriodEndMonth = 6
-              Mode.PeriodEndYear = 2004
-              Mode.PlannerType = plDay
-              Mode.TimeLineStart = 38110
-              Mode.TimeLineNVUBegin = 0
-              Mode.TimeLineNVUEnd = 0
-              Mode.WeekStart = 0
-              Mode.Year = 2004
-              MultiSelect = False
-              NavigatorButtons.Visible = False
-              NavigatorButtons.ShowHint = True
-              ShadowColor = clGray
-              ShowHint = False
-              Sidebar.ActiveColor = clNone
-              Sidebar.Alignment = taLeftJustify
-              Sidebar.AMPMPos = apUnderTime
-              Sidebar.Background = clBtnFace
-              Sidebar.BackgroundTo = clWhite
-              Sidebar.Font.Charset = DEFAULT_CHARSET
-              Sidebar.Font.Color = clWindowText
-              Sidebar.Font.Height = -11
-              Sidebar.Font.Name = 'Arial'
-              Sidebar.Font.Style = []
-              Sidebar.OccupiedFontColor = clWhite
-              Sidebar.Position = spLeft
-              Sidebar.SeparatorLineColor = clGray
-              Sidebar.ShowInPositionGap = False
-              Sidebar.ShowOccupied = False
-              Sidebar.Width = 40
-              Positions = 3
-              PositionGap = 0
-              PositionGroup = 0
-              PositionProps = <>
-              PositionWidth = 0
-              PositionZoomWidth = 0
-              PrintOptions.FooterAlignment = taLeftJustify
-              PrintOptions.FooterFont.Charset = DEFAULT_CHARSET
-              PrintOptions.FooterFont.Color = clWindowText
-              PrintOptions.FooterFont.Height = -11
-              PrintOptions.FooterFont.Name = 'MS Sans Serif'
-              PrintOptions.FooterFont.Style = []
-              PrintOptions.FooterSize = 0
-              PrintOptions.HeaderAlignment = taLeftJustify
-              PrintOptions.HeaderFont.Charset = DEFAULT_CHARSET
-              PrintOptions.HeaderFont.Color = clWindowText
-              PrintOptions.HeaderFont.Height = -11
-              PrintOptions.HeaderFont.Name = 'MS Sans Serif'
-              PrintOptions.HeaderFont.Style = []
-              PrintOptions.HeaderSize = 0
-              PrintOptions.LeftMargin = 0
-              PrintOptions.Orientation = poPortrait
-              PrintOptions.RightMargin = 0
-              ScrollSmooth = False
-              ScrollSynch = True
-              ScrollBarStyle.Color = clNone
-              ScrollBarStyle.Style = ssNormal
-              ScrollBarStyle.Width = 16
-              SelectBackground = False
-              SelectColor = clHighlight
-              TrackWidth = 4
-              URLGlyph.Data = {
-                F6000000424DF600000000000000760000002800000010000000100000000100
-                0400000000008000000000000000000000001000000000000000000000000000
-                8000008000000080800080000000800080008080000080808000C0C0C0000000
-                FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00888880000800
-                0088888808F8F0F8F80888808000000000808880F070888070F0888080000000
-                0080880408F8F0F8F80880CCC0000400008874CCC2222C4788887CCCC22226C0
-                88887CC822222CC088887C822224642088887C888422C220888877CF8CCCC227
-                888887F8F8222208888888776888208888888887777778888888}
-              Skin.SkinCaptionX = 0
-              Skin.SkinCaptionY = 0
-              Skin.SkinX = 0
-              Skin.SkinY = 0
-              ItemSource = Planner_DBDaySource
+              Height = 249
+              Align = alClient
+              Columns = <
+                item
+                  MaxWidth = 1
+                  Width = 1
+                end
+                item
+                  Caption = 'Zeit'
+                  MinWidth = 130
+                  Width = 130
+                end
+                item
+                  Alignment = taRightJustify
+                  Caption = 'Dauer'
+                  MinWidth = 50
+                end
+                item
+                  Caption = 'Titel'
+                  MinWidth = 350
+                  Width = 350
+                end
+                item
+                  Caption = 'Kanal'
+                  MinWidth = 170
+                  Width = 170
+                end>
+              GridLines = True
+              ReadOnly = True
+              RowSelect = True
+              TabOrder = 1
+              ViewStyle = vsReport
+              OnCustomDrawItem = lvTimerCustomDrawItem
+              OnDblClick = lvTimerDblClick
             end
           end
         end
@@ -592,9 +330,10 @@ object frmMain: TfrmMain
           object Recorded_DBNavigator: TDBNavigator
             Left = 8
             Top = 0
-            Width = 270
+            Width = 252
             Height = 33
             DataSource = Recorded_DataSource
+            VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbInsert, nbDelete, nbRefresh]
             Flat = True
             ParentShowHint = False
             ShowHint = True
@@ -612,11 +351,20 @@ object frmMain: TfrmMain
           HeavyBorder = True
           Caption = 'plRecorded'
           TabOrder = 1
+          object Splitter1: TSplitter
+            Left = 0
+            Top = 217
+            Width = 728
+            Height = 5
+            Cursor = crVSplit
+            Align = alTop
+          end
           object Panel3_Recorded: TPanel
             Left = 0
             Top = 0
-            Width = 729
-            Height = 225
+            Width = 728
+            Height = 217
+            Align = alTop
             BevelInner = bvSpace
             BevelOuter = bvLowered
             BevelWidth = 2
@@ -625,8 +373,8 @@ object frmMain: TfrmMain
             object Recorded_DBGrid: TDBGrid
               Left = 4
               Top = 4
-              Width = 721
-              Height = 217
+              Width = 720
+              Height = 209
               Align = alClient
               DataSource = Recorded_DataSource
               Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
@@ -670,17 +418,18 @@ object frmMain: TfrmMain
           end
           object Panel3: TPanel
             Left = 0
-            Top = 232
-            Width = 729
-            Height = 217
+            Top = 222
+            Width = 728
+            Height = 227
+            Align = alClient
             BevelInner = bvLowered
             Caption = 'Panel3'
             TabOrder = 1
             object Recorded_Epg_DropFiles: TPJDropFiles
               Left = 2
               Top = 2
-              Width = 725
-              Height = 213
+              Width = 724
+              Height = 223
               Align = alClient
               PassThrough = False
               ForegroundOnDrop = False
@@ -689,8 +438,8 @@ object frmMain: TfrmMain
               object Recorded_EpgView: ThtmlLite
                 Left = 0
                 Top = 0
-                Width = 725
-                Height = 213
+                Width = 724
+                Height = 223
                 TabOrder = 0
                 Align = alClient
                 DefBackground = clWhite
@@ -727,9 +476,10 @@ object frmMain: TfrmMain
           object Whishes_DBNavigator: TDBNavigator
             Left = 8
             Top = 0
-            Width = 270
+            Width = 259
             Height = 33
             DataSource = Whishes_DataSource
+            VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbInsert, nbDelete, nbRefresh]
             Flat = True
             ParentShowHint = False
             ShowHint = True
@@ -776,11 +526,19 @@ object frmMain: TfrmMain
             BevelOuter = bvLowered
             BevelWidth = 2
             TabOrder = 0
+            object Splitter2: TSplitter
+              Left = 4
+              Top = 161
+              Width = 721
+              Height = 5
+              Cursor = crVSplit
+              Align = alTop
+            end
             object Whishes_DBGrid: TDBGrid
               Left = 4
               Top = 4
               Width = 721
-              Height = 133
+              Height = 157
               Align = alTop
               DataSource = Whishes_DataSource
               Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
@@ -805,9 +563,9 @@ object frmMain: TfrmMain
             end
             object Whishes_Result: TListBox
               Left = 4
-              Top = 137
+              Top = 166
               Width = 721
-              Height = 308
+              Height = 279
               Style = lbOwnerDrawVariable
               Align = alClient
               Font.Charset = ANSI_CHARSET
@@ -1513,7 +1271,7 @@ object frmMain: TfrmMain
             Left = 0
             Top = 113
             Width = 730
-            Height = 121
+            Height = 107
             Align = alTop
             TabOrder = 1
             object lblSplitt1: TLabel
@@ -1645,7 +1403,7 @@ object frmMain: TfrmMain
             end
             object TeGroupBox2: TTeGroupBox
               Left = 0
-              Top = 45
+              Top = 31
               Width = 711
               Height = 57
               Align = alBottom
@@ -1786,7 +1544,7 @@ object frmMain: TfrmMain
           end
           object gbxDvdx: TTeGroupBox
             Left = 0
-            Top = 234
+            Top = 220
             Width = 730
             Height = 47
             Align = alTop
@@ -1834,9 +1592,9 @@ object frmMain: TfrmMain
           end
           object gbxMovix: TTeGroupBox
             Left = 0
-            Top = 288
+            Top = 338
             Width = 730
-            Height = 155
+            Height = 105
             Align = alBottom
             Caption = 'ISO'
             TabOrder = 4
@@ -1991,6 +1749,28 @@ object frmMain: TfrmMain
               OnChange = edCDRwSpeedChange
             end
           end
+          object gbxPowersave: TTeRadioGroup
+            Left = 0
+            Top = 296
+            Width = 730
+            Height = 42
+            Align = alBottom
+            Caption = 'Verhalten im Leerlauf'
+            Font.Charset = ANSI_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -11
+            Font.Name = 'Arial'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 5
+            Columns = 4
+            ItemIndex = 2
+            Items.Strings = (
+              'kein Energiesparen'
+              'Standby'
+              'Ruhezustand'
+              'Herunterfahren')
+          end
         end
         object TePanel3: TTePanel
           Left = 0
@@ -2144,25 +1924,6 @@ object frmMain: TfrmMain
     Left = 488
     Top = 440
   end
-  object Planner_DBDaySource: TDBDaySource
-    AutoIncKey = False
-    DataSource = Planner_DataSource
-    ResourceMap = <>
-    StartTimeField = 'Starttime'
-    EndTimeField = 'Endtime'
-    KeyField = 'Key'
-    ReadOnly = False
-    ResourceField = 'Resource'
-    SubjectField = 'Subject'
-    NotesField = 'Notes'
-    UpdateByQuery = False
-    OnFieldsToItem = Planner_DBDaySourceFieldsToItem
-    OnItemToFields = Planner_DBDaySourceItemToFields
-    DateFormat = 'dd.mm.yyyy'
-    Mode = dmMultiDay
-    Left = 240
-    Top = 512
-  end
   object Planner_ADOTable: TADOTable
     Connection = Planner_ADOConnection
     TableName = 'T_Planner'
@@ -2182,8 +1943,17 @@ object frmMain: TfrmMain
     Top = 512
   end
   object VcrDBoxTelnet: TIdTelnet
+    OnDisconnected = VcrDBoxTelnetDisconnected
+    RecvBufferSize = 8096
+    OnConnected = VcrDBoxTelnetConnected
     Port = 23
+    SocksInfo.Authentication = saUsernamePassword
+    SocksInfo.Port = 23
+    SocksInfo.UserID = 'root'
+    OnDataAvailable = VcrDBoxTelnetDataAvailable
     Terminal = 'dumb'
+    OnConnect = VcrDBoxTelnetConnect
+    OnDisconnect = VcrDBoxTelnetDisconnect
     Left = 576
     Top = 448
   end

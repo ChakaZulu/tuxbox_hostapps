@@ -1,6 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.6  2004/12/03 16:09:49  thotto
+// - Bugfixes
+// - EPG suchen überarbeitet
+// - Timerverwaltung geändert
+// - Ruhezustand / Standby gefixt
+//
 // Revision 1.5  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -103,10 +109,10 @@ uses
   IPAddressControl,
   VcrDivXchk,
   HTMLLite,
-  Planner,
-  DBPlanner,
   IdTelnet,
-  VcrDbHandling ;
+  ProcessViewer,
+  DoRecordDlg,
+  VcrDbHandling, PlanItemEdit ;
 
 {$M 65536,4194304}
 
@@ -289,8 +295,6 @@ type
     chxSwitchChannel: TTeCheckBox;
     lbl_check_EPG: TLabel;
     dbRefreshTimer: TTimer;
-    Record_Planner: TDBPlanner;
-    Planner_DBDaySource: TDBDaySource;
     Planner_ADOTable: TADOTable;
     btnWishesSeekDb: TTeBitBtn;
     Planner_DataSource: TDataSource;
@@ -299,6 +303,11 @@ type
     Recorded_EpgView: ThtmlLite;
     Label16: TLabel;
     VcrDBoxTelnet: TIdTelnet;
+    Timer_Splitter: TSplitter;
+    Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    lvTimer: TListView;
+    gbxPowersave: TTeRadioGroup;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -380,15 +389,20 @@ type
 
     procedure dbRefreshTimerTimer(Sender: TObject);
 
-    procedure Planner_DBDaySourceFieldsToItem(Sender: TObject; Fields: TFields;
-                                              Item: TPlannerItem);
-    procedure Planner_DBDaySourceItemToFields(Sender: TObject; Fields: TFields;
-                                              Item: TPlannerItem);
     procedure Whishes_ResultDrawItem(Control: TWinControl; Index: Integer;
                                      Rect: TRect; State: TOwnerDrawState);
     procedure mmoMessagesDrawItem(Control: TWinControl; Index: Integer;
                                   Rect: TRect; State: TOwnerDrawState);
     procedure Recorded_Epg_DropFilesDropFiles(Sender: TObject);
+
+    procedure VcrDBoxTelnetDataAvailable(Buffer: String);
+    procedure VcrDBoxTelnetConnect;
+    procedure VcrDBoxTelnetConnected(Sender: TObject);
+    procedure VcrDBoxTelnetDisconnect;
+    procedure VcrDBoxTelnetDisconnected(Sender: TObject);
+    procedure lvTimerDblClick(Sender: TObject);
+    procedure lvTimerCustomDrawItem(Sender: TCustomListView;
+      Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 
   private
     m_bInit              : Boolean;
@@ -412,12 +426,13 @@ type
     m_bVCR_Ping_Ok       : Boolean;
     m_bHttpInProgress    : Boolean;
     m_LastEpgUpdate      : TDateTime;
+    m_bIsEpgReading      : Boolean;
     m_bAbortWishesSeek   : Boolean;
 
     m_Recorded_dbConnectionString : String;
     m_coVcrDb                     : TVcrDb;
 
-    m_Trace              : TTrace;
+    m_Trace                       : TTrace;
 
 {$W+}
     procedure ReMuxTsStateCallback(aSender: TTeProcessManager; const aName, aState: string);
@@ -439,7 +454,7 @@ type
     procedure RecordingStopTimer;
 
     function  PingDBox(sIp: String) : Boolean;
-    procedure CheckShutdown;
+    procedure CheckShutdown(bForce: Boolean = false);
 
     function  CheckFileNameString(sFileName: String): String;
     function  CheckPathNameString(sPathName: String): String;
@@ -484,10 +499,10 @@ type
     // KanalListe
     procedure FillDbChannelListBox;
 
-    // Record-Timer
-    procedure Record_Planner_UpdateHeaders;
+    // Timerliste
+    procedure UpdateTimerListView;
+    procedure UpdateTimer;
 
-    
   public
     ChannelList   : TTeChannelList;
     StateList     : TStringList;
@@ -578,7 +593,7 @@ begin
     sTmp := sFileName;
     for k:= 1 to Length(sTmp) do
     begin
-      if sTmp[k] = ':' then sTmp[k]:= '.';
+      if sTmp[k] = ':' then sTmp[k]:= '_';
       if sTmp[k] = '*' then sTmp[k]:= '_';
       if sTmp[k] = '?' then sTmp[k]:= '_';
       if sTmp[k] = '\' then sTmp[k]:= '_';
@@ -770,10 +785,10 @@ var
 begin
   try
     Caption := Application.Title;
-
+    
     DateSeparator   := '-';
     ShortDateFormat := 'yyyy/m/d';
-    TimeSeparator   := '.';
+    TimeSeparator   := ':';
 
     m_Trace := TTrace.Create();
     m_Trace.DBMSG_INIT('',
@@ -824,9 +839,6 @@ begin
 
     LoadSettings;
 
-    Windows.SetThreadPriority(Application.Handle , THREAD_PRIORITY_ABOVE_NORMAL);
-
-    Record_Planner_UpdateHeaders;
     DoEvents;
     Sleep(100);
   except
@@ -890,10 +902,12 @@ begin
 
     DoEvents;
     Sleep(100);
-  except
+  finally
+    RefreshTimer.Enabled:= true;
   end;
+  RefreshTimer.Enabled:= true;
   DoEvents;
-  Sleep(10);
+  Sleep(0);
   m_Trace.DBMSG(TRACE_CALLSTACK, '< StartupTimerTimer');
 end;
 
@@ -902,7 +916,6 @@ begin
   try
     LoadSettings;
     DoEvents;
-
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'FormShow '+ E.Message );
   end;
@@ -968,6 +981,7 @@ end;
 procedure TfrmMain.tbsDboxHide(Sender: TObject);
 begin
 end;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1010,35 +1024,39 @@ begin
 
     RefreshTimer.Enabled := false;
     try
-      DoEvents;
-      bRecording := IsDBoxRecording;
-      if PingDBox(m_sDBoxIp) then
+      if pclMain.ActivePage = tbsWelcome then
       begin
-        if not bRecording then
+        DoEvents;
+        bRecording := IsDBoxRecording;
+        if PingDBox(m_sDBoxIp) then
         begin
-          RetrieveCurrentChannel(lbxChannelList, sTmp);
-          if lbxChannelList.ItemIndex >= 0 then
+          if not bRecording then
           begin
-            ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
-            FillDbEventListView( ChannelId );
-            lvChannelProg.SetFocus;
-            lvChannelProgClick(self);
-          end else
-          begin
-            InitChannels;
-          end;
-          DoEvents;
+            RetrieveCurrentChannel(lbxChannelList, sTmp);
+            if lbxChannelList.ItemIndex >= 0 then
+            begin
+              ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+              FillDbEventListView( ChannelId );
+              lvChannelProg.SetFocus;
+              lvChannelProgClick(self);
+            end else
+            begin
+              InitChannels;
+            end;
+            DoEvents;
 
+          end;
         end;
       end;
-      CheckShutdown;
-
-      // This subroutine decommits the unused memory blocks.
-      QMemDecommitOverstock;
-
+      RefreshTimer.Enabled := true;
     finally
       RefreshTimer.Enabled := true;
     end;
+
+    CheckShutdown;
+
+    // This subroutine decommits the unused memory blocks.
+    QMemDecommitOverstock;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'RefreshTimerTimer '+ E.Message );
   end;
@@ -1089,10 +1107,6 @@ begin
                      AMinute,
                      ASecond,
                      AMilliSecond);
-      m_Trace.DBMSG(TRACE_DETAIL, 'dbRefreshTimerTimer  LastUpdate='+DateTimeToStr(m_LastEpgUpdate));
-      m_Trace.DBMSG(TRACE_DETAIL, 'dbRefreshTimerTimer         Now='+DateTimeToStr(Now - OffsetFromUTC));
-      m_Trace.DBMSG(TRACE_DETAIL, 'dbRefreshTimerTimer        Hour='+IntToStr(AHour));
-      m_Trace.DBMSG(TRACE_DETAIL, 'dbRefreshTimerTimer CompareDate='+IntToStr(CompareDate((Now - OffsetFromUTC), m_LastEpgUpdate)));
       if (AHour > 02) and
          (AHour < 10) then
       begin
@@ -1121,13 +1135,13 @@ end;
 procedure TfrmMain.tbsWelcomeShow(Sender: TObject);
 begin
   lvChannelProg.SetFocus;
-  RefreshTimer.Enabled := true;
+//  RefreshTimer.Enabled := true;
   DoEvents;
 end;
 
 procedure TfrmMain.tbsWelcomeHide(Sender: TObject);
 begin
-  RefreshTimer.Enabled := false;
+//  RefreshTimer.Enabled := false;
   DoEvents;
 end;
 
@@ -1228,10 +1242,11 @@ end;
 
 procedure TfrmMain.Whishes_ResultDblClick(Sender: TObject);
 var
-  sTmp,
-  sMsg   : String;
-  bFound : Boolean;
-  i      : Integer;
+  ChannelId,
+  sEventId,
+  sTmp      : String;
+  bFound    : Boolean;
+  i         : Integer;
 begin
   try
     for i := 0 to (Whishes_Result.Items.Count - 1) do
@@ -1239,28 +1254,26 @@ begin
       if Whishes_Result.Selected[i] then
       begin
         sTmp:= Whishes_Result.Items.Strings[i];
-        sTmp := Trim(Copy(sTmp, Pos('"',sTmp)+1,Length(sTmp)));
-        sTmp := Trim(Copy(sTmp, 1, Pos('"',sTmp)-1));
+        sTmp := Trim(Copy(sTmp, Pos('###',sTmp)+3,Length(sTmp)));
 
-        bFound := (m_coVcrDb.IsInRecordedList(sTmp, '') > 0);
-        if bFound then
+        ChannelId := Trim(Copy(sTmp, 1,                 Pos('|||',sTmp)-1));
+        sEventId  := Trim(Copy(sTmp, Pos('|||',sTmp)+3, Length(sTmp)));
+
+        sTmp := DoRecordDialog(ChannelId,sEventId, m_Recorded_dbConnectionString);
+        if Trim(sTmp) <> '' then
         begin
-          sMsg :=  '"' + sTmp + '" wurde bereits aufgenommen !';
-          DbgMsg(PChar(sMsg));
-          sMsg :=  sMsg + #13 + #10;
-          sMsg :=  sMsg + #13 + #10;
-          Beep;
-        end;
-        sMsg := sMsg + 'Möchten Sie "' + sTmp + '" zur Aufnahme vormerken ?';
-        if Application.MessageBox(PChar(sMsg), PChar('Frage'), MB_YESNO) = IDYES then
-        begin
-          sTmp:= Whishes_Result.Items.Strings[i];
-          sTmp := Trim(Copy(sTmp, Pos('###',sTmp)+4,Length(sTmp)));
+          DbgMsg(sTmp);
           m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sTmp);
           SendHttpCommand(sTmp);
           DoEvents;
+
+          if PingDBox(m_sDBoxIp) then
+            Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+          DoEvents;
+
           Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
         end;
+
       end;
     end;
   except
@@ -1270,41 +1283,31 @@ end;
 
 procedure TfrmMain.lvChannelProgDblClick(Sender: TObject);
 var
-  ChannelId : String;
-  sZeit  : String;
-  sDauer : String;
-  sTmp   : String;
-  bFound : Boolean;
+  ChannelId,
+  sEventId : String;
+  sStartZeit,
+  sEndZeit : String;
+  sTmp     : String;
+  bFound   : Boolean;
 begin
   if lvChannelProg.ItemIndex = -1 then exit;
-  if not PingDBox(m_sDBoxIp) then exit;
+//  if not PingDBox(m_sDBoxIp) then exit;
   try
-    bFound := (m_coVcrDb.IsInRecordedList(lvChannelProg.Selected.SubItems[4], '') > 0);
-    sTmp := '';
-    if bFound then
+    ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+    sEventId  := lvChannelProg.Selected.Caption;
+
+    sTmp := DoRecordDialog(ChannelId,sEventId, m_Recorded_dbConnectionString);
+    if Trim(sTmp) <> '' then
     begin
-      sTmp :=  '"' + lvChannelProg.Selected.SubItems[4] + '" wurde bereits aufgenommen !';
-      DbgMsg(PChar(sTmp));
-      sTmp :=  sTmp + #13 + #10;
-      Beep;
-    end;
-    sTmp := sTmp + 'Möchten Sie "' + lvChannelProg.Selected.SubItems[4] + '" zur Aufnahme vormerken ?';
-    if Application.MessageBox(PChar(sTmp), PChar('Frage'), MB_YESNO) = IDYES then
-    begin
-
-      m_coVcrDb.SaveWhishesToDb(lvChannelProg.Selected.SubItems[4]);
-
-      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
-      sZeit     := lvChannelProg.Selected.SubItems[0];
-      sDauer    := lvChannelProg.Selected.SubItems[3];
-
-      sTmp := '/fb/timer.dbox2?action=new&type=5&alarm=' + sZeit;
-      sTmp := sTmp + '&stop=' + IntToStr( StrToIntDef(sZeit,0) + (StrToIntDef(sDauer,0) * 60) );
-      sTmp := sTmp + '&channel_id=' + ChannelId + '&rs=1';
       DbgMsg(sTmp);
-
+      m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sTmp);
       SendHttpCommand(sTmp);
       DoEvents;
+
+      if PingDBox(m_sDBoxIp) then
+        Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+      DoEvents;
+
       Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
     end;
   except
@@ -1334,7 +1337,7 @@ begin
     //Record it ...
     DateSeparator   := '-';
     ShortDateFormat := 'yyyy/m/d';
-    TimeSeparator   := '.';
+    TimeSeparator   := ':';
 
     if not IsDBoxRecording then
     begin
@@ -1481,7 +1484,7 @@ begin
       begin
         DateSeparator   := '-';
         ShortDateFormat := 'yyyy/m/d';
-        TimeSeparator   := '.';
+        TimeSeparator   := ':';
 
         // find next unused thread entry ...
         k:= GetNextFreeThread;
@@ -1565,8 +1568,11 @@ procedure TfrmMain.pclMainChange(Sender: TObject);
 begin
   try
     m_coGoBackTo := pclMain.ActivePage;
-
-    Record_Planner_UpdateHeaders;
+    if pclMain.ActivePage = tbsTimer then
+    begin
+      Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+      UpdateTimer;
+    end;
 
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'pclMainChange '+ E.Message );
@@ -2281,8 +2287,6 @@ end;
 //
 //
 procedure TfrmMain.btnWishesSeekDbClick(Sender: TObject);
-var
-  oldHeight : Integer;
 begin
   try
     if not Whishes_DBNavigator.Visible then exit;
@@ -2290,8 +2294,6 @@ begin
     btnWishesSeek.Enabled      := False;
     btnWishesSeekDb.Enabled    := False;
     Whishes_DBNavigator.Visible:= false;
-    oldHeight := Whishes_DBGrid.Height;
-    Whishes_DBGrid.Height := 0;
     try
       lbl_check_EPG.Caption:= '';
       DoEvents;
@@ -2313,7 +2315,6 @@ begin
       on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'StartupTimerTimer/SELECT * T_Whishes '+E.Message);
     end;
   finally
-    Whishes_DBGrid.Height      := oldHeight;
     Whishes_DBNavigator.Visible:= true;
     btnWishesSeek.Enabled      := True;
     btnWishesSeekDb.Enabled    := True;
@@ -2321,57 +2322,44 @@ begin
 end;
 
 procedure TfrmMain.btnWishesSeekClick(Sender: TObject);
-var
-  oldHeight : Integer;
 begin
-  try
-    if not Whishes_DBNavigator.Visible then
-    begin
-      m_bAbortWishesSeek := true;
-      btnWishesSeek.Caption := 'wird abgebrochen';
-      DoEvents;
-      Sleep(0);
-      Whishes_DBGrid.Height      := oldHeight;
-      Whishes_DBNavigator.Visible:= true;
-      btnWishesSeekDb.Enabled    := True;
-      btnWishesSeek.Caption      := 'DBox neu lesen';
-      exit;
-    end;
-
-    m_bAbortWishesSeek         := false;
-    btnWishesSeek.Caption      := 'Abbrechen';
-    btnWishesSeekDb.Enabled    := False;
-    Whishes_DBNavigator.Visible:= false;
-    oldHeight := Whishes_DBGrid.Height;
-    Whishes_DBGrid.Height := 0;
-    try
-      lbl_check_EPG.Caption:= '';
-      DoEvents;
-
-      CheckChannels(chxSwitchChannel.Checked);
-      DoEvents;
-      CheckChannelsInDb;
-      DoEvents;
-
-      lbl_check_EPG.Caption:= '';
-      DoEvents;
-    except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'btnWishesSeekClick '+E.Message);
-    end;
-    try
-      Whishes_ADOQuery.SQL.Clear;
-      Whishes_ADOQuery.SQL.Add('SELECT * FROM T_Whishes ORDER BY Titel;');
-      Whishes_ADOQuery.ExecSQL;
-      Whishes_ADOQuery.Active := true;
-      Whishes_DBGrid.Datasource.DataSet := Whishes_ADOQuery;
-    except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'btnWishesSeekClick/SELECT * T_Whishes '+E.Message);
-    end;
-  finally
-    Whishes_DBGrid.Height      := oldHeight;
+  if m_bIsEpgReading then
+  begin
+    m_bAbortWishesSeek := true;
+    btnWishesSeek.Caption := 'wird abgebrochen';
+    DoEvents;
+    Sleep(100);
+    DoEvents;
+{
     Whishes_DBNavigator.Visible:= true;
     btnWishesSeekDb.Enabled    := True;
     btnWishesSeek.Caption      := 'DBox neu lesen';
+}
+    exit;
+  end;
+
+  try
+    lbl_check_EPG.Caption:= '';
+    DoEvents;
+
+    CheckChannels(chxSwitchChannel.Checked);
+    DoEvents;
+    CheckChannelsInDb;
+    DoEvents;
+
+    lbl_check_EPG.Caption:= '';
+    DoEvents;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'btnWishesSeekClick '+E.Message);
+  end;
+  try
+    Whishes_ADOQuery.SQL.Clear;
+    Whishes_ADOQuery.SQL.Add('SELECT * FROM T_Whishes ORDER BY Titel;');
+    Whishes_ADOQuery.ExecSQL;
+    Whishes_ADOQuery.Active := true;
+    Whishes_DBGrid.Datasource.DataSet := Whishes_ADOQuery;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'btnWishesSeekClick/SELECT * T_Whishes '+E.Message);
   end;
 end;
 
@@ -2382,6 +2370,7 @@ begin
   RetrieveCurrentChannel(lbxChannelList, sTmp);
   lvChannelProgClick(Sender);
   if lvChannelProg.Visible then lvChannelProg.SetFocus;
+  CheckShutdown(true);
 end;
 
 procedure TfrmMain.Recorded_ADOQueryAfterScroll(DataSet: TDataSet);
@@ -2395,83 +2384,6 @@ begin
       sTmp := 'kein EPG verfügbar';
     Recorded_EpgView.LoadFromString(sTmp,'');
   except
-  end;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-procedure TfrmMain.Record_Planner_UpdateHeaders;
-var
-  i: Integer;
-begin
-  try
-    Record_Planner.Positions := 5;
-    Record_Planner.Header.Captions.Clear;
-    Record_Planner.Header.Captions.Add('');
-    if Planner_DBDaySource.Active then
-    begin
-      for i := 1 to Record_Planner.Positions do
-      begin
-        Record_Planner.Header.Captions.Add(FormatDateTime('DDD dd.mm.yy',Planner_DBDaySource.Day + i - 1 ));
-      end;
-    end else
-    begin
-      for i := 1 to Record_Planner.Positions do
-      begin
-        Record_Planner.Header.Captions.Add(FormatDateTime('DDD dd.mm.yy',Now + i - 1 ));
-      end;
-    end;
-{
-    Record_Planner.SelectCells((AHour * 60 + AMinute + 1) div Record_Planner.Display.DisplayUnit,
-                               (AHour * 60 + AMinute + 1) div Record_Planner.Display.DisplayUnit,
-                                0  ); //Spalte
-}
-    if Record_Planner.Items.SelCount > 0 then
-      Record_Planner.Items.Selected.ScrollInView;
-
-    DoEvents;
-  except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
-  end;
-end;
-
-procedure TfrmMain.Planner_DBDaySourceFieldsToItem(Sender: TObject;
-  Fields: TFields; Item: TPlannerItem);
-begin
-  try
-    { The FieldsToItem event is called when records are read from the database
-      and extra properties are set from database fields. With this code, any
-      field from the database can be connected in a custom way to planner item
-      properties.
-     }
-    Item.Color := TColor(Fields.FieldByName('COLOR').AsInteger);
-    Item.CaptionBkg := Item.Color;
-    Item.ImageID := Fields.FieldByName('IMAGE').AsInteger;
-    if Fields.FieldByName('CAPTION').AsBoolean then
-      Item.CaptionType := ctTime
-    else
-      Item.CaptionType := ctNone;
-  except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
-  end;
-end;
-
-procedure TfrmMain.Planner_DBDaySourceItemToFields(Sender: TObject;
-  Fields: TFields; Item: TPlannerItem);
-begin
-  try
-    { The ItemToFields event is called when items are written to the database
-      and extra properties are stored in database fields. With this code, any
-      property of the item can be saved into any field of the database in
-      a custom way to be retrieved later with the inverse event FieldsToItem
-    }
-    Fields.FieldByName('COLOR').AsInteger := Integer(Item.Color);
-    Fields.FieldByName('CAPTION').AsBoolean := Item.CaptionType = ctTime;
-    Fields.FieldByName('IMAGE').AsInteger := Item.ImageID;
-  except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -2561,7 +2473,7 @@ begin
         sTmp := 'Möchten Sie die Filmbeschreibung von ' + #13#10 + '"' + sEpgTitle + ' - ' + sEpgSubTitle + '"' + #13#10 + 'jetzt in die Datenbank einfügen?';
         if Application.MessageBox(PChar(sTmp), PChar('Frage'), MB_YESNO) = IDYES then
         begin
-          m_coVcrDb.SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
+          m_coVcrDb.UpdateEpgInDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
         end;
       finally
         sEpg.free;
@@ -2572,7 +2484,255 @@ begin
   end;
 end;
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+procedure TfrmMain.UpdateTimer;
+var
+  sTmp,
+  sLine      : String;
+  sRep,
+  sType,
+  sStartZeit,
+  sEndZeit,
+  sKanal,
+  ChannelId  : String;
+  i          : Integer;
+  TmpList    : TStringList;
+begin
+  try
+    if PingDBox(m_sDBoxIp) then
+    begin
+      sTmp := SendHttpCommand('/control/timer');
+      if Length(sTmp) > 0 then
+      begin
+        // eventID eventType eventRepeat announceTime alarmTime stopTime data
+        TmpList:= TStringList.Create;
+        try
+          m_coVcrDb.CheckTimerStart;
+          m_Trace.DBMSG(TRACE_SYNC, sTmp);
+          TmpList.Text := sTmp;
+          for i := 0 to Pred(TmpList.Count) do
+          begin
+            sLine      := TmpList.Strings[i];
+            sTmp       := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sType      := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sRep       := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sTmp       := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sStartZeit := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sEndZeit   := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
+            sKanal     := Copy(sLine, 1,               Pos(' ',sLine)-1);
+            ChannelId  := m_coVcrDb.GetDbChannelId(sKanal);
+            m_Trace.DBMSG(TRACE_SYNC, 'T='+sType+' S='+sStartZeit+' E='+sEndZeit+' ['+sKanal+']');
+            if sType = '5' then
+            begin
+              m_coVcrDb.CheckTimerEvent(ChannelId,sStartZeit,sEndZeit);
+            end;
+          end;
+        finally
+          TmpList.Free;
+          m_coVcrDb.CheckTimerEnd;
+        end;
+        DoEvents;
+      end;
+    end;
+    UpdateTimerListView;
 
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'UpdateTimer '+ E.Message );
+  end;
+end;
+
+procedure TfrmMain.UpdateTimerListView;
+var
+  sTmp,
+  sZeit,
+  sSQL     : String;
+  Datum    : TDateTime;
+  ListItem : TListItem;
+  iOverlapped : Integer;
+  AYear,
+  AMonth,
+  ADay,
+  AHour,
+  AMinute,
+  ASecond,
+  AMilliSecond: Word;
+begin
+  m_Trace.DBMSG(TRACE_CALLSTACK, '> UpdateTimerListView');
+  try
+    lvTimer.Items.Clear;
+    lvTimer.Items.BeginUpdate;
+    try
+      TimeSeparator   := ':';
+      sZeit := IntToStr(DateTimeToUnix(IncHour((Now - OffsetFromUTC),-3)));
+      Work_ADOQuery.SQL.Clear;
+      sSQL :=        'SELECT * FROM ';
+      sSQL := sSQL + 'T_Planner WHERE ';
+      sSQL := sSQL + 'Status = 1 AND ';
+      sSQL := sSQL + 'StartZeit  >= ''' + CheckDbString(sZeit) + ''' ';
+      sSQL := sSQL + 'ORDER BY StartZeit ;';
+      Work_ADOQuery.SQL.Add(sSQL);
+      Work_ADOQuery.Active := true;
+      if not Work_ADOQuery.Recordset.Eof then
+      begin
+        repeat
+//          sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['Zielformat'].Value, '0');
+          ListItem := lvTimer.Items.Add;
+//          ListItem.Caption := sTmp; // Zielformat
+
+          sTmp  := VarToStrDef(Work_ADOQuery.Recordset.Fields['StartZeit'].Value, '0');
+          Datum := UnixToDateTime(StrToInt64Def(sTmp,0)) + OffsetFromUTC;
+          DateTimeToString(sTmp,'dd.mm.yyyy hh:nn', Datum);
+          ListItem.SubItems.Add(sTmp); //Start
+
+          sTmp := IntToStr( (StrToInt(VarToStrDef(Work_ADOQuery.Recordset.Fields['EndZeit'].Value, '0')) - StrToInt(VarToStrDef(Work_ADOQuery.Recordset.Fields['StartZeit'].Value, '0'))) div 60 );
+          ListItem.SubItems.Add(sTmp); //Dauer
+
+          sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['Titel'].Value, '');
+          ListItem.SubItems.Add(sTmp); //Titel
+
+          sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['Kanal'].Value, '');
+          ListItem.SubItems.Add(sTmp); //Kanal
+
+          ListItem.Caption := '0';
+          if VarToStrDef(Work_ADOQuery.Recordset.Fields['Zielformat'].Value, '0') = '1' then
+          begin
+            ListItem.Caption := '3';
+          end;
+          iOverlapped:= m_coVcrDb.IsTimerAt(VarToStrDef(Work_ADOQuery.Recordset.Fields['StartZeit'].Value, '0'),
+                                            VarToStrDef(Work_ADOQuery.Recordset.Fields['EndZeit'].Value, '0'));
+          if iOverlapped > 1 then
+          begin
+             ListItem.Caption := '1';
+          end else
+          begin
+            // Startzeit...
+            DecodeDateTime(Datum,
+                           AYear,
+                           AMonth,
+                           ADay,
+                           AHour,
+                           AMinute,
+                           ASecond,
+                           AMilliSecond);
+            if  DayOfWeek(Datum) < 3 then
+            begin
+              //Sonntag/Montag ...
+              if ((AHour > 9) AND (AHour < 22)) then
+              begin
+                ListItem.Caption := '2';
+              end;
+            end else
+            begin
+              //Wochentage...
+              if ((AHour > 14) AND (AHour < 22)) then
+              begin
+                ListItem.Caption := '2';
+              end;
+            end;
+            if ListItem.Caption = '0' then
+            begin
+              // EndZeit ...
+              Datum := UnixToDateTime(StrToInt64Def(VarToStrDef(Work_ADOQuery.Recordset.Fields['EndZeit'].Value, '0'),0)) + OffsetFromUTC;
+              DecodeDateTime(Datum,
+                             AYear,
+                             AMonth,
+                             ADay,
+                             AHour,
+                             AMinute,
+                             ASecond,
+                             AMilliSecond);
+              if  DayOfWeek(Datum) < 3 then
+              begin
+                //Sonntag/Montag ...
+                if ((AHour > 9) AND (AHour < 22)) then
+                begin
+                  ListItem.Caption := '2';
+                end;
+              end else
+              begin
+                //Wochentage...
+                if ((AHour > 14) AND (AHour < 22)) then
+                begin
+                  ListItem.Caption := '2';
+                end;
+              end;
+            end;
+          end;
+          ListItem.MakeVisible(false);
+          
+          Work_ADOQuery.Recordset.MoveNext;
+        until(Work_ADOQuery.Recordset.Eof);
+        DoEvents;
+      end;
+    finally
+      lvTimer.Items.EndUpdate;
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'UpdateTimerListView '+E.Message +' SQL:'+ sSQL);
+  end;
+  m_Trace.DBMSG(TRACE_CALLSTACK, '< UpdateTimerListView');
+end;
+
+procedure TfrmMain.lvTimerDblClick(Sender: TObject);
+var
+  sTmp : String;
+begin
+  //
+  if lvTimer.ItemIndex = -1 then exit;
+
+  try
+    sTmp:= lvTimer.Selected.Caption;
+    sTmp:= lvTimer.Selected.SubItems[0];
+
+
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'lvTimerDblClick '+ E.Message );
+  end;
+end;
+
+procedure TfrmMain.lvTimerCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+var
+  Index : Integer;
+  Rect  : TRect;
+  sTmp  : String;
+begin
+  try
+    Index:= Item.Index;
+    if not (cdsSelected in State) then
+    begin
+      if Item.Caption = '1' then
+      begin
+        // Konflikt...
+        lvTimer.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clRed));
+      end;  
+      if Item.Caption = '2' then
+      begin
+        // "verbotene" Zeit...
+        lvTimer.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clYellow));
+      end;
+      if Item.Caption = '3' then
+      begin
+        // Ziel=DVD...
+        lvTimer.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clOlive));
+      end;
+    end else
+    begin
+      lvTimer.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clNavy));
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'lvTimerCustomDrawItem '+ E.Message );
+  end;
+end;
 
 end.
 
