@@ -1,11 +1,12 @@
 object frmMain: TfrmMain
-  Left = 39
-  Top = 1
+  Left = 190
+  Top = 107
   Width = 770
   Height = 570
-  ActiveControl = lvChannelProg
+  ActiveControl = btnVlcView
   AlphaBlend = True
   AutoSize = True
+  BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'WinGrabVCR 0.83 - TuxBox'
   Color = clBtnFace
   Constraints.MaxHeight = 570
@@ -940,7 +941,7 @@ object frmMain: TfrmMain
               object edOutMux_DropFiles: TPJDropFiles
                 Left = 2
                 Top = 8
-                Width = 572
+                Width = 703
                 Height = 28
                 PassThrough = False
                 ForegroundOnDrop = False
@@ -949,7 +950,7 @@ object frmMain: TfrmMain
                 object edOutMuxPes: TTeEdit
                   Left = 0
                   Top = 1
-                  Width = 570
+                  Width = 705
                   Height = 24
                   TabOrder = 0
                   OnChange = edInVideoMuxPesChange
@@ -968,7 +969,7 @@ object frmMain: TfrmMain
               object edInAudio4MuxPes: TTeEdit
                 Left = 0
                 Top = 0
-                Width = 570
+                Width = 705
                 Height = 24
                 TabOrder = 0
                 OnDblClick = edInAudioDblClick
@@ -985,7 +986,7 @@ object frmMain: TfrmMain
               object edInAudio3MuxPes: TTeEdit
                 Left = 0
                 Top = 0
-                Width = 570
+                Width = 705
                 Height = 24
                 TabOrder = 0
                 OnDblClick = edInAudioDblClick
@@ -1002,7 +1003,7 @@ object frmMain: TfrmMain
               object edInAudio2MuxPes: TTeEdit
                 Left = -1
                 Top = 0
-                Width = 570
+                Width = 706
                 Height = 24
                 TabOrder = 0
                 OnDblClick = edInAudioDblClick
@@ -1019,7 +1020,7 @@ object frmMain: TfrmMain
               object edInAudio1_DropFiles: TPJDropFiles
                 Left = 0
                 Top = 3
-                Width = 570
+                Width = 705
                 Height = 27
                 PassThrough = False
                 ForegroundOnDrop = False
@@ -1028,7 +1029,7 @@ object frmMain: TfrmMain
                 object edInAudio1MuxPes: TTeEdit
                   Left = 0
                   Top = 1
-                  Width = 570
+                  Width = 705
                   Height = 24
                   TabOrder = 0
                   OnChange = edInAudio1MuxPesChange
@@ -1097,7 +1098,7 @@ object frmMain: TfrmMain
               object edInVideo_DropFiles: TPJDropFiles
                 Left = -1
                 Top = 4
-                Width = 570
+                Width = 706
                 Height = 27
                 PassThrough = False
                 ForegroundOnDrop = False
@@ -1106,7 +1107,7 @@ object frmMain: TfrmMain
                 object edInVideoMuxPes: TTeEdit
                   Left = 1
                   Top = 2
-                  Width = 570
+                  Width = 704
                   Height = 24
                   TabOrder = 0
                   OnChange = edInVideoMuxPesChange
@@ -1203,7 +1204,7 @@ object frmMain: TfrmMain
               object edInReMuxPs_DropFiles: TPJDropFiles
                 Left = 0
                 Top = 2
-                Width = 577
+                Width = 705
                 Height = 28
                 PassThrough = False
                 ForegroundOnDrop = False
@@ -1212,7 +1213,7 @@ object frmMain: TfrmMain
                 object edInReMuxPs: TTeEdit
                   Left = 1
                   Top = 0
-                  Width = 575
+                  Width = 704
                   Height = 24
                   TabOrder = 0
                   OnChange = edInReMuxPsChange
@@ -1231,7 +1232,7 @@ object frmMain: TfrmMain
               object edOutReMuxPs: TTeEdit
                 Left = 3
                 Top = 5
-                Width = 577
+                Width = 702
                 Height = 24
                 TabOrder = 0
               end
@@ -1293,7 +1294,7 @@ object frmMain: TfrmMain
               object edReMuxTs_DropFiles: TPJDropFiles
                 Left = 1
                 Top = 2
-                Width = 578
+                Width = 704
                 Height = 29
                 PassThrough = False
                 ForegroundOnDrop = False
@@ -1302,7 +1303,7 @@ object frmMain: TfrmMain
                 object edInReMuxTs: TTeEdit
                   Left = 0
                   Top = 1
-                  Width = 577
+                  Width = 705
                   Height = 24
                   TabOrder = 0
                   OnChange = edInReMuxTsChange
@@ -1321,7 +1322,7 @@ object frmMain: TfrmMain
               object edOutReMuxTs: TTeEdit
                 Left = 3
                 Top = 5
-                Width = 577
+                Width = 702
                 Height = 24
                 TabOrder = 0
               end
@@ -1440,6 +1441,7 @@ object frmMain: TfrmMain
             Width = 730
             Height = 59
             Align = alTop
+            Caption = 'Netzwerk'
             TabOrder = 0
             object Label2: TLabel
               Left = 5
@@ -1486,6 +1488,7 @@ object frmMain: TfrmMain
               Font.Height = -8
               Font.Name = 'MS Sans Serif'
               Font.Style = []
+              IPAddress = '192.168.1.254'
             end
             object chxSwitchChannel: TTeCheckBox
               Left = 209
@@ -1547,9 +1550,10 @@ object frmMain: TfrmMain
             object Label3: TLabel
               Left = 224
               Top = 5
-              Width = 25
+              Width = 57
               Height = 14
-              Caption = 'Pfad '
+              Alignment = taRightJustify
+              Caption = 'MPEG-Pfad '
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
@@ -1559,7 +1563,7 @@ object frmMain: TfrmMain
               Layout = tlCenter
             end
             object btnBrowseOutPath: TSpeedButton
-              Left = 540
+              Left = 684
               Top = 1
               Width = 21
               Height = 22
@@ -1567,7 +1571,7 @@ object frmMain: TfrmMain
               OnClick = btnBrowseOutPathClick
             end
             object btnBrowseVlc: TSpeedButton
-              Left = 540
+              Left = 684
               Top = 24
               Width = 21
               Height = 22
@@ -1577,9 +1581,10 @@ object frmMain: TfrmMain
             object Label5: TLabel
               Left = 224
               Top = 28
-              Width = 25
+              Width = 57
               Height = 14
-              Caption = 'Pfad '
+              Alignment = taRightJustify
+              Caption = 'VLC-Pfad '
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
@@ -1624,7 +1629,7 @@ object frmMain: TfrmMain
             object edOutPath: TTeEdit
               Left = 286
               Top = 0
-              Width = 250
+              Width = 395
               Height = 22
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1730,7 +1735,7 @@ object frmMain: TfrmMain
             object edVlcPath: TTeEdit
               Left = 286
               Top = 23
-              Width = 250
+              Width = 395
               Height = 22
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1764,6 +1769,7 @@ object frmMain: TfrmMain
             Width = 730
             Height = 54
             Align = alTop
+            Caption = 'MPEG'
             Font.Charset = ANSI_CHARSET
             Font.Color = clWindowText
             Font.Height = -11
@@ -1782,9 +1788,10 @@ object frmMain: TfrmMain
             Width = 730
             Height = 47
             Align = alTop
+            Caption = 'Transform'
             TabOrder = 3
             object btnBrowseDvdxPath: TSpeedButton
-              Left = 540
+              Left = 684
               Top = 1
               Width = 22
               Height = 22
@@ -1796,7 +1803,7 @@ object frmMain: TfrmMain
               Top = 4
               Width = 274
               Height = 21
-              Caption = 'Wandlung vom *.m2p mit ...'
+              Caption = 'Wandlung vom *.M2P zu *.AVI mit ...'
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
@@ -1810,7 +1817,7 @@ object frmMain: TfrmMain
             object edDvdxFilePath: TTeEdit
               Left = 286
               Top = 0
-              Width = 250
+              Width = 395
               Height = 22
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1829,9 +1836,10 @@ object frmMain: TfrmMain
             Width = 730
             Height = 155
             Align = alBottom
+            Caption = 'ISO'
             TabOrder = 4
             object btnBrowseMovixPath: TSpeedButton
-              Left = 540
+              Left = 684
               Top = 1
               Width = 22
               Height = 22
@@ -1839,7 +1847,7 @@ object frmMain: TfrmMain
               OnClick = btnBrowseMovixPathClick
             end
             object btnBrowseIsoPath: TSpeedButton
-              Left = 540
+              Left = 684
               Top = 26
               Width = 22
               Height = 21
@@ -1847,10 +1855,10 @@ object frmMain: TfrmMain
               OnClick = btnBrowseIsoPathClick
             end
             object Label1: TLabel
-              Left = 26
-              Top = 52
+              Left = 290
+              Top = 53
               Width = 115
-              Height = 14
+              Height = 21
               Caption = 'Ger'#228'teId f'#252'r CdRecord  '
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1860,11 +1868,24 @@ object frmMain: TfrmMain
               ParentFont = False
             end
             object Label4: TLabel
-              Left = 285
+              Left = 525
               Top = 53
               Width = 113
               Height = 14
               Caption = 'Brenngeschwindigkeit  '
+              Font.Charset = ANSI_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Arial'
+              Font.Style = []
+              ParentFont = False
+            end
+            object Label16: TLabel
+              Left = 162
+              Top = 32
+              Width = 119
+              Height = 14
+              Caption = 'speichere das ISO in ...'
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
@@ -1891,7 +1912,7 @@ object frmMain: TfrmMain
             object edMovixPath: TTeEdit
               Left = 286
               Top = 0
-              Width = 250
+              Width = 395
               Height = 22
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1905,10 +1926,10 @@ object frmMain: TfrmMain
             end
             object chk_CDRwBurn_enabled: TCheckBox
               Left = 8
-              Top = 28
+              Top = 52
               Width = 276
               Height = 21
-              Caption = 'brenne das erzeugte ISO aus dem Ordner ...'
+              Caption = 'brenne das erzeugte ISO mit CdRecord ...'
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
               Font.Height = -11
@@ -1922,7 +1943,7 @@ object frmMain: TfrmMain
             object edIsoPath: TTeEdit
               Left = 286
               Top = 25
-              Width = 250
+              Width = 395
               Height = 22
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -1935,7 +1956,7 @@ object frmMain: TfrmMain
               OnChange = edIsoPathChange
             end
             object edCDRWDeviceId: TTeEdit
-              Left = 176
+              Left = 416
               Top = 50
               Width = 98
               Height = 22
@@ -1950,7 +1971,7 @@ object frmMain: TfrmMain
               OnChange = edCDRWDeviceIdChange
             end
             object edCDRwSpeed: TTeEdit
-              Left = 428
+              Left = 644
               Top = 50
               Width = 39
               Height = 22

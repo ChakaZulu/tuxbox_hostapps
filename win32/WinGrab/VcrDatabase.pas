@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrDatabase.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 14:02:37  thotto
 // initial
 //
@@ -296,7 +299,7 @@ begin
       end;
     end;
 
-    Idn := IsInWhishesList(sEpgTitle, '','');
+    Idn := IsInWhishesList(sEpgTitle);
     if Idn > 0 then
     begin
       try
@@ -425,7 +428,7 @@ var
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> SaveWhishesToDb');
   try
-    if IsInWhishesList(sEpgTitle, '','') = 0 then
+    if IsInWhishesList(sEpgTitle) = 0 then
     begin
       try
         sTmp := Whishes_ADOQuery.SQL.GetText;
@@ -452,7 +455,7 @@ begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '< SaveWhishesToDb');
 end;
 
-function  TfrmMain.IsInWhishesList(sTitel, sZeit, sDauer : String): Integer;
+function  TfrmMain.IsInWhishesList(sEpgTitle : String): Integer;
 var
   sRecorded,
   sTmp       : String;
@@ -460,12 +463,12 @@ begin
   Result := 0;
   m_Trace.DBMSG(TRACE_CALLSTACK, '> IsInWhishesList');
   try
-    if sTitel = '' then
+    if sEpgTitle = '' then
     begin
       m_Trace.DBMSG(TRACE_CALLSTACK, '< IsInWhishesList');
       exit;
     end;
-    m_Trace.DBMSG(TRACE_SYNC, 'IsInWhishesList sTitel="' + sTitel + '"');
+    m_Trace.DBMSG(TRACE_SYNC, 'IsInWhishesList sTitel="' + sEpgTitle + '"');
     try
       if not Whishes_ADOQuery.Recordset.Eof then
       begin
@@ -473,23 +476,23 @@ begin
         while not Whishes_ADOQuery.Recordset.Eof do
         begin
           sRecorded := VarToStr(Whishes_ADOQuery.Recordset.Fields['Titel'].Value);
-          if SameName(     sRecorded+' *',     sTitel+' ')
-          or SameName('* '+sRecorded     , ' '+sTitel    )
-          or SameName('* '+sRecorded+' *', ' '+sTitel+' ')
+          if SameName(     sRecorded+' *',     sEpgTitle+' ')
+          or SameName('* '+sRecorded     , ' '+sEpgTitle    )
+          or SameName('* '+sRecorded+' *', ' '+sEpgTitle+' ')
           then
           begin
-            m_Trace.DBMSG(TRACE_SYNC, 'maybe the same : "'+sRecorded+'" = "'+sTitel+'" (?)');
+            m_Trace.DBMSG(TRACE_SYNC, 'maybe the same : "'+sRecorded+'" = "'+sEpgTitle+'" (?)');
             Result := (Whishes_ADOQuery.Recordset.Fields['Idn'].Value);
             Whishes_ADOQuery.Recordset.MoveFirst;
             m_Trace.DBMSG(TRACE_CALLSTACK, '< IsInWhishesList');
             exit;
           end;
-          if SameName(     sTitel+' *',     sRecorded+' ')
-          or SameName('* '+sTitel     , ' '+sRecorded    )
-          or SameName('* '+sTitel+' *', ' '+sRecorded+' ')
+          if SameName(     sEpgTitle+' *',     sRecorded+' ')
+          or SameName('* '+sEpgTitle     , ' '+sRecorded    )
+          or SameName('* '+sEpgTitle+' *', ' '+sRecorded+' ')
           then
           begin
-            m_Trace.DBMSG(TRACE_SYNC, 'maybe the same : "'+sRecorded+'" = "'+sTitel+'" (?)');
+            m_Trace.DBMSG(TRACE_SYNC, 'maybe the same : "'+sRecorded+'" = "'+sEpgTitle+'" (?)');
             Result := (Whishes_ADOQuery.Recordset.Fields['Idn'].Value);
             Whishes_ADOQuery.Recordset.MoveFirst;
             m_Trace.DBMSG(TRACE_CALLSTACK, '< IsInWhishesList');
@@ -1129,7 +1132,7 @@ begin
         m_Trace.DBMSG(TRACE_SYNC, sDbg);
         DoEvents;
 
-        if IsInWhishesList(sTmp,sZeit,sDauer) > 0 then
+        if IsInWhishesList(sTmp) > 0 then
         begin
           sDbg:= '"'+sTmp+'" am '+sDatum+' '+sUhrzeit+' auf "'+sChannelName+'" gefunden';
           m_Trace.DBMSG(TRACE_DETAIL, sDbg);
@@ -1269,7 +1272,7 @@ begin
           sDbg := 'CheckChannelProg eventid=' + sEventId + ' Titel="' + sTitel + '" SubTilel="' + sSubTitel  + '"';
           m_Trace.DBMSG(TRACE_SYNC, sDbg);
           DoEvents;
-          if IsInWhishesList(sTitel,sZeit,sDauer) > 0 then
+          if IsInWhishesList(sTitel) > 0 then
           begin
             sDbg:= 'Titel "'+sTitel+'" auf "'+GetDbChannelName(ChannelId)+'" am '+sDatum+' um '+sUhrzeit+' gefunden !';
             m_Trace.DBMSG(TRACE_DETAIL, sDbg);

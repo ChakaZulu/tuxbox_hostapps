@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.3  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.2  2004/07/02 14:24:19  thotto
 // *** empty log message ***
 //
@@ -68,11 +71,11 @@ uses
 
 type
 
-  e_TheadState = ( Thread_Idle,
+  e_TheadState = ( Thread_StateUnknown,
+                   Thread_Idle,
                    Thread_Recording,
                    Thread_TransformStart,
-                   Thread_Muxing,
-                   Thread_StateUnknown );
+                   Thread_Muxing           );
 
   T_Recording = record
     pcoTransformThread : TTransformThread;
@@ -249,6 +252,7 @@ type
     Planner_ADOConnection: TADOConnection;
     Recorded_Epg_DropFiles: TPJDropFiles;
     Recorded_EpgView: ThtmlLite;
+    Label16: TLabel;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -362,10 +366,11 @@ type
     m_bVCR_Ping_Ok       : Boolean;
     m_bHttpInProgress    : Boolean;
     m_LastEpgUpdate      : TDateTime;
-
+    m_bAbortWishesSeek   : Boolean;
+    
     m_Recorded_dbConnectionString : String;
 
-    m_Trace : TTrace;
+    m_Trace              : TTrace;
 
 {$W+}
     procedure ReMuxTsStateCallback(aSender: TTeProcessManager; const aName, aState: string);
@@ -419,7 +424,7 @@ type
     function  IsInRecordedList(sTitel, sSubTitle : String): Integer;
 
     procedure SaveWhishesToDb(sEpgTitle : String);
-    function  IsInWhishesList(sTitel,sZeit,sDauer : String): Integer;
+    function  IsInWhishesList(sEpgTitle : String): Integer;
 
     procedure CheckChannelProg(ChannelId: String; sChannelName: String);
     procedure CheckChannelProgInDb(ChannelId: String);
@@ -617,7 +622,7 @@ begin
     try
       Result.Text := Get(aUrl);
     except
-//      Result.Free;
+//      Free;
       raise;
     end;
   finally
@@ -757,7 +762,7 @@ var
 begin
   Result := 0;
   try
-    for k:=0 to 9 do
+    for k:=1 to 9 do
     begin
       if not (m_RecordingThread[k].pcoTransformThread = nil) then
       begin
@@ -786,21 +791,20 @@ begin
   try
     for k:=0 to 9 do
     begin
-{
       if  (                     RecordingData.cmd = CMD_VCR_STOP)
       and (m_RecordingThread[k].RecordingData.cmd = CMD_VCR_RECORD)
       then
       begin
         Result:= k;
+        m_Trace.DBMSG(TRACE_ALL,'GetMachingThread (VCR_RECORD) '+ IntToStr(k) );
         break;
       end;
-}
       if  (RecordingData.vpid = m_RecordingThread[k].RecordingData.vpid)
       and (RecordingData.vpid <> 0)
       then
       begin
         Result:= k;
-        m_Trace.DBMSG(TRACE_DETAIL,'GetMachingThread (vpid) '+ IntToStr(k) );
+        m_Trace.DBMSG(TRACE_ALL,'GetMachingThread (vpid) '+ IntToStr(k) );
         break;
       end;
       if  (RecordingData.channel_id = m_RecordingThread[k].RecordingData.channel_id)
@@ -808,7 +812,7 @@ begin
       then
       begin
         Result:= k;
-        m_Trace.DBMSG(TRACE_DETAIL,'GetMachingThread (channel_id) '+ IntToStr(k) );
+        m_Trace.DBMSG(TRACE_ALL,'GetMachingThread (channel_id) '+ IntToStr(k) );
         break;
       end;
     end;
@@ -848,7 +852,8 @@ begin
     StateList.Duplicates := dupIgnore;
 
     ChannelList          := TTeChannelList.Create;
-
+    m_bAbortWishesSeek   := false;
+    
     lvwState.DoubleBuffered := true;
     if FindCmdLineSwitch('DONTPANIC', ['-', '/'], True) then
     begin
@@ -953,7 +958,7 @@ end;
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
   try
-    Application.MainForm.WindowState:= wsMaximized;
+    LoadSettings;
     DoEvents;
 
   except
@@ -1380,9 +1385,16 @@ var
   sEpg     : TStringList;
 begin
   if not PingDBox(m_sDBoxIp) then exit;
-  if lvChannelProg.ItemIndex = -1 then exit;
 
   try
+    lvChannelProg.SetFocus;
+    DoEvents;
+    if lvChannelProg.ItemIndex = -1 then
+    begin
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> lvChannelProg.ItemIndex = -1');
+      exit;
+    end;
+
     //Record it ...
     DateSeparator   := '-';
     ShortDateFormat := 'yyyy/m/d';
@@ -1390,42 +1402,46 @@ begin
 
     if not IsDBoxRecording then
     begin
-      //Zap to Channel ...
-      lbxChannelListDblClick(self);
-
-      GetChannelProg( GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]), x, sTmp );
-      lvChannelProgClick(self);
-
       // find next unused thread entry ...
       k:= GetNextFreeThread;
-      GetPids(m_RecordingThread[k].RecordingData.vpid,
-              m_RecordingThread[k].RecordingData.apids);
-
-      m_RecordingThread[k].RecordingData.epgid := lvChannelProg.Selected.Caption;
-
-      m_Trace.DBMSG(TRACE_DETAIL, 'create folder');
-      sOutPath:= RecordingCreateOutPath( k );
-
-      m_Trace.DBMSG(TRACE_DETAIL, 'get EPG');
-      RecordingSaveEpgFile( k, sOutPath );
-
-      m_Trace.DBMSG(TRACE_DETAIL, 'build filename');
-      RecordingCreateOutFileName( k, sOutPath );
-
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> NextFreeThread = ' + IntToStr(k));
       m_RecordingThread[k].RecordingData.bIsPreview  := false;
       m_RecordingThread[k].RecordingData.iMuxerSyncs := 0;
 
-      m_Trace.DBMSG(TRACE_DETAIL, 'DBoxIP = '      + m_sDBoxIp);
-      m_Trace.DBMSG(TRACE_DETAIL, 'vpid = '        + IntToStrDef(m_RecordingThread[k].RecordingData.vpid,0));
+      //Zap to Channel ...
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> DBoxIP      = ' + m_sDBoxIp);
+      m_RecordingThread[k].RecordingData.channelname     := lbxChannelList.Items.Strings[lbxChannelList.ItemIndex];
+      m_RecordingThread[k].RecordingData.channel_id      := GetDbChannelId(m_RecordingThread[k].RecordingData.channelname);
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> channel_id  = ' + m_RecordingThread[k].RecordingData.channel_id);
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> channelname = ' + m_RecordingThread[k].RecordingData.channelname);
+      SendHttpCommand('/fb/switch.dbox2?zapto=' + m_RecordingThread[k].RecordingData.channel_id );
+      DoEvents;
 
-      m_Trace.DBMSG(TRACE_DETAIL, 'apids[1] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[1],0));
-      m_Trace.DBMSG(TRACE_DETAIL, 'apids[2] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[2],0));
-      m_Trace.DBMSG(TRACE_DETAIL, 'apids[3] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[3],0));
+      GetPids(m_RecordingThread[k].RecordingData.vpid,
+              m_RecordingThread[k].RecordingData.apids);
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> vpid = '        + IntToStrDef(m_RecordingThread[k].RecordingData.vpid,0));
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> apids[0] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[0],0));
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> apids[1] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[1],0));
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> apids[2] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[2],0));
 
-      m_Trace.DBMSG(TRACE_DETAIL, 'channel_id  = ' + m_RecordingThread[k].RecordingData.channel_id);
-      m_Trace.DBMSG(TRACE_DETAIL, 'channelname = ' + m_RecordingThread[k].RecordingData.channelname);
-      m_Trace.DBMSG(TRACE_DETAIL, 'epgtitel = '    + m_RecordingThread[k].RecordingData.epgtitle);
-      m_Trace.DBMSG(TRACE_DETAIL, 'filename = '    + m_RecordingThread[k].RecordingData.filename);
+      m_RecordingThread[k].RecordingData.cmd  := CMD_VCR_RECORD;
+      m_RecordingThread[k].TheadState         := Thread_Recording;
+
+      lvChannelProg.SetFocus;
+      m_RecordingThread[k].RecordingData.epgid := lvChannelProg.Selected.Caption;
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> epgid    = '    + m_RecordingThread[k].RecordingData.epgid);
+
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> create folder');
+      sOutPath:= RecordingCreateOutPath( k );
+
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> get EPG');
+      RecordingSaveEpgFile( k, sOutPath );
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> epgtitel = '    + m_RecordingThread[k].RecordingData.epgtitle);
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> epgtitel2= '    + m_RecordingThread[k].RecordingData.epgsubtitle);
+
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> build filename');
+      RecordingCreateOutFileName( k, sOutPath );
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> filename = '    + m_RecordingThread[k].RecordingData.filename);
       DoEvents;
 
       SendHttpCommand('/control/setmode?record=start');
@@ -1434,9 +1450,9 @@ begin
 
       m_RecordingThread[k].pcoProcessManager := TTeMuxGrabManager.Create( m_sDBoxIp,
                                                                           m_RecordingThread[k].RecordingData.vpid,
-                                                                          [m_RecordingThread[k].RecordingData.apids[1],
-                                                                           m_RecordingThread[k].RecordingData.apids[2],
-                                                                           m_RecordingThread[k].RecordingData.apids[3]],
+                                                                          [m_RecordingThread[k].RecordingData.apids[0],
+                                                                           m_RecordingThread[k].RecordingData.apids[1],
+                                                                           m_RecordingThread[k].RecordingData.apids[2]],
                                                                           m_RecordingThread[k].RecordingData.filename + Mgeg2FileExt,
                                                                           SplittSize,
                                                                           MessageCallback,
@@ -1460,21 +1476,24 @@ begin
                        m_RecordingThread[k].RecordingData.epgsubtitle);
           until( (FileExists(sOutPath + m_RecordingThread[k].RecordingData.epgtitle + '_-_' + m_RecordingThread[k].RecordingData.epgsubtitle + '.HTML')) or (i > 10));
         except
-          on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'btnRecordNowClick/GetProgEpg '+ E.Message );
+          on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'RecordNow> GetProgEpg '+ E.Message );
         end;
       end;
       Sleep(3000);
       m_coGoBackTo       := pclMain.ActivePage;
       pclMain.ActivePage := tbsRunning;
       DoEvents;
+    end else
+    begin
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> IsDBoxRecording=true');
     end;
 
     sZeit := lvChannelProg.Selected.SubItems[0];
-    sDbg := 'Record Now - Zeit =' + sZeit;
+    sDbg := 'RecordNow> Zeit =' + sZeit;
     m_Trace.DBMSG(TRACE_MIN, sDbg);
 
     sDauer := lvChannelProg.Selected.SubItems[3];
-    sDbg := 'Record Now - Dauer =' + sDauer;
+    sDbg := 'RecordNow> Dauer =' + sDauer;
     m_Trace.DBMSG(TRACE_MIN, sDbg);
 
     m_tStopRecordNow := UnixToDateTime(StrToInt64(sZeit)) + OffsetFromUTC;
@@ -1488,7 +1507,7 @@ begin
 
     RecordNowTimer.Enabled := true;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'btnRecordNowClick '+ E.Message );
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'RecordNow>  '+ E.Message );
   end;
 end;
 
@@ -1499,6 +1518,7 @@ begin
     if CompareDateTime(now, m_tStopRecordNow) >= 0  then
     begin
       RecordNowTimer.Enabled := false;
+      m_Trace.DBMSG(TRACE_DETAIL, 'RecordNowTimerTimer = StopTime');
       bnStopClick(self);
     end;
   except
@@ -1544,6 +1564,7 @@ begin
 
         m_RecordingThread[k].RecordingData.iMuxerSyncs := 0;
         m_RecordingThread[k].RecordingData.bIsPreview  := true;
+        m_RecordingThread[k].TheadState                := Thread_Recording;
 
         m_RecordingThread[k].pcoProcessManager := TTeMuxGrabManager.Create( m_sDBoxIp,
                                                                             m_RecordingThread[k].RecordingData.vpid,
@@ -1560,6 +1581,8 @@ begin
       end else
       begin
         RecordingData.cmd:= CMD_VCR_STOP;
+        GetPids(RecordingData.vpid,
+                RecordingData.apids);
         k:= GetMachingThread(RecordingData);
       end;
       SetCurrentDir(m_sVlcPath);
@@ -2038,15 +2061,25 @@ begin
     m_tStopRecordNow := 0;
     if IsDBoxRecording then
     begin
+      RecordingData.cmd:= CMD_VCR_STOP;
+      GetPids(RecordingData.vpid,
+              RecordingData.apids);
+      x:= GetMachingThread(RecordingData);
+      m_Trace.DBMSG(TRACE_DETAIL, 'StopClick found and stop recording thread[' + IntToStr(x) + ']');
+      RecordingStop(m_RecordingThread[x].RecordingData);
+      FreeAndNil(m_RecordingThread[x].pcoProcessManager);
+      ClearStateList;
+    end else
+    begin
       for x:=0 to 9 do
       begin
         RecordingStop(m_RecordingThread[x].RecordingData);
         FreeAndNil(m_RecordingThread[x].pcoProcessManager);
-      end;  
+      end;
+      mmoMessages.Clear;
+      m_Trace.DBMSG(TRACE_DETAIL, 'StopClick stops all the threads');
     end;
-    ClearStateList;
-    mmoMessages.Clear;
-    
+
     pclMain.ActivePage := m_coGoBackTo;
     DoEvents;
   except
@@ -2355,9 +2388,16 @@ var
   oldHeight : Integer;
 begin
   try
-    if not Whishes_DBNavigator.Visible then exit;
+    if not Whishes_DBNavigator.Visible then
+    begin
+      m_bAbortWishesSeek := true;
+      btnWishesSeek.Caption := 'wird abgebrochen';
+      DoEvents;
+      exit;
+    end;
 
-    btnWishesSeek.Enabled      := False;
+    m_bAbortWishesSeek         := false;
+    btnWishesSeek.Caption      := 'Abbrechen';
     btnWishesSeekDb.Enabled    := False;
     Whishes_DBNavigator.Visible:= false;
     oldHeight := Whishes_DBGrid.Height;
@@ -2367,7 +2407,9 @@ begin
       DoEvents;
 
       CheckChannels(chxSwitchChannel.Checked);
+      DoEvents;
       CheckChannelsInDb;
+      DoEvents;
 
       lbl_check_EPG.Caption:= '';
       DoEvents;
@@ -2386,8 +2428,8 @@ begin
   finally
     Whishes_DBGrid.Height      := oldHeight;
     Whishes_DBNavigator.Visible:= true;
-    btnWishesSeek.Enabled      := True;
     btnWishesSeekDb.Enabled    := True;
+    btnWishesSeek.Caption      := 'DBox neu lesen';
   end;
 end;
 

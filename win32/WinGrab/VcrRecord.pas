@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrRecord.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 14:06:35  thotto
 // initial
 //
@@ -102,6 +105,10 @@ begin
     except
     end;
 
+    m_RecordingThread[k].RecordingData.bIsPreview   := false;
+    m_RecordingThread[k].RecordingData.iMuxerSyncs  := 0;
+    m_RecordingThread[k].TheadState                 := Thread_Recording;
+
     m_Trace.DBMSG(TRACE_DETAIL, 'create folder');
     sOutPath:= RecordingCreateOutPath( k );
 
@@ -112,9 +119,6 @@ begin
     RecordingCreateOutFileName( k, sOutPath );
 
     RecordingStopTimer;
-
-    m_RecordingThread[k].RecordingData.bIsPreview   := false;
-    m_RecordingThread[k].RecordingData.iMuxerSyncs  := 0;
 
     m_Trace.DBMSG(TRACE_DETAIL, 'DBoxIP = '      + m_sDBoxIp);
     m_Trace.DBMSG(TRACE_DETAIL, 'vpid = '        + IntToStrDef(m_RecordingThread[k].RecordingData.vpid,0));
@@ -246,6 +250,7 @@ begin
         Sleep(300);
         DoEvents;
       end;
+      m_RecordingThread[k].TheadState := Thread_TransformStart;
       ClearStateList;
       DbgMsg( IntToStr(m_RecordingThread[k].RecordingData.iMuxerSyncs) + ' ReSyncs' );
 
@@ -307,7 +312,7 @@ begin
         m_RecordingThread[k].pcoTransformThread                 := TTransformThread.Create(true);
         m_RecordingThread[k].pcoTransformThread.FreeOnTerminate := false;
         m_RecordingThread[k].pcoTransformThread.Priority        := tpLower;
-        m_RecordingThread[k].TheadState                         := Thread_TransformStart;
+        m_RecordingThread[k].TheadState                         := Thread_Muxing;
         m_RecordingThread[k].pcoTransformThread.SetParams(m_RecordingThread[k].RecordingData);
         m_RecordingThread[k].pcoTransformThread.Resume;
 
@@ -381,13 +386,24 @@ begin
           sTmp := Copy(sBuffer, Pos('<epgtitle>', sBuffer) + Length('<epgtitle>'), Length(sBuffer));
           RecordingData.epgtitle := Copy(sTmp, 1, Pos('</epgtitle>', sTmp)-1);
 
+          if Pos('<onidsid>', sBuffer) > 0 then
+          begin
+            sTmp := Copy(sBuffer, Pos('<onidsid>', sBuffer) + Length('<onidsid>'), Length(sBuffer));
+            sTmp := Copy(sTmp, 1, Pos('</onidsid>', sTmp)-1);
+            RecordingData.channel_id := Trim(sTmp);
+            m_Trace.DBMSG(TRACE_MIN, #13#10' old image version on DBox detected '#13#10'Please update to yadi image version 1.8 or higher ! '#13#10'(http://dboxupdate.berlios.de/?mode=&deliver=&get=download&cat=7)'#13#10);
+          end;
+
           sTmp := Copy(sBuffer, Pos('<mode>', sBuffer) + Length('<mode>'), Length(sBuffer));
           sTmp := Copy(sTmp, 1, Pos('</mode>', sTmp)-1);
           RecordingData.mode    := StrToInt(sTmp);
 
-          sTmp := Copy(sBuffer, Pos('<id>', sBuffer) + Length('<id>'), Length(sBuffer));
-          sTmp := Copy(sTmp, 1, Pos('</id>', sTmp)-1);
-          RecordingData.channel_id := Trim(sTmp);
+          if Pos('<id>', sBuffer) > 0 then
+          begin
+            sTmp := Copy(sBuffer, Pos('<id>', sBuffer) + Length('<id>'), Length(sBuffer));
+            sTmp := Copy(sTmp, 1, Pos('</id>', sTmp)-1);
+            RecordingData.channel_id := Trim(sTmp);
+          end;
 
           sTmp := Copy(sBuffer, Pos('<info1>', sBuffer) + Length('<info1>'), Length(sBuffer));
           sTmp := Copy(sTmp, 1, Pos('</info1>', sTmp)-1);
@@ -557,6 +573,11 @@ begin
             end;
           end;
         end;
+        if m_RecordingThread[k].TheadState <> Thread_Idle then
+        begin
+          m_Trace.DBMSG(TRACE_DETAIL, 'CheckShutdown - work on Thread['+IntToStr(k)+'] is in progress ...' );
+          break;
+        end;
       except
       end;
     end;
@@ -622,6 +643,13 @@ begin
                                 m_RecordingThread[ThreadId].RecordingData.epgid,
                                 m_RecordingThread[ThreadId].RecordingData.epgtitle,
                                 m_RecordingThread[ThreadId].RecordingData.epgsubtitle) );
+        if sEpg.Text = '' then
+        begin
+          sEpg.Add( SaveEpgText(m_RecordingThread[ThreadId].RecordingData.epgid,
+                                '',
+                                m_RecordingThread[ThreadId].RecordingData.epgtitle,
+                                m_RecordingThread[ThreadId].RecordingData.epgsubtitle).Text );
+        end;
         if m_RecordingThread[ThreadId].RecordingData.epgsubtitle <> '' then
         begin
           sEpg.SaveToFile(CheckPathNameString(sOutPath + m_RecordingThread[ThreadId].RecordingData.epgtitle + '_-_' + m_RecordingThread[ThreadId].RecordingData.epgsubtitle + '.HTML'));

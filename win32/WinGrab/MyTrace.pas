@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: MyTrace.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 13:58:39  thotto
 // initial
 //
@@ -134,7 +137,7 @@ begin
         try
           dwDbgLevel := ReadInteger(TRACE_LEVEL_VAL);
         except
-          WriteInteger(TRACE_LEVEL_VAL, 0);
+          WriteInteger(TRACE_LEVEL_VAL, 1);
         end;
 {
         try
@@ -231,7 +234,21 @@ begin
       RootKey := HKEY_CURRENT_USER;
       if OpenKey(m_strRegKey, True) then
       begin
-        dwDbgLevel := ReadInteger(TRACE_LEVEL_VAL);
+        try
+        m_TraceFile:= ReadString( TRACE_FILE_VAL );
+        finally
+          if m_TraceFile = '' then
+          begin
+            m_TraceFile := GetEnvironmentVariable('TEMP') + '\'+ m_strModul;
+            WriteString(TRACE_FILE_VAL, m_TraceFile);
+          end;
+        end;
+        m_TraceFile := m_TraceFile + '_' + DateTimeToStr(Date) + '.log';
+        try
+          dwDbgLevel := ReadInteger(TRACE_LEVEL_VAL);
+        except
+          WriteInteger(TRACE_LEVEL_VAL, 0);
+        end;
 //        dwDbgMode  := ReadInteger(TRACE_MODE_VAL);
       end;
     finally

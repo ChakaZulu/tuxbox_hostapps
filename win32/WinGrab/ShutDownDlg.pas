@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: ShutDownDlg.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 13:59:41  thotto
 // initial
 //
@@ -97,7 +100,9 @@ end;
 procedure TFrmShutdown.btn_CancelClick(Sender: TObject);
 begin
   try
-
+    Sleep(0);
+    FrmShutdown.Close;
+    Application.HandleMessage;
   except
   end;
 end;
@@ -161,7 +166,7 @@ begin
 	    // The return value of AdjustTokenPrivileges can't be tested
 	    //
       OutPutDebugString(PChar('SHUTDOWN NOW'));
-      ExitWindowsEx(EWX_POWEROFF + EWX_FORCE, 0);
+      ExitWindowsEx(EWX_POWEROFF + EWX_FORCEIFHUNG, 0);
     end else
     begin
       OutPutDebugString(PChar('SHUTDOWN NOW'));

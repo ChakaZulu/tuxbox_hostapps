@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainSettings.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 14:06:35  thotto
 // initial
 //
@@ -71,7 +74,7 @@ begin
 
     m_bCDRwBurn  := ReadBool( 'WinGrab', 'CDRwBurn', False);
     chk_CDRwBurn_enabled.Checked := m_bCDRwBurn;
-    chk_CDRwBurn_enabled.Enabled := m_bMoviX AND chk_MoviX_enabled.Enabled;
+    chk_CDRwBurn_enabled.Enabled := m_bMoviX    AND chk_MoviX_enabled.Enabled;
 
     m_bDVDx     := chk_DVDx_enabled.Checked     AND chk_DVDx_enabled.Enabled;
     m_bMoviX    := chk_MoviX_enabled.Checked    AND chk_MoviX_enabled.Enabled;
@@ -84,12 +87,13 @@ begin
     m_Trace.DBMSG(TRACE_DETAIL, 'CDRwSpeed : ' + m_sCDRwSpeed );
     edCDRwSpeed.Text := m_sCDRwSpeed;
 
-    m_bVlc     := ReadBool(  'WinGrab', 'UseVlc', False);
-    chxVlc.Checked := m_bVlc;
-    btnVlcView.Enabled:= m_bVlc;
+    m_bVlc     := false;
     m_sVlcPath := ReadString('WinGrab', 'VlcPath', 'C:\Programme\VideoLAN\VLC\');
     m_Trace.DBMSG(TRACE_DETAIL, 'VlcPath : ' + m_sVlcPath );
     edVlcPath.Text := m_sVlcPath;
+    m_bVlc     := ReadBool(  'WinGrab', 'UseVlc', False);
+    chxVlc.Checked := m_bVlc;
+    btnVlcView.Enabled:= m_bVlc;
 
 ///////
     cbxSplitSize.Text := ReadString('WinGrab', 'SplittSize', '');
@@ -499,6 +503,7 @@ procedure TfrmMain.chxVlcClick(Sender: TObject);
 begin
   m_bVlc := chxVlc.Checked;
   btnVlcView.Enabled:= m_bVlc;
+  if not m_bVlc then exit;
   if NOT FileExists(edVlcPath.Text + 'vlc.exe') then
   begin
     btnBrowseVlcClick(self);
@@ -509,6 +514,7 @@ procedure TfrmMain.edVlcPathChange(Sender: TObject);
 begin
   try
     if not m_bInit then exit;
+    if not m_bVlc  then exit;
 
     if NOT FileExists(edVlcPath.Text + 'vlc.exe') then
     begin

@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainHttpClients.pas,v $
+// Revision 1.2  2004/10/11 15:33:39  thotto
+// Bugfixes
+//
 // Revision 1.1  2004/07/02 14:02:37  thotto
 // initial
 //
@@ -68,6 +71,36 @@ begin
             sTmp := '';
           end;
         end;
+      end else
+      begin
+        //restart the nhttpd
+        VcrEpgClientSocket.Active:= false;
+        VcrEpgClientSocket.Port   := 23;
+        VcrEpgClientSocket.Address:= m_sDBoxIp;
+        Application.ProcessMessages;
+        VcrEpgClientSocket.Active:= true;
+        sTmp := VcrEpgClientSocket.Socket.ReceiveText;
+        m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+        if Length(sTmp) > 0 then
+        begin
+          VcrEpgClientSocket.Socket.SendText('root'+#13#10);
+          DoEvents;
+          Sleep(1000);
+          DoEvents;
+          sTmp := VcrEpgClientSocket.Socket.ReceiveText;
+          m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+          VcrEpgClientSocket.Socket.SendText('nhttpd'+#13#10);
+          DoEvents;
+          Sleep(1000);
+          DoEvents;
+          sTmp := VcrEpgClientSocket.Socket.ReceiveText;
+          m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
+        end;
+        VcrEpgClientSocket.Active:= false;
+        VcrEpgClientSocket.Port   := 80;
+        VcrEpgClientSocket.Address:= m_sDBoxIp;
+        Application.ProcessMessages;
+        VcrEpgClientSocket.Active:= true;
       end;
       Result := sTmp;
       m_bHttpInProgress := false;
@@ -194,6 +227,11 @@ begin
       if Length(sTmp) > 0 then
       begin
         repeat
+          if IsDBoxRecording then
+          begin
+            m_Trace.DBMSG(TRACE_CALLSTACK, '< GetChannelProg (DBox is recording now)');
+            exit;
+          end;
           sLine    := Copy(sTmp, 1, Pos(#10,sTmp)-1);
           m_Trace.DBMSG(TRACE_SYNC, sLine);
           sTmp     := Copy(sTmp, Pos(#10,sTmp)+1, Length(sTmp));
@@ -417,7 +455,7 @@ begin
           exit;
         end;
         DoEvents;
-      until( Length(sTmp) <= 0 );
+      until((Length(sTmp) <= 0 ) or (m_bAbortWishesSeek));
       DoEvents;
     end;
   except
@@ -461,6 +499,9 @@ begin
       end;
 
       Whishes_Result.Items.Clear;
+      sTmp := '';
+      DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+      Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
       Whishes_Result.Items.Add('Speichern aller verfügbaren EPGs der einzelnen Sender in der Datenbank ...');
       DoEvents;
       if bSwitchChannels then
@@ -476,6 +517,16 @@ begin
           j:= Pred(lbxChannelList.Items.Count);
           for i := 0 to j do
           begin
+            if IsDBoxRecording or m_bAbortWishesSeek then
+            begin
+              m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
+              m_bAbortWishesSeek := false;
+              Whishes_Result.Items.Add('... abgebrochen');
+              sTmp := '';
+              DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+              Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
+              exit;
+            end;
             try
               ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[i]);
               if GetDbChannelSwitchFlag(ChannelId) > 0 then
@@ -538,9 +589,15 @@ begin
             Whishes_Result.Items.Add('  '+lbxChannelList.Items.Strings[i]);
             DoEvents;
             CheckChannelProg(ChannelId, sTmp);
-            if IsDBoxRecording then
+            DoEvents;
+            if IsDBoxRecording or m_bAbortWishesSeek then
             begin
               m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckChannels (DBox is recording)');
+              m_bAbortWishesSeek := false;
+              Whishes_Result.Items.Add('... abgebrochen');
+              sTmp := '';
+              DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+              Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
               exit;
             end;
           end;
@@ -549,6 +606,9 @@ begin
         DoEvents;
       end;
       Whishes_Result.Items.Add('... fertig');
+      sTmp := '';
+      DateTimeToString(sTmp, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
+      Whishes_Result.Items.Add( '### ' + sTmp + ' ###');
       m_LastEpgUpdate := Now;
       SaveSettings;
     end;
@@ -561,10 +621,10 @@ end;
 
 procedure TfrmMain.RetrieveChannelList(ChannelList : TListBox);
 var
-  TmpList : TStringList;
+  TmpList   : TStringList;
   ChannelId : String;
-  i       : Integer;
-  sTmp    : String;
+  i         : Integer;
+  sTmp      : String;
 begin
   try
     m_Trace.DBMSG(TRACE_CALLSTACK, '> RetrieveChannelList');
@@ -683,6 +743,8 @@ procedure TfrmMain.GetPids(var vpid: Integer; var apids: array of Integer);
 var
   sTmp,
   sLine : String;
+  i     : Integer;
+  sListe: TStringList;
 begin
   try
     m_Trace.DBMSG(TRACE_CALLSTACK, '> GetPids');
@@ -691,30 +753,23 @@ begin
       m_Trace.DBMSG(TRACE_CALLSTACK, '< GetPids');
       exit;
     end;
-    sTmp := SendHttpCommand('/control/zapto?getpids');
+    sTmp := SendHttpCommand('/control/zapto?getallpids');
     if Length(sTmp) > 0 then
     begin
       m_Trace.DBMSG(TRACE_DETAIL, '/control/zapto?getallpids >> ' + sTmp);
       sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
       vpid:= StrToIntEx(sLine);
-      m_Trace.DBMSG(TRACE_DETAIL, sLine);
-      sTmp  := Copy(sTmp, Pos(#10,sTmp)+1, Length(sTmp));
-      sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
-      apids[0]:= StrToIntEx(sLine);
-      m_Trace.DBMSG(TRACE_DETAIL, sLine);
-      sTmp  := Copy(sTmp, Pos(#10,sTmp)+1, Length(sTmp));
-      if Length(sTmp) > 0 then
+      m_Trace.DBMSG(TRACE_DETAIL, 'vpid    =' + IntToStr(vpid));
+      i:= 0;
+      while(Length(sTmp) > 0 ) do
       begin
-        sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
-        apids[1]:= StrToIntEx(sLine);
-        m_Trace.DBMSG(TRACE_DETAIL, sLine);
         sTmp  := Copy(sTmp, Pos(#10,sTmp)+1, Length(sTmp));
-        if Length(sTmp) > 0 then
-        begin
-          sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
-          apids[2]:= StrToIntEx(sLine);
-          m_Trace.DBMSG(TRACE_DETAIL, sLine);
-        end;
+        sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
+        apids[i]:= StrToIntEx(sLine);
+        m_Trace.DBMSG(TRACE_DETAIL, 'apids['+IntToStr(i)+']=' + IntToStr(apids[i]));
+        i:= i+1;
+        if i > 2 then
+          break;
       end;
     end;
 
