@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.h,v 1.1 2002/09/18 07:34:54 obi Exp $
+ * $Id: ucodex.h,v 1.2 2002/12/25 22:00:57 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -24,14 +24,14 @@
 #include <openssl/md5.h>
 
 struct ucode_s {
-	unsigned char name[21];
+	char name[21];
 	size_t size;
-	unsigned char md5sum[MD5_DIGEST_LENGTH];
+	char md5sum[MD5_DIGEST_LENGTH];
 };
 
 struct ucode_type_s {
-	unsigned char name[10];
-	unsigned char magic[6];
+	char name[10];
+	char magic[6];
 	struct ucode_s ucodes[20];
 };
 

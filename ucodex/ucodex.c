@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.5 2002/09/18 07:34:54 obi Exp $
+ * $Id: ucodex.c,v 1.6 2002/12/25 22:00:57 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -99,10 +99,10 @@ const struct ucode_type_s types[] = {
 #endif
 };
 
-unsigned int char2hex (const unsigned char * src, unsigned char * dest, const unsigned int size) {
+unsigned int char2hex(const char *src, unsigned char *dest, const unsigned int size) {
 
 	unsigned int count = 0;
-	unsigned char tmp[3];
+	char tmp[3];
 
 	tmp[2] = 0x00;
 
@@ -117,7 +117,7 @@ unsigned int char2hex (const unsigned char * src, unsigned char * dest, const un
 	return count;
 }
 
-int md5cmp (const unsigned char * buf, const unsigned int size, const unsigned char * md5sum) {
+int md5cmp(const unsigned char *buf, const unsigned int size, const char *md5sum) {
 
 	unsigned char md[MD5_DIGEST_LENGTH];
 
@@ -127,21 +127,21 @@ int md5cmp (const unsigned char * buf, const unsigned int size, const unsigned c
 		return EXIT_FAILURE;
 
 	if (VERBOSE) {
-		unsigned char i;
+		unsigned int i;
 		for (i = 0; i < MD5_DIGEST_LENGTH; i++)
-			fprintf(stdout, "%02x", md5sum[i]);
+			fprintf(stdout, "%02x", md5sum[i] & 0xff);
 	}
 
 	return EXIT_SUCCESS;
 }
 
-int writebuf (const unsigned char * buf, const unsigned int size, const unsigned char * filename) {
+int writebuf(const unsigned char *buf, const unsigned int size, const char *filename) {
 
 	if (VERBOSE)
 		fprintf(stdout, "\t%s\n", filename);
 
 	if (WRITE) {
-		FILE * file = fopen(filename, "w");
+		FILE *file = fopen(filename, "w");
 
 		if (file == NULL) {
 			perror(filename);
@@ -159,16 +159,16 @@ int writebuf (const unsigned char * buf, const unsigned int size, const unsigned
 	return EXIT_SUCCESS;
 }
 
-int scan_file (const char * filename, off_t file_size) {
+int scan_file(const char *filename, off_t file_size) {
 
-	FILE * file;
+	FILE *file;
 	int probe;
 
 	unsigned int i, j;
 
-	unsigned char * buf = NULL;
-	unsigned char * psrc = NULL;
-	unsigned char * pdest = NULL;
+	unsigned char *buf = NULL;
+	unsigned char *psrc = NULL;
+	unsigned char *pdest = NULL;
 
 	/* open file */
 	file = fopen(filename, "r");
@@ -191,8 +191,8 @@ int scan_file (const char * filename, off_t file_size) {
 
 	/* Motorola S-Record; binary data in text format */
 	if (probe == 'S') {
-		unsigned char linebuf[515];
-		unsigned char addrlen;
+		char linebuf[515];
+		unsigned int addrlen;
 
 		pdest = buf;
 
@@ -255,14 +255,15 @@ int scan_file (const char * filename, off_t file_size) {
 	return EXIT_SUCCESS;
 }
 
-int process_path (const char * directory, const char * filename) {
+int process_path(const char *directory, const char *filename) {
 
 	struct stat filestat;
-
-	char path[strlen(directory) + strlen(filename) + 2];
+	char *path;
 
 	if ((!strcmp(filename, ".")) || (!strcmp(filename, "..")))
 		return EXIT_FAILURE;
+
+	path = (char *) malloc(strlen(directory) + strlen(filename) + 2);
 
 	if (!strcmp(directory, ""))
 		strcpy(path, filename);
@@ -272,19 +273,23 @@ int process_path (const char * directory, const char * filename) {
 	/* check file type */
 	if (stat(path, &filestat) < 0) {
 		perror(path);
+		free(path);
 		return EXIT_FAILURE;
 	}
 
-	if (S_ISREG(filestat.st_mode))
-		return scan_file(path, filestat.st_size);
+	if (S_ISREG(filestat.st_mode)) {
+		int ret = scan_file(path, filestat.st_size);
+		free(path);
+		return ret;
+	}
 
 	if (S_ISDIR(filestat.st_mode)) {
-
-		struct dirent * entry;
-		DIR * dir = opendir(path);
+		struct dirent *entry;
+		DIR *dir = opendir(path);
 
 		if (dir == NULL) {
 			fprintf(stderr, "%s: opendir failed\n", path);
+			free(path);
 			return EXIT_FAILURE;
 		}
 
@@ -293,16 +298,19 @@ int process_path (const char * directory, const char * filename) {
 
 		if (closedir(dir) < 0) {
 			fprintf(stderr, "%s: closedir failed\n", path);
+			free(path);
 			return EXIT_FAILURE;
 		}
 
+		free(path);
 		return EXIT_SUCCESS;
 	}
 
+	free(path);
 	return EXIT_FAILURE;
 }
 
-int main (int argc, char ** argv) {
+int main (int argc, char **argv) {
 
 	int i;
 
