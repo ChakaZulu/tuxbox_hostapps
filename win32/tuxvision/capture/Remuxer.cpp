@@ -356,7 +356,9 @@ int Remuxer::supply_audio_data(void * data, unsigned long len) {
 		unsigned char * pes_packet = abuf + offset + pes_start; // what we just found
 
 //		if (pes_start + pes_len > abuf_valid-offset) 
-//            { *((long *)0) = 0; }
+//            { 
+//            *((long *)0) = 0; 
+//            }
 
 
 		if (audio_packet_wanted(pes_packet)) {
@@ -874,7 +876,10 @@ int Remuxer::supply_video_data(void * data, unsigned long len) {
 		
 		if (vp_len) {
 			
-//			if (vp_start + vp_len > vbuf_valid-offset) { *((long *)0) = 0; }
+//			if (vp_start + vp_len > vbuf_valid-offset) 
+//                { 
+//                *((long *)0) = 0; 
+//                }
 
 
             if (vp_start>0)
@@ -1272,13 +1277,15 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 
 			double av_pts_diff = pts_diff(audio_pts, video_pts);
 			
-			if (fabs(av_pts_diff) < (90000.0/22)) { // /2 ?			
+			//if (fabs(av_pts_diff) < (90000.0/22)) { // /2 ?			
+			if (fabs(av_pts_diff) < (90000.0/20)) { // /2 ?			
 				// ha - we found a place...
 				
 				playtime_offset += pts_diff(system_clock_ref, system_clock_ref_start);
 				
 				double smaller_pts = audio_pts;
-				if (video_pts < smaller_pts) smaller_pts = video_pts;
+				if (video_pts < smaller_pts) 
+                    smaller_pts = video_pts;
 				
 				dprintf( "resynced at playtime %s", pts_to_hms(playtime_offset));
 				OutputDebugString("ReSync !!!\r\n");
@@ -1324,8 +1331,8 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 			return 0;
 		}
 
-static double last_audio_pts = -1;
-static double last_video_pts = -1;
+        static double last_audio_pts = -1;
+        static double last_video_pts = -1;
 		
 		double      vp_pts[3];
 		vp_pts[0] = pes_pts(video_packets[0]);
@@ -1356,12 +1363,12 @@ static double last_video_pts = -1;
 		
 		
 		// check for an emergency resync
-		if (   fabs(pts_diff(vp_pts[0], ap_pts[0]))        > 1*90000.0
-		    || fabs(pts_diff(vp_pts[0], system_clock_ref)) > 1*90000.0
-		    || fabs(vp_dur[0])                                    > 1*90000.0
-			 || fabs(ap_dur[0])                                    > 1*90000.0
-			) {
-			
+		if (   fabs(pts_diff(vp_pts[0], ap_pts[0]))        > 0.50*90000.0
+		    || fabs(pts_diff(vp_pts[0], system_clock_ref)) > 0.50*90000.0
+		    || fabs(vp_dur[0])                             > 0.50*90000.0
+		    || fabs(ap_dur[0])                             > 0.50*90000.0
+		   ) 
+        {
 			// oops, our data seems to be severely broken. need a resync...
 			dprintf("resyncing due to big time differences in packet buffers");
 			perform_resync();

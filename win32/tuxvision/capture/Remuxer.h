@@ -135,7 +135,6 @@ public:
 	unsigned long video_packets_avail;
 	
 	double frame_pts; // our last synthesized PTS for video frames
-	int frame_skew_counter;
 	
 	double aux_packets[max_aux_packets];
 	unsigned long aux_packets_avail;
@@ -187,8 +186,7 @@ public:
 		video_packets_avail = 0;
 		
 		frame_pts = -1.0;
-		frame_skew_counter = 0;
-		
+	
 		// --------------
 		
 		aux_packets_avail = 0;
@@ -251,8 +249,7 @@ public:
 		vbuf_valid = 0;
 		
 		frame_pts = -1.0;
-		frame_skew_counter = 0;
-		
+	
 		resync = true;		
 	}
 	

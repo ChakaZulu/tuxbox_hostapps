@@ -96,7 +96,7 @@ HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigne
             hr=WriteTerminal(hSocket, CMD_PROMPT, "ps -ax");
         if (SUCCEEDED(hr))
             hr=WriteTerminal(hSocket, CMD_PROMPT, "/var/tuxbox/fbclear");
-#if 1
+#if 0
         if (isENX)
             {
             if (SUCCEEDED(hr))
