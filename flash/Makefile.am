@@ -1,4 +1,5 @@
 bin_PROGRAMS = flashcheck flashsign
+bin_SCRIPTS = flashmanage.pl
 
 flashcheck_SOURCES = \
 	flashcheck.cpp
