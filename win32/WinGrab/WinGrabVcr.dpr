@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: WinGrabVcr.dpr,v $
+// Revision 1.2  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.1  2004/07/02 14:07:40  thotto
 // initial
 //
@@ -35,7 +38,8 @@ uses
   MyTrace in 'MyTrace.pas',
   ShutDownDlg in 'ShutDownDlg.pas' {FrmShutdown},
   VcrDivXtools in 'VcrDivXtools.pas',
-  VcrDivXchk in 'VcrDivXchk.pas' {FrmDivXchk};
+  VcrDivXchk in 'VcrDivXchk.pas' {FrmDivXchk},
+  VcrDbHandling in 'VcrDbHandling.pas';
 
 {$R *.RES}
 
@@ -69,7 +73,7 @@ begin
       Application.Initialize;
       Application.Title := 'WinGrab v0.83 - VCR Edition';
       Application.CreateForm(TfrmMain, frmMain);
-      Application.Run;
+  Application.Run;
       if hMux<>0 then ReleaseMutex(hMux);
     end;
   except

@@ -176,6 +176,7 @@ object frmMain: TfrmMain
               Width = 716
               Height = 205
               Align = alClient
+              Color = clCaptionText
               Columns = <
                 item
                   Caption = 'Eventid'
@@ -218,6 +219,8 @@ object frmMain: TfrmMain
               ReadOnly = True
               RowSelect = True
               ParentFont = False
+              ParentShowHint = False
+              ShowHint = True
               TabOrder = 0
               ViewStyle = vsReport
               OnClick = lvChannelProgClick

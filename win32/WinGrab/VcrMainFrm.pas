@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.5  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.4  2004/10/13 10:38:14  thotto
 // Telnet-Restart des nhttpd
 //
@@ -30,14 +33,51 @@ interface
 
 uses
   QMemory,
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, TeControls, ComCtrls, ExtCtrls, TeButtons, TeChannelsReader,
-  ActnList, TeFiFo, TeFileStreamThread, TeHTTPStreamThread, JclSynch,
-  TeProcessManager, TeGrabManager, TePesParserThread, TePesFiFo, Registry, Buttons,
-  TeSocket, TeComCtrls, Winsock2, IdThreadMgr, IdThreadMgrPool, TePesMuxerThread,
-  IdBaseComponent, IdComponent, IdTCPServer, IdHTTPServer, TeSectionParserThread,
-  IdTCPConnection, IdTCPClient, IdHTTP, Sockets, ScktComp, PJDropFiles, JclShell,
-  ShlObj, ShellAPI,
+  Windows,
+  Messages,
+  SysUtils,
+  Classes,
+  Graphics,
+  Controls,
+  Forms,
+  Dialogs,
+  StdCtrls,
+  TeControls,
+  ComCtrls,
+  ExtCtrls,
+  TeButtons,
+  TeChannelsReader,
+  ActnList,
+  TeFiFo,
+  TeFileStreamThread,
+  TeHTTPStreamThread,
+  JclSynch,
+  TeProcessManager,
+  TeGrabManager,
+  TePesParserThread,
+  TePesFiFo,
+  Registry,
+  Buttons,
+  TeSocket,
+  TeComCtrls,
+  Winsock2,
+  IdThreadMgr,
+  IdThreadMgrPool,
+  TePesMuxerThread,
+  IdBaseComponent,
+  IdComponent,
+  IdTCPServer,
+  IdHTTPServer,
+  TeSectionParserThread,
+  IdTCPConnection,
+  IdTCPClient,
+  IdHTTP,
+  Sockets,
+  ScktComp,
+  PJDropFiles,
+  JclShell,
+  ShlObj,
+  ShellAPI,
   IdRawBase,
   IdRawClient,
   IdIcmpClient,
@@ -64,7 +104,9 @@ uses
   VcrDivXchk,
   HTMLLite,
   Planner,
-  DBPlanner, IdTelnet;
+  DBPlanner,
+  IdTelnet,
+  VcrDbHandling ;
 
 {$M 65536,4194304}
 
@@ -371,8 +413,9 @@ type
     m_bHttpInProgress    : Boolean;
     m_LastEpgUpdate      : TDateTime;
     m_bAbortWishesSeek   : Boolean;
-    
+
     m_Recorded_dbConnectionString : String;
+    m_coVcrDb                     : TVcrDb;
 
     m_Trace              : TTrace;
 
@@ -421,50 +464,24 @@ type
     function  SendHttpCommand(sCommand: String): String;
     procedure RestartHttpd;
 
-    procedure OpenEpgDb(sEpgDbFilename : String);
+    function  IsDBoxRecording: Boolean;
+    function  GetNextFreeThread: Integer;
+    function  GetMachingThread(RecordingData: T_RecordingData): Integer;
+
+    procedure OpenEpgDb;
     procedure CloseEpgDb;
-
-    procedure SaveEpgToDb(  sEpgTitle, sEpgSubTitle, sEpg : String);
-    procedure UpdateEpgInDb(sEpgTitle, sEpgSubTitle, sEpg : String);
-    function  IsInRecordedList(sTitel, sSubTitle : String): Integer;
-
-    procedure SaveWhishesToDb(sEpgTitle : String);
-    function  IsInWhishesList(sEpgTitle : String): Integer;
+    procedure CheckDbVersion;
 
     procedure CheckChannelProg(ChannelId: String; sChannelName: String);
     procedure CheckChannelProgInDb(ChannelId: String);
     procedure CheckChannels(bSwitchChannels: Boolean);
     procedure CheckChannelsInDb;
 
-    function  IsDBoxRecording: Boolean;
-    function  GetNextFreeThread: Integer;
-    function  GetMachingThread(RecordingData: T_RecordingData): Integer;
-
-    procedure CheckDbVersion;
-
     // EventListe
-    procedure UpdateEventInDb(ChannelId : String;
-                              sEventId  : String;
-                              sZeit     : String;
-                              sDauer    : String;
-                              sTitel    : String;
-                              sSubTitel : String;
-                              sEpg      : String );
     procedure FillDbEventListView(ChannelId : String);
     function  GetCurrentDbEvent(ChannelId : String): String;
-    function  GetDbEventEpg(ChannelId    : String;
-                            EventId      : String;
-                            var sTitel,
-                                sSubTitel: String): String;
-    procedure TruncDbEvent;
 
     // KanalListe
-    procedure UpdateChannelInDb( ChannelId : String;
-                                 sName     : String );
-    function  GetDbChannelId( sChannelName : String ) : String;
-    function  GetDbChannelName( ChannelId : String ) : String;
-    function  GetDbChannelSwitchFlag( ChannelId : String ) : Integer;
-    function  GetDbChannelEpgFlag( ChannelId : String ) : Integer;
     procedure FillDbChannelListBox;
 
     // Record-Timer
@@ -531,89 +548,6 @@ begin
     hResult.rgbBlue := (hColor1.rgbBlue + hColor2.rgbBlue) div 2;
     hResult.rgbGreen := (hColor1.rgbGreen + hColor2.rgbGreen) div 2;
     hResult.rgbRed := (hColor1.rgbRed + hColor2.rgbRed) div 2;
-  except
-    on E: Exception do OutputDebugString(PChar(E.Message));
-  end;
-end;
-
-function IntToStrDef(aInt, aDefInt: Integer) : String;
-begin
-  try
-    Result := IntToStr(aInt);
-  except
-    Result := IntToStr(aDefInt);
-  end;
-end;
-
-function StrToIntEx(aString: string): Integer;
-begin
-  Result := 0;
-  try
-    aString := AnsiUpperCase(Trim(aString));
-    if Copy(aString, 1, 2) = '0X' then
-    begin
-      Delete(aString, 1, 2);
-      aString := '$' + aString;
-      Result := StrToInt(aString);
-      exit;
-    end;
-    if Pos('$',aString) = 1 then
-    begin
-      Result := StrToInt(aString);
-      exit;
-    end;
-    if (Pos('A',aString) <> 0) or
-       (Pos('B',aString) <> 0) or
-       (Pos('C',aString) <> 0) or
-       (Pos('D',aString) <> 0) or
-       (Pos('E',aString) <> 0) or
-       (Pos('F',aString) <> 0) then
-    begin
-      aString := '$'+aString;
-    end;
-    try
-      Result := StrToInt(aString);
-    except
-      on E: EConvertError do
-        Result := 0;
-    end;
-  except
-    on E: Exception do OutputDebugString(PChar(E.Message));
-  end;
-end;
-
-function StrToInt64Ex(aString: string): Int64;
-begin
-  Result := 0;
-  try
-    aString := AnsiUpperCase(Trim(aString));
-    if Copy(aString, 1, 2) = '0X' then
-    begin
-      Delete(aString, 1, 2);
-      aString := '$' + aString;
-      Result := StrToInt64(aString);
-      exit;
-    end;
-    if Pos('$',aString) = 1 then
-    begin
-      Result := StrToInt64(aString);
-      exit;
-    end;
-    if (Pos('A',aString) <> 0) or
-       (Pos('B',aString) <> 0) or
-       (Pos('C',aString) <> 0) or
-       (Pos('D',aString) <> 0) or
-       (Pos('E',aString) <> 0) or
-       (Pos('F',aString) <> 0) then
-    begin
-      aString := '$'+aString;
-    end;
-    try
-      Result := StrToInt64(aString);
-    except
-      on E: EConvertError do
-        Result := 0;
-    end;
   except
     on E: Exception do OutputDebugString(PChar(E.Message));
   end;
@@ -850,7 +784,9 @@ begin
     DbgMsg('***###*** Startup ***###***');
     DoEvents;
 
-    OpenEpgDb(ExtractFilePath(Application.ExeName) + 'WinGrabVcr.mdb');
+    m_Recorded_dbConnectionString := 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source="' + ExtractFilePath(Application.ExeName) + 'WinGrabVcr.mdb' + '";Persist Security Info=False';
+    m_coVcrDb                     := TVcrDb.Create(m_Recorded_dbConnectionString);
+    OpenEpgDb();
 
     StateList            := TStringList.Create;
     StateList.Sorted     := true;
@@ -881,7 +817,8 @@ begin
 
     for k:= 0 to 9 do
     begin
-      m_RecordingThread[k].RecordingData.HWndMsgList  := mmoMessages.Handle;
+      m_RecordingThread[k].RecordingData.HWndMsgList   := mmoMessages.Handle;
+      m_RecordingThread[k].RecordingData.sDbConnectStr := m_Recorded_dbConnectionString;
       ClearRecordingThread(k);
     end;
 
@@ -915,7 +852,7 @@ begin
     begin
       pclMain.ActivePage := tbsWelcome;
       DoEvents;
-      ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
       FillDbEventListView( ChannelId );
       if lvChannelProg.Items.Count < 10 then
       begin
@@ -1054,7 +991,6 @@ end;
 procedure TfrmMain.RefreshTimerTimer(Sender: TObject);
 var
   ChannelId  : String;
-  x          : Integer;
   bRecording : Boolean;
   sTmp       : String;
 begin
@@ -1083,7 +1019,7 @@ begin
           RetrieveCurrentChannel(lbxChannelList, sTmp);
           if lbxChannelList.ItemIndex >= 0 then
           begin
-            ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+            ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
             FillDbEventListView( ChannelId );
             lvChannelProg.SetFocus;
             lvChannelProgClick(self);
@@ -1113,7 +1049,6 @@ procedure TfrmMain.dbRefreshTimerTimer(Sender: TObject);
 var
   ChannelId  : String;
   x          : Integer;
-  bRecording : Boolean;
   sTmp       : String;
   AYear,
   AMonth,
@@ -1169,7 +1104,7 @@ begin
       if lvChannelProg.Items.Count < 20 then
       begin
         m_Trace.DBMSG(TRACE_DETAIL, 'dbRefreshTimerTimer lvChannelProg.Items.Count='+IntToStr(lvChannelProg.Items.Count));
-        ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+        ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
         GetChannelProg( ChannelId, x, sTmp );
         CheckChannels( false );
       end;
@@ -1203,7 +1138,7 @@ begin
   try
     if lbxChannelList.ItemIndex >= 0 then
     begin
-      ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
       m_Trace.DBMSG(TRACE_DETAIL,'Click Channel '+(ChannelId)+' "'+ lbxChannelList.Items.Strings[lbxChannelList.ItemIndex] + '"');
       FillDbEventListView( ChannelId );
 
@@ -1226,7 +1161,7 @@ begin
   try
     if lbxChannelList.ItemIndex >= 0 then
     begin
-      ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
       if PingDBox(m_sDBoxIp) then
         SendHttpCommand('/fb/switch.dbox2?zapto=' + (ChannelId) );
 
@@ -1274,7 +1209,7 @@ begin
     if lvChannelProg.Items.Count < 20 then
     begin
       m_Trace.DBMSG(TRACE_DETAIL, 'lvChannelProgClick lvChannelProg.Items.Count='+IntToStr(lvChannelProg.Items.Count));
-      ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
       GetChannelProg( ChannelId, x, sTmp );
     end;
 
@@ -1307,7 +1242,7 @@ begin
         sTmp := Trim(Copy(sTmp, Pos('"',sTmp)+1,Length(sTmp)));
         sTmp := Trim(Copy(sTmp, 1, Pos('"',sTmp)-1));
 
-        bFound := (IsInRecordedList(sTmp, '') > 0);
+        bFound := (m_coVcrDb.IsInRecordedList(sTmp, '') > 0);
         if bFound then
         begin
           sMsg :=  '"' + sTmp + '" wurde bereits aufgenommen !';
@@ -1336,7 +1271,6 @@ end;
 procedure TfrmMain.lvChannelProgDblClick(Sender: TObject);
 var
   ChannelId : String;
-  sDbg   : String;
   sZeit  : String;
   sDauer : String;
   sTmp   : String;
@@ -1345,7 +1279,7 @@ begin
   if lvChannelProg.ItemIndex = -1 then exit;
   if not PingDBox(m_sDBoxIp) then exit;
   try
-    bFound := (IsInRecordedList(lvChannelProg.Selected.SubItems[4], '') > 0);
+    bFound := (m_coVcrDb.IsInRecordedList(lvChannelProg.Selected.SubItems[4], '') > 0);
     sTmp := '';
     if bFound then
     begin
@@ -1358,9 +1292,9 @@ begin
     if Application.MessageBox(PChar(sTmp), PChar('Frage'), MB_YESNO) = IDYES then
     begin
 
-      SaveWhishesToDb(lvChannelProg.Selected.SubItems[4]);
+      m_coVcrDb.SaveWhishesToDb(lvChannelProg.Selected.SubItems[4]);
 
-      ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+      ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
       sZeit     := lvChannelProg.Selected.SubItems[0];
       sDauer    := lvChannelProg.Selected.SubItems[3];
 
@@ -1380,14 +1314,11 @@ end;
 
 procedure TfrmMain.btnRecordNowClick(Sender: TObject);
 var
-  sTmp     : String;
-  x        : Integer;
   sDbg,
   sZeit,
   sDauer,
   sOutPath : String;
   i,k      : Integer;
-  sEpg     : TStringList;
 begin
   if not PingDBox(m_sDBoxIp) then exit;
 
@@ -1416,7 +1347,7 @@ begin
       //Zap to Channel ...
       m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> DBoxIP      = ' + m_sDBoxIp);
       m_RecordingThread[k].RecordingData.channelname     := lbxChannelList.Items.Strings[lbxChannelList.ItemIndex];
-      m_RecordingThread[k].RecordingData.channel_id      := GetDbChannelId(m_RecordingThread[k].RecordingData.channelname);
+      m_RecordingThread[k].RecordingData.channel_id      := m_coVcrDb.GetDbChannelId(m_RecordingThread[k].RecordingData.channelname);
       m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> channel_id  = ' + m_RecordingThread[k].RecordingData.channel_id);
       m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> channelname = ' + m_RecordingThread[k].RecordingData.channelname);
       SendHttpCommand('/fb/switch.dbox2?zapto=' + m_RecordingThread[k].RecordingData.channel_id );
@@ -1534,13 +1465,12 @@ end;
 
 procedure TfrmMain.btnVlcViewClick(Sender: TObject);
 var
-  sTmp,
   sTrace,
   sOutPath,
   sCmdLine,
   sCmdParam     : String;
   TmpList       : TStringList;
-  k,x           : Integer;
+  k             : Integer;
   RecordingData : T_RecordingData;
 begin
   if not PingDBox(m_sDBoxIp) then exit;
@@ -1902,10 +1832,12 @@ begin
 
       m_RecordingThread[k].RecordingData.filename := filename;
 
-      SaveEpgToDb(CheckDbString(ExtractFilename(m_RecordingThread[k].RecordingData.filename)),
-                  '',
+      RecordingLoadEpgFile( k, m_RecordingThread[k].RecordingData.filename + EpgFileExt );
+{      //save epg -> now in transforthread
+      SaveEpgToDb(m_RecordingThread[k].RecordingData.epgtitle,
+                  m_RecordingThread[k].RecordingData.epgsubtitle,
                   RecordingLoadEpgFile( k, m_RecordingThread[k].RecordingData.filename + EpgFileExt ));
-
+}
       // Transform the PsStream to DivX ...
       m_RecordingThread[k].TheadState                         := Thread_TransformStart;
       m_RecordingThread[k].pcoTransformThread                 := TTransformThread.Create(true);
@@ -2398,6 +2330,11 @@ begin
       m_bAbortWishesSeek := true;
       btnWishesSeek.Caption := 'wird abgebrochen';
       DoEvents;
+      Sleep(0);
+      Whishes_DBGrid.Height      := oldHeight;
+      Whishes_DBNavigator.Visible:= true;
+      btnWishesSeekDb.Enabled    := True;
+      btnWishesSeek.Caption      := 'DBox neu lesen';
       exit;
     end;
 
@@ -2428,7 +2365,7 @@ begin
       Whishes_ADOQuery.Active := true;
       Whishes_DBGrid.Datasource.DataSet := Whishes_ADOQuery;
     except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'StartupTimerTimer/SELECT * T_Whishes '+E.Message);
+      on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'btnWishesSeekClick/SELECT * T_Whishes '+E.Message);
     end;
   finally
     Whishes_DBGrid.Height      := oldHeight;
@@ -2444,6 +2381,7 @@ var
 begin
   RetrieveCurrentChannel(lbxChannelList, sTmp);
   lvChannelProgClick(Sender);
+  if lvChannelProg.Visible then lvChannelProg.SetFocus;
 end;
 
 procedure TfrmMain.Recorded_ADOQueryAfterScroll(DataSet: TDataSet);
@@ -2623,7 +2561,7 @@ begin
         sTmp := 'Möchten Sie die Filmbeschreibung von ' + #13#10 + '"' + sEpgTitle + ' - ' + sEpgSubTitle + '"' + #13#10 + 'jetzt in die Datenbank einfügen?';
         if Application.MessageBox(PChar(sTmp), PChar('Frage'), MB_YESNO) = IDYES then
         begin
-          SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
+          m_coVcrDb.SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
         end;
       finally
         sEpg.free;

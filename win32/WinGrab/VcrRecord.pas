@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrRecord.pas,v $
+// Revision 1.3  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.2  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -66,8 +69,7 @@ procedure TfrmMain.RecordingStart(Socket:        TCustomWinSocket;
 var
   sTmp     : String;
   sOutPath : String;
-  sEpg     : TStringList;
-  i,k      : Integer;
+  k        : Integer;
 begin
   try
     m_Trace.DBMSG(TRACE_CALLSTACK, '> RecordingStart');
@@ -183,7 +185,6 @@ var
   k,x       : Integer;
   sFileName,
   sTmp      : String;
-  sEpg      : TStringList;
   sr        : TSearchRec;
   FileAttrs : Integer;
 begin
@@ -302,10 +303,11 @@ begin
 
         RecordingLoadEpgFile( k, m_RecordingThread[k].RecordingData.filename + EpgFileExt );
 
+{        //save epg -> now in transforthread
         SaveEpgToDb(m_RecordingThread[k].RecordingData.epgtitle,
                     m_RecordingThread[k].RecordingData.epgsubtitle,
                     m_RecordingThread[k].RecordingData.epg);
-
+}
         sTmp := ExtractFilePath( m_RecordingThread[k].RecordingData.filename );
 
         // Transform the StreamFiles to DivX ...
@@ -596,7 +598,11 @@ begin
         //
         // ... nur dann, wenn das AUFWECKEN via LAN geht ...
         //
-        DoShutdownDialog;
+        DoShutdownDialog(Shutdown_Hibernate);
+        DoEvents;
+        Sleep(10000);
+        DoEvents;
+        DoShutdownDialog(Shutdown_Standby);
       end;
     end;
   except
@@ -630,7 +636,6 @@ end;
 
 procedure TfrmMain.RecordingSaveEpgFile( ThreadId : Integer; sOutPath : String );
 var
-  sTmp : String;
   sEpg : TStringList;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> RecordingSaveEpgFile');
@@ -639,10 +644,10 @@ begin
     begin
       sEpg := TStringList.Create;
       try
-        sEpg.Add( GetDbEventEpg(m_RecordingThread[ThreadId].RecordingData.channel_id,
-                                m_RecordingThread[ThreadId].RecordingData.epgid,
-                                m_RecordingThread[ThreadId].RecordingData.epgtitle,
-                                m_RecordingThread[ThreadId].RecordingData.epgsubtitle) );
+        sEpg.Add( m_coVcrDb.GetDbEventEpg(m_RecordingThread[ThreadId].RecordingData.channel_id,
+                                          m_RecordingThread[ThreadId].RecordingData.epgid,
+                                          m_RecordingThread[ThreadId].RecordingData.epgtitle,
+                                          m_RecordingThread[ThreadId].RecordingData.epgsubtitle) );
         if sEpg.Text = '' then
         begin
           sEpg.Add( SaveEpgText(m_RecordingThread[ThreadId].RecordingData.epgid,
@@ -670,20 +675,49 @@ begin
   end;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< RecordingSaveEpgFile');
 end;
-
 Function TfrmMain.RecordingLoadEpgFile( ThreadId : Integer; sEpgFileName : String ): String;
 var
-  sTmp : String;
   sEpg : TStringList;
+  sTmp,
+  sTmpFilename : String;
+  i    : Integer;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> RecordingLoadEpgFile');
   try
-    sEpg := TStringList.Create;
-    try
-      sEpg.LoadFromFile(sEpgFileName);
-      m_RecordingThread[ThreadId].RecordingData.epg := sEpg.Text;
-    finally
-      sEpg.Free;
+    sTmpFilename := sEpgFileName;
+    if not FileExists(sTmp) then
+    begin
+      i    := Pos('[', sTmpFilename);
+      if i > 0 then
+      begin
+        sTmpFilename := copy(sEpgFileName, 1, i-1) + copy(sEpgFileName, Pos(']',sEpgFileName)+1, Length(sEpgFileName));
+      end;
+    end;
+    if FileExists(sTmpFilename) then
+    begin
+      sEpg := TStringList.Create;
+      try
+        sEpg.LoadFromFile(sTmpFilename);
+        m_RecordingThread[ThreadId].RecordingData.epg := sEpg.Text;
+        sTmp := sEpg.Text;
+        i:= Pos('<b>',LowerCase(sTmp));
+        if i <> 0 then
+        begin
+          sTmp := Copy( sTmp, Pos('<b>',LowerCase(sTmp))+3, Length(sTmp));
+          sTmp := Trim(Copy( sTmp, 1, Pos('</b>',LowerCase(sTmp))-1));
+          if sTmp <> 'keine ausführlichen Informationen verfügbar' then
+          begin
+            m_RecordingThread[ThreadId].RecordingData.epgsubtitle := sTmp;
+          end;
+        end;
+        if m_RecordingThread[ThreadId].RecordingData.epgtitle = '' then
+        begin
+          m_RecordingThread[ThreadId].RecordingData.epgtitle := ChangeFileExt(ExtractFileName(sTmpFilename), '');
+        end;
+        Result := sEpg.Text;
+      finally
+        sEpg.Free;
+      end;
     end;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'RecordingLoadEpgFile '+E.Message);

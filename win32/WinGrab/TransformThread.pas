@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: TransformThread.pas,v $
+// Revision 1.2  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.1  2004/07/02 13:56:23  thotto
 // initial
 //
@@ -28,7 +31,8 @@ uses
   TeProcessManager,
   TeGrabManager,
   TePesParserThread,
-  TePesFiFo
+  TePesFiFo,
+  VcrDbHandling
   ;
 
 type
@@ -40,19 +44,23 @@ type
     m_hMuxerMutexHandle : Cardinal;
     m_coProcessManager  : TTeProcessManager;
 
+    procedure SetToDbRecorded;
+
     procedure TransformPsStream;
     procedure TransformToDivX(sM2pFile: String);
     procedure EditAvi(var sAviFile: String);
     procedure TransformToIso(sAviFile: String);
 
     procedure TransformMuxPES;
-{$W+}
+
+    {$W+}
     procedure MessageCallback(aSender       : TTeProcessManager;
                               const aMessage: string);
-    procedure MuxStateCallback(aSender     : TTeProcessManager;
+    procedure MuxStateCallback(aSender      : TTeProcessManager;
                                const aName,
-                                     aState: string);
-{$W-}
+                                     aState : string);
+    {$W-}
+
     procedure SerializeIsoThread;
     procedure SerializeIsoThreadFinish;
     
@@ -153,6 +161,7 @@ begin
     m_RecordingData.sIsoPath     := my_RecordingData.sIsoPath;
     m_RecordingData.sCDRwDevId   := my_RecordingData.sCDRwDevId;
     m_RecordingData.sCDRwSpeed   := my_RecordingData.sCDRwSpeed;
+    m_RecordingData.sDbConnectStr:= my_RecordingData.sDbConnectStr;
     m_RecordingData.HWndMsgList  := my_RecordingData.HWndMsgList;
 
     if Pos('[',my_RecordingData.filename) > 0 then
@@ -162,8 +171,6 @@ begin
     begin
       m_RecordingData.filename   := my_RecordingData.filename;
     end;
-    
-    m_RecordingData.dbConnection := my_RecordingData.dbConnection;
 
     Terminated := false;
     Success    := false;
@@ -194,6 +201,8 @@ begin
       FillChar(cBuffer, 255, 0);
       GetShortPathName(PChar(sM2pFile), cBuffer, 254);
       sCmdParam:= cBuffer;
+
+      sCmdParam:= sM2pFile;
       iCmdShow := SW_SHOWNORMAL;
       sCmdLine := m_RecordingData.sDVDxPath;
       sTmp     := ChangeFileExt(sCmdParam, DivXFileExt);
@@ -251,7 +260,7 @@ begin
       end;
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -323,13 +332,12 @@ begin
       end;
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
 procedure TTransformThread.TransformToIso(sAviFile: String);
 var
-  iRes      : Integer;
   sCmdLine  : String;
   sCmdParam : String;
   sCmdVerb  : String;
@@ -447,7 +455,7 @@ begin
       m_Trace.DBMSG(TRACE_MIN, 'not found '+sAviFile);
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -498,6 +506,7 @@ begin
       begin
 
         EditAvi(sAviFile);
+        if Success then SetToDbRecorded;
 
         if  m_RecordingData.bMoviX
         AND Success then
@@ -540,7 +549,7 @@ begin
       DbgMsg('--- Ende Transformthread [' + ExtractFileName(sM2pFile) + '] ---');
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -585,7 +594,6 @@ end;
 
 procedure TTransformThread.TransformMuxPES;
 var
-  bResult  : Boolean;
   dwResult : DWORD;
 begin
   try
@@ -669,7 +677,7 @@ begin
 			end;
 		end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -683,7 +691,7 @@ begin
       m_hMutexHandle:= 0;
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_MIN, E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
 end;
 
@@ -712,6 +720,32 @@ begin
   end;
 end;
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Database.
+//
+procedure TTransformThread.SetToDbRecorded;
+var
+  coVcrDb : TVcrDb;
+begin
+  try
+    coVcrDb := TVcrDb.Create(m_RecordingData.sDbConnectStr);
+    m_Trace.DBMSG(TRACE_MIN, 'epgtitle   =[' + m_RecordingData.epgtitle + ']');
+    m_Trace.DBMSG(TRACE_MIN, 'epgsubtitle=[' + m_RecordingData.epgsubtitle + ']');
+    m_Trace.DBMSG(TRACE_MIN, 'epg        =[' + m_RecordingData.epg + ']');
 
+    coVcrDb.SaveEpgToDb(m_RecordingData.epgtitle,
+                        m_RecordingData.epgsubtitle,
+                        m_RecordingData.epg);
 
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
+  end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// EOF.
+//
+////////////////////////////////////////////////////////////////////////////////
 end.

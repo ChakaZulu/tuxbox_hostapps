@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: ShutDownDlg.pas,v $
+// Revision 1.3  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.2  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -25,6 +28,10 @@ uses
 
 {#####################################################################}
 
+type e_ShutdownMode = (  Shutdown_PcOff      = 0,
+                         Shutdown_Standby    = 1,
+                         Shutdown_Hibernate  = 2 );
+
 type
   TFrmShutdown = class(TForm)
     CountDown: TTimer;
@@ -38,7 +45,8 @@ type
     procedure FormCreate(Sender: TObject);
 
   private
-    m_iCountDown : Integer;
+    m_iCountDown   : Integer;
+    m_ShutdownMode : integer;
 
     procedure System_Shutdown;
 
@@ -49,7 +57,7 @@ type
 
 {#####################################################################}
 
-PROCEDURE DoShutdownDialog;
+PROCEDURE DoShutdownDialog(ShutdownMode : e_ShutdownMode);
 
 var
   FrmShutdown: TFrmShutdown;
@@ -62,7 +70,7 @@ implementation
 
 {#####################################################################}
 
-PROCEDURE DoShutdownDialog;
+PROCEDURE DoShutdownDialog(ShutdownMode : e_ShutdownMode);
 var
   OldCur : TCursor;
 begin
@@ -161,17 +169,17 @@ begin
                             sizeof(TOKEN_PRIVILEGES),
                             NIL,
                             NIL);
-
 	    //
 	    // The return value of AdjustTokenPrivileges can't be tested
 	    //
-      OutPutDebugString(PChar('SHUTDOWN NOW'));
-      ExitWindowsEx(EWX_POWEROFF + EWX_FORCEIFHUNG, 0);
-    end else
-    begin
-      OutPutDebugString(PChar('SHUTDOWN NOW'));
-      ExitWindowsEx(EWX_SHUTDOWN, 0);
 	  end;
+
+    OutPutDebugString(PChar('SHUTDOWN NOW'));
+    case m_ShutdownMode of
+      Integer(Shutdown_PcOff)    : ExitWindowsEx(EWX_POWEROFF + EWX_FORCEIFHUNG, 0); //shutdown
+      Integer(Shutdown_Standby)  : SetSystemPowerState(true,true);   //standby
+      Integer(Shutdown_Hibernate): SetSystemPowerState(false,true);  //hibernate
+    end;
 
   except
 //    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );

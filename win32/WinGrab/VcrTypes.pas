@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrTypes.pas,v $
+// Revision 1.2  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.1  2004/07/02 14:06:35  thotto
 // initial
 //
@@ -15,7 +18,7 @@ uses
 
 const
   VideoFileExt = '.mpv';
-  AudioFileExt = '.mp2';
+  AudioFileExt = '.mpa';
   Mgeg2FileExt = '.m2p';
   DivXFileExt  = '.avi';
   EpgFileExt   = '.HTML';
@@ -41,7 +44,6 @@ type T_RecordingData = record
   epgsubtitle  : String;
   epg          : String;
   filename     : String;
-  dbConnection : String;
   //transform ...
   bDVDx        : Boolean;
   sDVDxPath    : String;
@@ -52,6 +54,8 @@ type T_RecordingData = record
   sIsoPath     : String;
   sCDRwDevId   : String;
   sCDRwSpeed   : String;
+  //Database
+  sDbConnectStr: String;
   //StateMessages send to ...
   HWndMsgList  : Integer;
 end;

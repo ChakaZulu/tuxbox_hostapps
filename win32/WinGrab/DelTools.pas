@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: DelTools.pas,v $
+// Revision 1.3  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.2  2004/07/02 13:58:07  thotto
 // *** empty log message ***
 //
@@ -212,7 +215,16 @@ Procedure RepaintDesktop;
 Function TimeAdd(SourceTime, TimeToAdd: Variant): Variant;
 {------------------------------------------------------------------------------}
 
+{------------------------------------------------------------------------------}
+function IntToStrDef(aInt, aDefInt: Integer) : String;
+{------------------------------------------------------------------------------}
+function StrToIntEx(aString: string): Integer;
+{------------------------------------------------------------------------------}
+function StrToInt64Ex(aString: string): Int64;
+{------------------------------------------------------------------------------}
 
+
+{------------------------------------------------------------------------------}
 const
   NotSelected       = -1;
   yes               = true;
@@ -1747,6 +1759,92 @@ begin
       OutputDebugString(PChar( 'result is ' + IntToStr(Resultval)));
     end;
     DoEvents;
+  except
+    on E: Exception do OutputDebugString(PChar(E.Message));
+  end;
+end;
+
+{------------------------------------------------------------------------------}
+function IntToStrDef(aInt, aDefInt: Integer) : String;
+begin
+  try
+    Result := IntToStr(aInt);
+  except
+    Result := IntToStr(aDefInt);
+  end;
+end;
+
+{------------------------------------------------------------------------------}
+function StrToIntEx(aString: string): Integer;
+begin
+  Result := 0;
+  try
+    aString := AnsiUpperCase(Trim(aString));
+    if Copy(aString, 1, 2) = '0X' then
+    begin
+      Delete(aString, 1, 2);
+      aString := '$' + aString;
+      Result := StrToInt(aString);
+      exit;
+    end;
+    if Pos('$',aString) = 1 then
+    begin
+      Result := StrToInt(aString);
+      exit;
+    end;
+    if (Pos('A',aString) <> 0) or
+       (Pos('B',aString) <> 0) or
+       (Pos('C',aString) <> 0) or
+       (Pos('D',aString) <> 0) or
+       (Pos('E',aString) <> 0) or
+       (Pos('F',aString) <> 0) then
+    begin
+      aString := '$'+aString;
+    end;
+    try
+      Result := StrToInt(aString);
+    except
+      on E: EConvertError do
+        Result := 0;
+    end;
+  except
+    on E: Exception do OutputDebugString(PChar(E.Message));
+  end;
+end;
+
+{------------------------------------------------------------------------------}
+function StrToInt64Ex(aString: string): Int64;
+begin
+  Result := 0;
+  try
+    aString := AnsiUpperCase(Trim(aString));
+    if Copy(aString, 1, 2) = '0X' then
+    begin
+      Delete(aString, 1, 2);
+      aString := '$' + aString;
+      Result := StrToInt64(aString);
+      exit;
+    end;
+    if Pos('$',aString) = 1 then
+    begin
+      Result := StrToInt64(aString);
+      exit;
+    end;
+    if (Pos('A',aString) <> 0) or
+       (Pos('B',aString) <> 0) or
+       (Pos('C',aString) <> 0) or
+       (Pos('D',aString) <> 0) or
+       (Pos('E',aString) <> 0) or
+       (Pos('F',aString) <> 0) then
+    begin
+      aString := '$'+aString;
+    end;
+    try
+      Result := StrToInt64(aString);
+    except
+      on E: EConvertError do
+        Result := 0;
+    end;
   except
     on E: Exception do OutputDebugString(PChar(E.Message));
   end;

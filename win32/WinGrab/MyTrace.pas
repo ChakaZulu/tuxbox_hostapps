@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: MyTrace.pas,v $
+// Revision 1.3  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.2  2004/10/11 15:33:39  thotto
 // Bugfixes
 //
@@ -50,7 +53,6 @@ type
     m_strMsgPrefix : String;
 
   protected
-//    procedure Execute; override;
 
   public
     procedure DBMSG_INIT( szBaseKey, szProduct, szVersion, szPackage, szModule: String );

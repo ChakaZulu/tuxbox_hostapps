@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainHttpClients.pas,v $
+// Revision 1.4  2004/10/15 13:39:16  thotto
+// neue Db-Klasse
+//
 // Revision 1.3  2004/10/13 10:38:14  thotto
 // Telnet-Restart des nhttpd
 //
@@ -94,8 +97,9 @@ begin
   try
     //restart the nhttpd
     VcrDBoxTelnet.BoundIP := m_sDBoxIp;
+    VcrDBoxTelnet.Port    := 23;
     Application.ProcessMessages;
-    VcrDBoxTelnet.Connect;
+    VcrDBoxTelnet.ConnectAndGetAll;
     // login
     sTmp := VcrDBoxTelnet.ReadLn(#0,1000);
     m_Trace.DBMSG(TRACE_SYNC, 'Telnet: ['+sTmp+']'+#13#10);
@@ -166,6 +170,7 @@ begin
     if Length(sTmp) > 0 then
     begin
       Result.Text := sTmp;
+
       i:= Pos('<b>',LowerCase(sTmp));
       if i <> 0 then
       begin
@@ -180,6 +185,7 @@ begin
           Result.SaveToFile(sFilePath + CheckFileNameString(epgtitel) + '_-_' + CheckFileNameString(epgsubtitel) + '.HTML');
         end;
       end;
+
     end;
     DoEvents;
   except
@@ -269,13 +275,13 @@ begin
           m_Trace.DBMSG(TRACE_SYNC, sDbg);
           DoEvents;
           ////////
-          UpdateEventInDb(ChannelId,
-                          sEventId,
-                          sZeit,
-                          sDauer,
-                          sTitel,
-                          sSubTitel,
-                          sEpg);
+          m_coVcrDb.UpdateEventInDb(ChannelId,
+                                    sEventId,
+                                    sZeit,
+                                    sDauer,
+                                    sTitel,
+                                    sSubTitel,
+                                    sEpg);
           DoEvents;
         until( Length(sTmp) <= 0 );
         DoEvents;
@@ -298,8 +304,6 @@ var
   sZeit    : String;
   sDauer   : String;
   sTitel   : String;
-  sSubTitel: String;
-  sEpg     : String;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> GetCurrentEvent('+ChannelId+')');
   Result := '0';
@@ -360,7 +364,6 @@ var
   sTitel   : String;
   sSubTitel: String;
   sEpg     : String;
-  sTimerStr: String;
   Datum    : TDateTime;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckChannelProg');
@@ -442,13 +445,13 @@ begin
           sEpg     := SaveEpgText(IntToHex(StrToInt64Ex(sEventId),10), '', sTitel, sSubTitel).Text;
           ////////
 
-          UpdateEventInDb(ChannelId,
-                          sEventId,
-                          sZeit,
-                          sDauer,
-                          sTitel,
-                          sSubTitel,
-                          sEpg);
+          m_coVcrDb.UpdateEventInDb(ChannelId,
+                                    sEventId,
+                                    sZeit,
+                                    sDauer,
+                                    sTitel,
+                                    sSubTitel,
+                                    sEpg);
           DoEvents;
         end;
         if IsDBoxRecording then
@@ -494,7 +497,7 @@ begin
       try
         lbl_check_EPG.Caption:= 'alte Einträge werden aus der Datenbank gelöscht';
         DoEvents;
-        TruncDbEvent;
+        m_coVcrDb.TruncDbEvent;
         DoEvents;
       except
         on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'CheckChannels '+E.Message);
@@ -511,8 +514,8 @@ begin
         Whishes_Result.Items.Add('- Durchschalten der vorgemerkten Sender zum Lesen der EPGs vom SAT');
         DoEvents;
 
-        CurrentChannelId := GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
-        lbl_check_EPG.Caption:= 'aktueller Kanal "' + GetDbChannelName(CurrentChannelId) + '"';
+        CurrentChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+        lbl_check_EPG.Caption:= 'aktueller Kanal "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
         DoEvents;
 
         try
@@ -530,11 +533,11 @@ begin
               exit;
             end;
             try
-              ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[i]);
-              if GetDbChannelSwitchFlag(ChannelId) > 0 then
+              ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
+              if m_coVcrDb.GetDbChannelSwitchFlag(ChannelId) > 0 then
               begin
                 m_Trace.DBMSG(TRACE_SYNC, 'Kanalwechsel zu "'+lbxChannelList.Items.Strings[i]+'"');
-                sLabel:= 'Kanalwechsel zu "' + GetDbChannelName(ChannelId) + '"';
+                sLabel:= 'Kanalwechsel zu "' + m_coVcrDb.GetDbChannelName(ChannelId) + '"';
                 DoEvents;
                 SendHttpCommand('/fb/switch.dbox2?zapto=' + ChannelId );
                 for x:= 1 to 10 do
@@ -571,7 +574,7 @@ begin
             DoEvents;
           end;
         finally
-          lbl_check_EPG.Caption:= 'Wechsel zurück zu  "' + GetDbChannelName(CurrentChannelId) + '"';
+          lbl_check_EPG.Caption:= 'Wechsel zurück zu  "' + m_coVcrDb.GetDbChannelName(CurrentChannelId) + '"';
           DoEvents;
           SendHttpCommand('/fb/switch.dbox2?zapto=' + CurrentChannelId );
         end;
@@ -583,9 +586,9 @@ begin
       for i := 0 to j do
       begin
         try
-          ChannelId := GetDbChannelId(lbxChannelList.Items.Strings[i]);
+          ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
           m_Trace.DBMSG(TRACE_SYNC, 'Check Channel "'+lbxChannelList.Items.Strings[i]+'"');
-          if GetDbChannelEpgFlag( ChannelId ) > 0 then
+          if m_coVcrDb.GetDbChannelEpgFlag( ChannelId ) > 0 then
           begin
             lbl_check_EPG.Caption:= 'lese EPGs von "' + lbxChannelList.Items.Strings[i] + '"';
             Whishes_Result.Items.Add('  '+lbxChannelList.Items.Strings[i]);
@@ -653,7 +656,7 @@ begin
               ChannelId := sTmp;
               sTmp := Copy(TmpList.Strings[i] , Pos(' ', TmpList.Strings[i])+1, Length(TmpList.Strings[i]));
               ChannelList.Items.Add(sTmp);
-              UpdateChannelInDb(ChannelId, sTmp);
+              m_coVcrDb.UpdateChannelInDb(ChannelId, sTmp);
             except
             end;
             DoEvents;
@@ -678,7 +681,7 @@ function  TfrmMain.RetrieveCurrentChannel(ChannelList : TListBox; var channelnam
 var
   Channel_Id,
   chidx      : String;
-  i,x        : Integer;
+  i          : Integer;
   sTmp       : String;
 begin
   Result := '0';
@@ -699,7 +702,7 @@ begin
         Result  := Channel_Id;
         for i := 0 to Pred(ChannelList.Items.Count) do
         begin
-          chidx := GetDbChannelId(lbxChannelList.Items.Strings[i]);
+          chidx := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[i]);
           if chidx = Channel_Id then
           begin
             ChannelList.ItemIndex := i;
@@ -746,7 +749,6 @@ var
   sTmp,
   sLine : String;
   i     : Integer;
-  sListe: TStringList;
 begin
   try
     m_Trace.DBMSG(TRACE_CALLSTACK, '> GetPids');
