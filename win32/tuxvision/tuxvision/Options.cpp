@@ -184,7 +184,7 @@ BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_RESETCONTENT , 0, 0 );
 			SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_ADDSTRING, 0, (LONG)(LPSTR)"PCM" );
 			SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_ADDSTRING, 0, (LONG)(LPSTR)"MPEG1 L2" );
-			//SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_ADDSTRING, 0, (LONG)(LPSTR)"MPEG1 L3" );
+			SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_ADDSTRING, 0, (LONG)(LPSTR)"MPEG1 L3" );
 			SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_SETCURSEL, gTranscodeAudioFormat, 0 );
 
             // -----------------------------------------------
@@ -290,6 +290,34 @@ BOOL CALLBACK DlgProc_AUDIO(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                         EnableWindow(GetDlgItem(hDlg,IDC_AUDIOSAMPLEFREQUENCY),TRUE);
                         EnableWindow(GetDlgItem(hDlg,IDC_AUDIOBITRATE),TRUE);
                         break;
+
+// --------------------------------------------------------------------------
+		            case IDC_AUDIOFORMAT:
+			            if (GET_WM_COMMAND_CMD (wParam, lParam)==CBN_SELCHANGE)
+				            {
+				            gTranscodeAudioFormat=SendMessage( GetDlgItem(hDlg,IDC_AUDIOFORMAT), CB_GETCURSEL, 0, 0 );
+				            }
+			            break;
+		            case IDC_AUDIOSAMPLEFREQUENCY:
+			            if (GET_WM_COMMAND_CMD (wParam, lParam)==CBN_SELCHANGE)
+				            {
+				            int sel=SendMessage( GetDlgItem(hDlg,IDC_AUDIOSAMPLEFREQUENCY), CB_GETCURSEL, 0, 0 );
+                            switch(sel)
+                                {
+                                case 0: gTranscodeAudioSampleRate=32000; break;
+                                case 1: gTranscodeAudioSampleRate=44100; break;
+                                case 2: gTranscodeAudioSampleRate=48000; break;
+                                }
+				            }
+			            break;
+		            case IDC_AUDIOBITRATE:
+			            if (GET_WM_COMMAND_CMD (wParam, lParam)==CBN_SELCHANGE)
+				            {
+				            int sel=SendMessage( GetDlgItem(hDlg,IDC_AUDIOBITRATE), CB_GETCURSEL, 0, 0 );
+                            gTranscodeAudioBitRate=BitrateTable[sel];
+				            }
+			            break;
+// --------------------------------------------------------------------------
 
 				    }
 			    return TRUE;

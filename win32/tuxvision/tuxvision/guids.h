@@ -32,11 +32,38 @@ STDMETHOD(getParameter) (THIS_ int command, DWORD value1, DWORD value2, DWORD *v
 DEFINE_GUID(CLSID_MPADecoder,
 0xefc5a84, 0x7f47, 0x4ee7, 0xbf, 0xfb, 0xe8, 0x12, 0x90, 0x54, 0x18, 0x44);
 
+
+// --------------------------------------------------------------------------
+// AudioResampler
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_AudioResampler,
+0xac2ad0f4, 0x2211, 0x49f2, 0x99, 0x85, 0x43, 0x74, 0x2d, 0x5f, 0x7, 0xd0);
+
+DEFINE_GUID(IID_AudioResampler, 
+0x8c1b48a1, 0xef8e, 0x4a60, 0x8a, 0xf3, 0x92, 0x35, 0xfa, 0xcd, 0x9b, 0x11);
+
+DECLARE_INTERFACE_(IAudioResampler,IUnknown)
+{
+STDMETHOD(setParameter) (THIS_ int cmd, int  val) PURE;
+STDMETHOD(getParameter) (THIS_ int cmd, int *val) PURE;
+};
+
+#define CMD_DESTINATION_FREQUENCY   1
+#define CMD_SOURCE_FREQUENCY        2
+#define CMD_FRAME_NOTIFY            3
+#define CMD_FRAMEDURATION_NOTIFY    4
+
 // --------------------------------------------------------------------------
 // VideoRenderer
 // --------------------------------------------------------------------------
 DEFINE_GUID(CLSID_PinnacleVideoRenderer,
 0x11c012c1, 0x5563, 0x11d3, 0x8d, 0x66, 0x0, 0xaa, 0x0, 0xa0, 0x18, 0x93);
+
+// --------------------------------------------------------------------------
+// WaveFileWriter
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_WaveOut,
+0xcc01b761, 0xa537, 0x11d0, 0x9c, 0x71, 0x0, 0xaa, 0x0, 0x58, 0xa7, 0x35);
 
 // --------------------------------------------------------------------------
 // AV RawFileWriter
@@ -64,7 +91,49 @@ DECLARE_INTERFACE_(ISimpleSink,IUnknown)
     STDMETHOD(getCurrentFileSize)  (THIS_ __int64 *size) PURE;
 };
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// MPEG1 LayerII AudioEncoder
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_WaveToMPA,
+0xfc41cfc1, 0x4927, 0x11d3, 0xae, 0xe3, 0x0, 0x60, 0x8, 0x57, 0xee, 0xd8);
+
+// {FC41CFC2-4927-11d3-AEE3-00600857EED8}
+DEFINE_GUID(IID_WaveToMPA, 
+0xfc41cfc2, 0x4927, 0x11d3, 0xae, 0xe3, 0x0, 0x60, 0x8, 0x57, 0xee, 0xd8);
+
+DECLARE_INTERFACE_(IWaveToMPA,IUnknown)
+{
+STDMETHOD(setParameter) (THIS_ int command, int  val) PURE;
+STDMETHOD(getParameter) (THIS_ int command, int *val) PURE;
+};
+
+#define CMD_BITRATE		1   // set/get bitrate in bit/sec
+							// allowed parameters: (stereo allowed !)
+							//  96000, 112000, 128000, 160000, 192000,
+							// 224000, 256000, 320000, 384000
+#define CMD_CRC         2   // 0:CRC off (default), 1:CRC on
+
+
+
+// --------------------------------------------------------------------------
+// MPEG1 LayerIII AudioEncoder 
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_WaveToMP3,
+0x9b6f2536, 0x6a50, 0x4c16, 0xba, 0xf9, 0x87, 0x8b, 0x7d, 0xd7, 0x5d, 0x5a);
+
+DEFINE_GUID(IID_WaveToMP3, 
+0x8317535d, 0xa297, 0x4f59, 0x97, 0xaa, 0x59, 0x69, 0x10, 0x17, 0xcb, 0x2b);
+
+DECLARE_INTERFACE_(IWaveToMP3,IUnknown)
+{
+STDMETHOD(setParameter) (THIS_ int command, int  val) PURE;
+STDMETHOD(getParameter) (THIS_ int command, int *val) PURE;
+};
+
+#define CMD_BITRATE		1   // set/get bitrate in bit/sec
+							// allowed parameters: (stereo allowed !)
+							//  96000, 112000, 128000, 160000, 192000,
+							// 224000, 256000, 320000, 384000
 
 // --------------------------------------------------------------------------
 // DeMultiplexer

@@ -408,6 +408,76 @@ HRESULT RebuildGraph()
     return(hr);
 }
 
+HRESULT CreateAudioOnlyPreviewGraph()
+{
+    HRESULT hr=NOERROR;
+    IBaseFilter     *pAudioDecoder=NULL;
+    IBaseFilter     *pAudioRenderer=NULL;
+    IBaseFilter     *pTee=NULL;
+    IBaseFilter     *pAudioResampler=NULL;
+    IAudioResampler *pIAudioResampler=NULL;
+
+
+    if (SUCCEEDED(hr))
+        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_AudioResampler, &pAudioResampler, L"AudioResampler");
+
+    if (SUCCEEDED(hr))
+        hr=pAudioResampler->QueryInterface(IID_AudioResampler, (void **)&pIAudioResampler);
+    if (SUCCEEDED(hr))
+        hr=pIAudioResampler->setParameter(CMD_DESTINATION_FREQUENCY, gTranscodeAudioSampleRate);
+
+
+    if (gTranscodeAudio)
+        {
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_MPADecoder, &pAudioDecoder, L"AudioDecoder");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, gpVCap, 4, pAudioDecoder, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pAudioDecoder, 0, pAudioResampler, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID (gpIGraphBuilder, CLSID_InfTee, &pTee, L"InfTee");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pAudioResampler, 0, pTee, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioRenderer, 0, TRUE);
+        }
+    else
+        {
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID (gpIGraphBuilder, CLSID_InfTee, &pTee, L"InfTee");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, gpVCap, 4, pTee, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_MPADecoder, &pAudioDecoder, L"AudioDecoder");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pTee, 0, pAudioDecoder, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pAudioDecoder, 0, pAudioResampler, 0, TRUE);
+
+        if (SUCCEEDED(hr))
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_DSoundRender, &pAudioRenderer, L"AudioRenderer");
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pAudioResampler, 0, pAudioRenderer, 0, TRUE);
+        }
+
+
+    RELEASE(pIAudioResampler);
+    RELEASE(pAudioResampler);
+    RELEASE(pTee);
+    RELEASE(pAudioRenderer);
+    RELEASE(pAudioDecoder);
+
+    return(hr);
+}    
+
 HRESULT CreatePreviewGraph()
 {
     RECT            rc;
@@ -423,13 +493,15 @@ HRESULT CreatePreviewGraph()
     IMediaFilter    *pMediaFilter=NULL;
     IPCLECommands   *pIDemux=NULL;
 
-    //hr=DestroyGraph(gpIGraphBuilder);
-    //if (FAILED(hr))
-    //    return(hr);
-    //hr=AddCaptureFilterToGraph(gpIGraphBuilder, gpVCap, gszCaptureFilterName);
     hr=RebuildGraph();
     if (FAILED(hr))
         return(hr);
+
+    if (gCaptureAudioOnly)
+        {
+        hr=CreateAudioOnlyPreviewGraph();
+        return(hr);
+        }
 
     hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_PCLE_DEMUX2, &pDemux, L"DeMultiplexer");
 
@@ -517,6 +589,154 @@ HRESULT CreatePreviewGraph()
     return(NOERROR);
 }
 
+HRESULT ValidateFileName(TCHAR *szFile)
+{
+    for(int i=0;i<lstrlen(szFile);i++)
+        {
+        if (
+            (szFile[i]=='.')||
+            (szFile[i]==':')||
+            (szFile[i]=='\\')||
+            (szFile[i]=='/')||
+            (szFile[i]==',')||
+            (szFile[i]==';')||
+            (szFile[i]=='*')||
+            (szFile[i]=='?')||
+            (szFile[i]=='"')||
+            (szFile[i]=='<')||
+            (szFile[i]=='>')||
+            (szFile[i]=='|')
+           )
+            szFile[i]=' ';
+        }
+    
+    return(NOERROR);
+}
+
+HRESULT CreateAudioOnlyCaptureGraph()
+{
+    HRESULT hr=NOERROR;
+    char  szFilename[264];
+    IBaseFilter *pFileWriter=NULL;
+    IBaseFilter *pTee=NULL;
+    IFileSinkFilter *pFileSink=NULL;
+    IWaveToMPA *pIWaveToMPA=NULL;
+    IWaveToMP3 *pIWaveToMP3=NULL;
+    IBaseFilter *pMPEGAudioEncoder=NULL;
+    WCHAR wszFilename[264];
+
+    ZeroMemory(wszFilename,sizeof(wszFilename));
+
+    if (lstrlen(gszDestinationFile)==0)
+        lstrcpy(gszDestinationFile, "DBOXIICapture");
+    
+    ValidateFileName(gszDestinationFile);
+
+    if (!gTranscodeAudio)
+        _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpa" );
+    else
+        {
+        if (gTranscodeAudioFormat==AUDIO_PCM)
+            _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "wav" );
+        else
+            _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpa" );
+        }
+
+    MultiByteToWideChar(CP_ACP, 
+                        0, 
+                        szFilename, 
+                        lstrlen(szFilename),
+                        wszFilename,  
+                        264);
+
+    if (!gTranscodeAudio)
+        {
+        hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+        if (SUCCEEDED(hr))
+            hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
+        if (SUCCEEDED(hr))
+            hr=pFileSink->SetFileName(wszFilename,NULL);
+
+        if (SUCCEEDED(hr))
+            hr=gpIGraphBuilder->FindFilterByName(L"InfTee", &pTee);
+        if (SUCCEEDED(hr))
+            hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pFileWriter, 0, TRUE);
+        }
+    else
+        {
+        if (gTranscodeAudioFormat==AUDIO_PCM)
+            {
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_WaveOut, &pFileWriter, L"FileWriter");
+            if (SUCCEEDED(hr))
+                hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
+            if (SUCCEEDED(hr))
+                hr=pFileSink->SetFileName(wszFilename,NULL);
+
+            if (SUCCEEDED(hr))
+                hr=gpIGraphBuilder->FindFilterByName(L"InfTee", &pTee);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pFileWriter, 0, TRUE);
+            }
+        else
+        if (gTranscodeAudioFormat==AUDIO_MPEG1L2)
+            {
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_WaveToMPA, &pMPEGAudioEncoder, L"MPEGAudioEncoder");
+            if (SUCCEEDED(hr))
+                hr=pMPEGAudioEncoder->QueryInterface(IID_WaveToMPA, (void **)&pIWaveToMPA);
+            if (SUCCEEDED(hr))
+                hr=pIWaveToMPA->setParameter(CMD_BITRATE, gTranscodeAudioBitRate);
+
+            if (SUCCEEDED(hr))
+                hr=gpIGraphBuilder->FindFilterByName(L"InfTee", &pTee);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pMPEGAudioEncoder, 0, TRUE);
+
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+            if (SUCCEEDED(hr))
+                hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
+            if (SUCCEEDED(hr))
+                hr=pFileSink->SetFileName(wszFilename,NULL);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pMPEGAudioEncoder, 0, pFileWriter, 0, TRUE);
+            }
+        else
+        if (gTranscodeAudioFormat==AUDIO_MPEG1L3)
+            {
+            hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_WaveToMP3, &pMPEGAudioEncoder, L"MPEGAudioEncoder");
+            if (SUCCEEDED(hr))
+                hr=pMPEGAudioEncoder->QueryInterface(IID_WaveToMP3, (void **)&pIWaveToMP3);
+            if (SUCCEEDED(hr))
+                hr=pIWaveToMP3->setParameter(CMD_BITRATE, gTranscodeAudioBitRate);
+
+            if (SUCCEEDED(hr))
+                hr=gpIGraphBuilder->FindFilterByName(L"InfTee", &pTee);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pTee, 1, pMPEGAudioEncoder, 0, TRUE);
+
+            if (SUCCEEDED(hr))
+                hr=LoadFilterByCLSID(gpIGraphBuilder, CLSID_RAWWriter, &pFileWriter, L"FileWriter");
+            if (SUCCEEDED(hr))
+                hr=pFileWriter->QueryInterface(IID_IFileSinkFilter, (void **)&pFileSink);
+            if (SUCCEEDED(hr))
+                hr=pFileSink->SetFileName(wszFilename,NULL);
+            if (SUCCEEDED(hr))
+                hr=TryConnectingFilters(gpIGraphBuilder, pMPEGAudioEncoder, 0, pFileWriter, 0, TRUE);
+            }
+        }
+
+
+    RELEASE(pIWaveToMPA);
+    RELEASE(pIWaveToMP3);
+    RELEASE(pMPEGAudioEncoder);
+
+    RELEASE(pFileSink);
+    RELEASE(pTee);
+    RELEASE(pFileWriter);
+
+    return(hr);
+}    
+
 HRESULT CreateCaptureGraph()
 {
     char  szFilename[264];
@@ -525,6 +745,19 @@ HRESULT CreateCaptureGraph()
     IBaseFilter *pFileWriter=NULL;
     IBaseFilter *pTee=NULL;
     IFileSinkFilter *pFileSink=NULL;
+
+    if (gCaptureAudioOnly)
+        {
+        hr=RebuildGraph();
+        if (FAILED(hr))
+            return(hr);
+
+        hr=CreateAudioOnlyPreviewGraph();
+        if (FAILED(hr))
+            return(hr);
+        hr=CreateAudioOnlyCaptureGraph();
+        return(hr);
+        }
 
     if (!gRecNoPreview)
         {
@@ -544,24 +777,8 @@ HRESULT CreateCaptureGraph()
     if (lstrlen(gszDestinationFile)==0)
         lstrcpy(gszDestinationFile, "DBOXIICapture");
     
-    for(int i=0;i<lstrlen(gszDestinationFile);i++)
-        {
-        if (
-            (gszDestinationFile[i]=='.')||
-            (gszDestinationFile[i]==':')||
-            (gszDestinationFile[i]=='\\')||
-            (gszDestinationFile[i]=='/')||
-            (gszDestinationFile[i]==',')||
-            (gszDestinationFile[i]==';')||
-            (gszDestinationFile[i]=='*')||
-            (gszDestinationFile[i]=='?')||
-            (gszDestinationFile[i]=='"')||
-            (gszDestinationFile[i]=='<')||
-            (gszDestinationFile[i]=='>')||
-            (gszDestinationFile[i]=='|')
-           )
-            gszDestinationFile[i]=' ';
-        }
+    ValidateFileName(gszDestinationFile);
+
     _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpg" );
 
     MultiByteToWideChar(CP_ACP, 
@@ -618,6 +835,7 @@ HRESULT GetCaptureFileSize(__int64 *size)
 {
     IBaseFilter *pFileWriter=NULL;
     ISimpleSink *pSink=NULL;
+    IMediaSeeking *pIMediaSeeking=NULL;
     HRESULT hr=NOERROR;
     if (size==NULL)
         return(E_POINTER);
@@ -625,12 +843,28 @@ HRESULT GetCaptureFileSize(__int64 *size)
     if (gpIGraphBuilder==NULL)
         return(E_POINTER);
 
+    *size=0;
+
     hr=gpIGraphBuilder->FindFilterByName(L"FileWriter", &pFileWriter);
     if (SUCCEEDED(hr))
-        pFileWriter->QueryInterface(IID_ISimpleSink, (void **)&pSink);
-    if (SUCCEEDED(hr))
-        hr=pSink->getCurrentFileSize(size);
+        {
+        if (gCaptureAudioOnly && gTranscodeAudio && (gTranscodeAudioFormat==AUDIO_PCM))
+            {
+            LONGLONG pPosition=0;
+            hr=pFileWriter->QueryInterface(IID_IMediaSeeking, (void **)&pIMediaSeeking);
+            if (SUCCEEDED(hr))
+                pIMediaSeeking->GetCurrentPosition(&pPosition);
+            *size=(pPosition/10000000)*gTranscodeAudioSampleRate*4;
+            }
+        else
+            {
+            hr=pFileWriter->QueryInterface(IID_ISimpleSink, (void **)&pSink);
+            if (SUCCEEDED(hr))
+                hr=pSink->getCurrentFileSize(size);
+            }
+        }
 
+    RELEASE(pIMediaSeeking);
     RELEASE(pSink);
     RELEASE(pFileWriter);
     return(hr);
@@ -686,6 +920,44 @@ HRESULT GetCurrentBitrates(__int64 *val, __int64 *val2)
     RELEASE(pSource);
     return(hr);
 }
+
+HRESULT AdjustAudioFrequency(void)
+{
+    HRESULT hr=NOERROR;
+    IDBOXIICapture *pSource=NULL;
+    IBaseFilter    *pAudioResampler=NULL;
+    IAudioResampler *pIAudioResampler=NULL;
+
+    __int64 val=0;
+
+    if (gpIGraphBuilder==NULL)
+        return(E_POINTER);
+
+    if (gpVCap==NULL)
+        return(E_POINTER);
+
+    hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pSource);
+
+    if (SUCCEEDED(hr))
+        hr=pSource->getParameter(CMD_GETAUDIOFREQ, &val, NULL);
+
+    if ( SUCCEEDED(hr) && (val>0) )
+        {
+        hr = gpIGraphBuilder->FindFilterByName (L"AudioResampler", &pAudioResampler);
+        if (SUCCEEDED(hr))
+            hr=pAudioResampler->QueryInterface(IID_AudioResampler, (void **)&pIAudioResampler);
+        if (SUCCEEDED(hr))
+            hr=pIAudioResampler->setParameter(CMD_SOURCE_FREQUENCY, (int)val);
+        }
+
+
+    RELEASE(pIAudioResampler);
+    RELEASE(pAudioResampler);
+    RELEASE(pSource);
+
+    return(hr);
+}
+
 
 HRESULT GetDSoundVolume(__int64 *val)
 {

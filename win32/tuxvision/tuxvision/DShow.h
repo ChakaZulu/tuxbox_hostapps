@@ -26,6 +26,8 @@
 #define RELEASE(x) { if (x) x->Release(); x = NULL; }
 #define WM_GRAPHNOTIFY	(WM_USER+42)
 
+HRESULT ValidateFileName(TCHAR *szFile);
+
 HRESULT OpenInterface(HWND hwnd, HINSTANCE hinst);
 HRESULT CloseInterface(HWND hwnd);
 
@@ -33,8 +35,12 @@ extern IGraphBuilder        *gpIGraphBuilder;
 extern ICaptureGraphBuilder *gpICaptureGraphBuilder;
 extern IBaseFilter          *gpVCap;
 
+HRESULT CreateAudioOnlyPreviewGraph();
+HRESULT CreateAudioOnlyCaptureGraph();
 HRESULT CreatePreviewGraph();
 HRESULT CreateCaptureGraph();
+
+HRESULT AdjustAudioFrequency(void);
 
 HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16By9);
 HRESULT RebuildGraph();

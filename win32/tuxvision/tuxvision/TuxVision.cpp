@@ -451,11 +451,16 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                         ltoa((long)val, szString, 10);
                         if (avStatus&0x80)
                             {
-                            SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, "fail !");
+                            if (gCaptureAudioOnly)
+                                SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, "-----");
+                            else
+                                {
+                                SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, "fail !");
+                                dprintf("Video failed");
+                                }
                             vStatus=FALSE;
-                            dprintf("Video failed");
                             }
-                        if (avStatus&0x40)
+                        if ((avStatus&0x40)&&(!gCaptureAudioOnly))
                             {
                             SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, "fail !");
                             aStatus=FALSE;
@@ -463,8 +468,13 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                             }
                         if (avStatus&0x01)
                             {
-                            lstrcpy(szString,"search...");
-                            dprintf("still synching ....");
+                            if (gCaptureAudioOnly)
+                                lstrcpy(szString,"-----");
+                            else
+                                {
+                                lstrcpy(szString,"search...");
+                                dprintf("still synching ....");
+                                }
                             }
                         }
                     }
@@ -501,6 +511,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                 if (vStatus)
                     SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, szString2);
                 }
+
+            if ( (wParam==1) && ((gState==StateRecord)||(gState==StatePreview)) && (gCaptureAudioOnly) )
+                {
+                AdjustAudioFrequency();
+                }
+
             break;
 
 		case WM_CLOSE:
@@ -1107,6 +1123,9 @@ void LoadParameter(void)
         gSetVideoToWindow=atoi(regval);
 
 
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "CaptureAudioOnly", (unsigned char *)regval, sizeof(regval)))
+        gCaptureAudioOnly=atoi(regval);
+
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudio", (unsigned char *)regval, sizeof(regval)))
         gTranscodeAudio=atoi(regval);
 
@@ -1164,6 +1183,9 @@ void SaveParameter(void)
 	wsprintf((char *)regval,"%ld",gSetVideoToWindow);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "SetVideoToWindow", (unsigned char *)regval, lstrlen(regval));
 
+
+	wsprintf((char *)regval,"%ld",gCaptureAudioOnly);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "CaptureAudioOnly", (unsigned char *)regval, lstrlen(regval));
 
 	wsprintf((char *)regval,"%ld",gTranscodeAudio);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudio", (unsigned char *)regval, lstrlen(regval));
