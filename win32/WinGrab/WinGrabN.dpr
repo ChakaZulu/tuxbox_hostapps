@@ -26,7 +26,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title := 'WinGrab NeutrinoNG Edition v0.81';
+  Application.Title := 'WinGrab NeutrinoNG Edition v0.82';
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.

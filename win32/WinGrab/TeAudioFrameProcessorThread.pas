@@ -79,6 +79,7 @@ type
     PTS: Int64;
     FrameCount: Integer;
     StartCode: Byte;
+    FrameJitter: Boolean;
 
     {mpeg only}
     MpegHeaderCount: Integer;
@@ -237,13 +238,13 @@ begin
 
           if NewPes then begin
             NewPes := False;
+
             //LogMessage('new pes packet: ' + IntToStr(Pes.PTS));
             if Pes.PTS <> -1 then
               if PTS = -1 then
                 PTS := Pes.PTS + PTSLength
               else if PTS <> Pes.PTS then begin
                 if Abs(PTS - Pes.PTS) > MaxPtsJitter then
-
                   if Abs(PTS - Pes.PTS) <> High(Longword) then // pts turnover... ist erlaubt...
                     LogMessage('warning: pts discontinuity detected [' + IntToStr(PTS - Pes.PTS) + ' pts cycles]');
                 PTS := Pes.PTS;
@@ -326,13 +327,21 @@ begin
                 if PTS = -1 then
                   PTS := Pes.PTS + PTSLength
                 else if PTS <> Pes.PTS then begin
+
+                  if PTS - Pes.PTS = -PTSLength then begin
+                    LogMessage('frame jitter detected [trying to compensate]');
+                    Pes.OffsetPTSDTS(-PTSLength);
+                  end;
+
                   if Abs(PTS - Pes.PTS) > MaxPtsJitter then
-                    LogMessage('warning: pts discontinuity detected [' + IntToStr(PTS - Pes.PTS) + ' pts cycles]');
+                    if Abs(PTS - Pes.PTS) <> High(Longword) then // pts turnover... ist erlaubt...
+                      LogMessage('warning: pts discontinuity detected [' + IntToStr(PTS - Pes.PTS) + ' pts cycles]');
+
                   PTS := Pes.PTS;
                 end;
             end;
 
-            //LogMessage('audio frame ' + IntToStr(FrameCount) + ' found. next pts: ' + IntToStr(PTS));
+          //LogMessage('audio frame ' + IntToStr(FrameCount) + ' found. next pts: ' + IntToStr(PTS));
           end
           else
             LogMessage('invalid audio frame: not a layer I or layer II frame');

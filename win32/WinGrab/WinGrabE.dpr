@@ -31,7 +31,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title := 'WinGrab EliteDVB Edition v0.81';
+  Application.Title := 'WinGrab EliteDVB Edition v0.82';
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.

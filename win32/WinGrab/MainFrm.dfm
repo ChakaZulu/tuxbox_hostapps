@@ -1,6 +1,6 @@
 object frmMain: TfrmMain
-  Left = 1280
-  Top = 198
+  Left = 50
+  Top = 134
   Width = 640
   Height = 512
   Caption = 'frmMain'
@@ -18,7 +18,6 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnHide = FormHide
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 14
   object TePanel1: TTePanel
     Left = 0
@@ -58,10 +57,10 @@ object frmMain: TfrmMain
       Top = 26
       Width = 622
       Height = 413
-      ActivePage = tbsInTs
+      ActivePage = tbsDbox
       Align = alClient
       Style = tsFlatButtons
-      TabIndex = 4
+      TabIndex = 1
       TabOrder = 0
       OnChange = pclMainChange
       object tbsWelcome: TTabSheet
@@ -161,8 +160,8 @@ object frmMain: TfrmMain
               Align = alBottom
             end
             object bnFromBox: TButton
-              Left = 443
-              Top = 64
+              Left = 499
+              Top = 114
               Width = 75
               Height = 25
               Anchors = [akRight, akBottom]

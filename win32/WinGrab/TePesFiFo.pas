@@ -428,12 +428,24 @@ var
 begin
   inherited;
   if aParser.StartsParsed then begin
-    SetLength(SequenceStarts, Length(aParser.SequenceStarts));
-    Move(aParser.SequenceStarts[0], SequenceStarts[0], Length(SequenceStarts) * SizeOf(LongWord));
-    SetLength(GroupStarts, Length(aParser.GroupStarts));
-    Move(aParser.GroupStarts[0], GroupStarts[0], Length(GroupStarts) * SizeOf(LongWord));
-    SetLength(PictureStarts, Length(aParser.PictureStarts));
-    Move(aParser.PictureStarts[0], PictureStarts[0], Length(PictureStarts) * SizeOf(LongWord));
+    if Length(aParser.SequenceStarts) > 0 then begin
+      SetLength(SequenceStarts, Length(aParser.SequenceStarts));
+      Move(aParser.SequenceStarts[0], SequenceStarts[0], Length(SequenceStarts) * SizeOf(LongWord));
+    end else
+      SequenceStarts := nil;
+
+    if Length(aParser.GroupStarts) > 0 then begin
+      SetLength(GroupStarts, Length(aParser.GroupStarts));
+      Move(aParser.GroupStarts[0], GroupStarts[0], Length(GroupStarts) * SizeOf(LongWord));
+    end else
+      GroupStarts := nil;
+
+    if Length(aParser.PictureStarts) > 0 then begin
+      SetLength(PictureStarts, Length(aParser.PictureStarts));
+      Move(aParser.PictureStarts[0], PictureStarts[0], Length(PictureStarts) * SizeOf(LongWord));
+    end else
+      PictureStarts := nil;
+
   end else begin
     Buffer := PLongByteArray(PChar(Memory) + PayloadStart);
     Count := Size - PayloadStart;
