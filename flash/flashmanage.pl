@@ -16,7 +16,7 @@ GetOptions
   'man' => sub { pod2usage ( -exitstatus => 0, -verbose => 2 ); },
   'image|i=s' => \$image,
   'operation|oper|o=s' => \$operation,
-  'part|p=s' => \%parts,
+  'part=s' => \%parts,
 );
 
 my %partdef =
@@ -176,13 +176,13 @@ flashmanage [OPTIONS]
 
   -i, --image FILE      image file
   -o, --operation ARG   what to do (build, extract, replace, print)
-  -p, --part NAME=FILE  partition files
+      --part NAME=FILE  partition files
       --help            brief help message
       --man             full documentation
 
 =head2 EXAMPLES
 
-  flashmanage.pl -i flashimage.img -o replace -p root=root.img
-  flashmanage.pl -i flashimage.img -o build -p root=root.img -p var=var.img
+  flashmanage.pl -i flashimage.img -o replace --part root=root.img
+  flashmanage.pl -i flashimage.img -o build --part root=root.img --part var=var.img
 
 =cut
