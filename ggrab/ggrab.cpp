@@ -66,7 +66,7 @@ int main( int argc, char *argv[] ) {
 	int		port 		= 31338;;
 	bool		quiet 		= false;
 	bool		logging		= false;
-	bool		udpbase		= 0;
+	int		udpbase		= 0;
 	bool		debug		= false;
 
 	//some default parameters for arguments
@@ -207,6 +207,7 @@ int main( int argc, char *argv[] ) {
 	
 	// Max size - 3 MB because cut at next Sequence start
 	max_file_size -= 1024 * 1024 * 3;
+
 	
 	toggle_sectionsd(dbox2name) ;
 

@@ -525,6 +525,10 @@ void pesstream::get_pp_stats (char * p_buffer, int len) {
 	msec += (now.tv_usec - m_last_time.tv_usec) / 1000;
 	msec ++;
 
+	if(m_stype == S_VIDEO) {
+		m_padding = gpadding;
+	}
+
 	if (len < 50) {
 		errexit("Wrong length");
 	}
@@ -548,6 +552,7 @@ void pesstream::get_pp_stats (char * p_buffer, int len) {
 	m_recbytes = 0;
 	m_recmax   = 0;
 	m_padding  = 0;
+	gpadding   = 0;
 }
 	
 int pesstream::m_st_nr;

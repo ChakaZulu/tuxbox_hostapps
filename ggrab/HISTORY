@@ -18,3 +18,4 @@ ggrab---------------------------------------------
 17.11.2002	Version 0.09a	Bug mit kaputten Bildern beseitigt, sserver jetzt im Pfad startbar
 07.12.2002	Version 0.10	Verschiedene Korrekturen, Experiment udp support
 20.12.2002	Version 0.20	Versionssprung: alle Innereien neu, Viele neue Funktionen, siehe Readme
+06.01.2003	Version 0.21	Bug beseitigt Filesize > 2G, UDP Bug beseitigt, Streamudp auf 2 Prozesse geändert.
