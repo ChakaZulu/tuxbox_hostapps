@@ -13,9 +13,13 @@ AM_PROG_LIBTOOL
 AC_PROG_RANLIB
 AC_HEADER_STDC
 
+AC_CHECK_LIB(crypto,PEM_write_bio,[HAVE_LIBCRYPTO="yes"],[AC_MSG_WARN([*argh*])])
+AC_CHECK_HEADER(openssl/bio.h,[HAVE_LIBCRYPTO="yes"],[AC_MSG_WARN([*argh*])])
+
 AC_OUTPUT([
 Makefile
 bmp2raw/Makefile
+flash/Makefile
 grab/Makefile
 stream/Makefile
 ])
