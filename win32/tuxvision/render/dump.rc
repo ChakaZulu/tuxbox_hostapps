@@ -31,8 +31,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,2
- PRODUCTVERSION 0,0,0,2
+ FILEVERSION 0,0,0,16
+ PRODUCTVERSION 0,0,0,16
  FILEFLAGSMASK 0x30003fL
 #ifdef _DEBUG
  FILEFLAGS 0xbL
@@ -51,15 +51,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "PRIVAT\0"
             VALUE "FileDescription", "DBOXII Render Filter\0"
-            VALUE "FileVersion", "0, 0, 0, 2\0"
+            VALUE "FileVersion", "0, 0, 0, 16\0"
             VALUE "InternalName", "DBOXIIRender\0"
-            VALUE "LegalCopyright", "Copyright © 2002 BS\0"
+            VALUE "LegalCopyright", "Copyright © 2002 BSE\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OLESelfRegister", "AM20\0"
             VALUE "OriginalFilename", "DBOXIIRender.ax\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "DBOXII\0"
-            VALUE "ProductVersion", "0, 0, 0, 2\0"
+            VALUE "ProductVersion", "0, 0, 0, 16\0"
             VALUE "SpecialBuild", "\0"
         END
     END
