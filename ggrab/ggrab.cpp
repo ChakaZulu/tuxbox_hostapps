@@ -725,7 +725,7 @@ void install_signal_handler (void) {
 	sg.sa_handler=sighandler;
 	sigemptyset (&sg.sa_mask);
 	sg.sa_flags = 0;
-#if !defined __CYGWIN__ && !defined __MACOSX__
+#ifdef __linux__ 
 	sg.sa_restorer = 0;
 #endif
 	
