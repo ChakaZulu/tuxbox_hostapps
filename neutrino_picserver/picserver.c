@@ -27,7 +27,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
@@ -372,6 +371,16 @@ void* ServerThread(void* socket)
 	close(s2);
 	return NULL;
 }
+char* mybasename(char* src)
+{
+	char* p;
+	p = strrchr (src, '/');
+	if (p == NULL)
+		return src;
+	else
+		return p + 1;
+}
+
 void usage(char* name)
 {
 	fprintf(stderr, "\nUsage: %s [-d] [-r \"<replace>,<to>\"] <port>\n\n", name);
@@ -419,13 +428,13 @@ int main(int argnr, char** argv)
 
 	if(optind > argnr-1)
 	{
-		usage((char*)basename(argv[0]));
+		usage((char*)mybasename(argv[0]));
 		exit(1);
 	}
 	int port = atoi(argv[optind]);
 	if(port <= 0)
 	{
-		usage((char*)basename(argv[0]));
+		usage((char*)mybasename(argv[0]));
 		exit(1);
 	}
 
