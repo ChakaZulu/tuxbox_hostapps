@@ -27,7 +27,7 @@
 #include "debug.h"
 
 
-#define WAIT_DELAY  2
+#define WAIT_DELAY  1
 
 CCircularBuffer::CCircularBuffer()
 {
