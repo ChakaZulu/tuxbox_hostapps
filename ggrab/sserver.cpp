@@ -45,16 +45,15 @@ int main(int argc, char * argv[])
 	u_short Port = 4000;
 	char buf[BUFLEN];
 	int rc;
-	int onidsid, apid, vpid;
 	int pid = 0;
 	time_t t;
 	char * a_arg[50];
 	char a_grabname[256];
 	char a_vpid[20];
 	char a_apid[20];
-	char a_filename[256];
+	char a_filename[256]="";
 	char a_host[256];
-	int	i;
+	int	i,n;
 	struct sockaddr_in cliaddr;
 	socklen_t clilen = sizeof(cliaddr);
 
@@ -78,8 +77,16 @@ int main(int argc, char * argv[])
 #ifdef __CYGWIN__
 	strcat(a_grabname,".exe");
 #endif
+	n = sizeof(a_arg)/sizeof(char*);
+
 	for (i = 1; i < argc; i++) {
-		a_arg[i+8]=argv[i];
+		if (!strcmp("-o",argv[i])) {
+			i++; if (i >= argc) { fprintf(stderr, "need path for -o\n"); return -1; }
+			strcpy (a_filename, argv[i]);
+		}
+		else {
+			a_arg[n++]=argv[i];
+		}
 	}
 	a_arg[i+8] = 0;
 	
@@ -95,7 +102,7 @@ int main(int argc, char * argv[])
 	{
 		fprintf(stderr, "bind to port %d failed, RC=%d...\n",Port, rc);
 		if (i == 10) {
-			fprintf(stderr, "Giving up\n",i++);
+			fprintf(stderr, "Giving up\n");
 			exit(1);
 		}
 		fprintf(stderr, "%d. try, wait for 2 s\n",i++);
@@ -142,8 +149,10 @@ int main(int argc, char * argv[])
 						fprintf(stderr, "***********************************************************\n");
 						sprintf(a_vpid,"0x%03x",recdata.vpid);	
 						sprintf(a_apid,"0x%03x",recdata.apid);	
-
-						a_filename[0] = 0x00;
+							
+						if (strlen(a_filename)) {
+							strcat(a_filename,"/");
+						}
 
 						if (strlen(recdata.channelname) > 0)
 						{
@@ -170,7 +179,6 @@ int main(int argc, char * argv[])
 							execvp(a_arg[0], a_arg);
 							fprintf(stderr,"execv failed");
 							perror("");
-							exit(1);
 						}
 						break;
 					case CMD_VCR_STOP:
