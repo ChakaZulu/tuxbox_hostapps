@@ -134,8 +134,6 @@ void __cdecl CreateHTTPResponse(void *rs)
             break;
         }while(TRUE);
 
-
-
     CancelConnection(rSock,1);
     dprintf("HTTP Thread exit");
 //	gOpenSocketCount=CountConnections();
@@ -645,13 +643,28 @@ int OnMY_READ_HTTP(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			}
 
 		dThread=_beginthread(CreateHTTPResponse,1000000,(void *)rSock);
-		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
+		
+        SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_BELOW_NORMAL);
 		return(0);
 		}
 
 	if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
 		{
+        int count=10;
+        int ret;
+        unsigned long avail;
+
+        while(count-- > 0)
+            {
+            ret=ioctlsocket((SOCKET)wParam, FIONREAD, &avail);
+            if (ret==0)
+                if (avail>0)
+                    {
+                    Sleep(100);
+                    }
+            }
+
 		dprintf("Close Request from Client\n");
 		DeleteConnection((SOCKET)wParam);
 		closesocket((SOCKET)wParam);	
@@ -695,13 +708,27 @@ int OnMY_READ_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
         dprintf("--------------------------\r\n%s",(char *)InBuffer);
         }
 #endif
-		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
+		SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_BELOW_NORMAL);
 		return(0);
 		}
 
 	if (WSAGETSELECTEVENT(lParam) == FD_CLOSE)
 		{
+        int count=10;
+        int ret;
+        unsigned long avail;
+
+        while(count-- > 0)
+            {
+            ret=ioctlsocket((SOCKET)wParam, FIONREAD, &avail);
+            if (ret==0)
+                if (avail>0)
+                    {
+                    Sleep(100);
+                    }
+            }
+
 		dprintf("Close Request from Client\n");
 		DeleteConnection((SOCKET)wParam);
 		closesocket((SOCKET)wParam);	

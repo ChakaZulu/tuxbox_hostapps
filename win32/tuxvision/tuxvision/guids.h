@@ -136,6 +136,12 @@ STDMETHOD(getParameter) (THIS_ int command, int *val) PURE;
 							// 224000, 256000, 320000, 384000
 
 // --------------------------------------------------------------------------
+// Multiplexer
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_DBOXIIMUX,
+0xfad5b8a7, 0x1114, 0x4474, 0xa0, 0x3a, 0x12, 0xb3, 0x9b, 0xe8, 0xd1, 0x40);
+
+// --------------------------------------------------------------------------
 // DeMultiplexer
 // --------------------------------------------------------------------------
 DEFINE_GUID(CLSID_PCLE_DEMUX2, 
@@ -184,7 +190,52 @@ DECLARE_INTERFACE_(IPCLECommands, IUnknown)
 {
    STDMETHOD(Command)  (ECommand cmd, LPARAM lParam1, LPARAM lParam2, LONGLONG* param3) PURE;     
 };
-// --------------------------------------------------------------------------
 
+// --------------------------------------------------------------------------
+// Push Source/Sink
+// --------------------------------------------------------------------------
+DEFINE_GUID(CLSID_PushSink, 
+0xadb57f8, 0x1c, 0x4166, 0x8c, 0x4b, 0x52, 0x81, 0x40, 0x6c, 0x43, 0xeb);
+
+DEFINE_GUID(IID_PushSink, 
+0x9552bddc, 0xec2c, 0x4ce2, 0x81, 0x8c, 0x1e, 0x44, 0x10, 0x26, 0x79, 0xc);
+
+DECLARE_INTERFACE_(IPushSink,IUnknown)
+{
+STDMETHOD(setParameter) (THIS_ int command, void *data) PURE;
+STDMETHOD(getParameter) (THIS_ int command, void *data) PURE;
+};
+
+
+DEFINE_GUID(CLSID_PushSource, 
+0xc709a2a1, 0x343a, 0x11d1, 0xae, 0xea, 0x0, 0x60, 0x8, 0x57, 0xee, 0xd8);
+
+DEFINE_GUID(IID_PushSource, 
+0xe50f9ca1, 0x3462, 0x11d1, 0xae, 0xea, 0x0, 0x60, 0x8, 0x57, 0xee, 0xd8);
+
+DECLARE_INTERFACE_(IPushSource,IUnknown)
+{
+STDMETHOD(setParameter) (THIS_ int command, void *data) PURE;
+STDMETHOD(getParameter) (THIS_ int command, void *data) PURE;
+};
+
+
+#define TYPE_VIDEO               1
+#define TYPE_AUDIO               2
+
+#define CMD_CALLBACK	         1
+#define CMD_TYPE                 2
+
+#define CMD_VIDEO_WIDTH         10
+#define CMD_VIDEO_HEIGHT        11
+#define CMD_VIDEO_FOURCC        12
+#define CMD_VIDEO_BPP           13
+#define CMD_VIDEO_TIMEPERFRAME  14
+
+#define CMD_AUDIO_FREQUENCY     20
+#define CMD_AUDIO_CHANNELS      21
+#define CMD_AUDIO_BITSPERSAMPLE 22
+
+// --------------------------------------------------------------------------
 
 #endif
