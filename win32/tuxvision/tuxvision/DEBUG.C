@@ -20,25 +20,22 @@
 * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-
-
-
 #include "debug.h"
-
-#if (defined DEBUG) || (defined _DEBUG)
+#include "logger.h"
 
 void cdecl dprintf(LPSTR szFormat, ...)
 {
-    char ach[4096];
-
+    char ach[264];
+    char achl[264];
     static BOOL fDebug = -1;
-
     lstrcpy(ach, "TuxVision: ");
-    wvsprintf(ach+lstrlen(ach),szFormat,(LPVOID)(&szFormat+1));
+    wvsprintf(ach+lstrlen(ach),szFormat,(char *)(&szFormat+1));
     lstrcat(ach, "\r\n");
 
+    lstrcpy(achl, "> ");
+    wvsprintf(achl+lstrlen(achl),szFormat,(char *)(&szFormat+1));
+#if (defined DEBUG) || (defined _DEBUG)
     OutputDebugString(ach);
+#endif
+    LogPrintf(achl);
 }
-
-#endif 
-

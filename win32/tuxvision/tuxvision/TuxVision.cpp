@@ -55,6 +55,7 @@
 #include "..\\capture\\interface.h"
 #include "..\\render\\interface.h"
 #include "TCPServer.h"
+#include "logger.h"
 #include "debug.h"
 
 // ------------------------------------------------------------------------
@@ -141,6 +142,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
 	if (DoesInstanceExist())
 		return(-1);
+// ------------------------------------------------------------------------
+    LogClear();
 // ------------------------------------------------------------------------
     // OLE subsystem requires applications to initialize things first!
     CoInitialize(NULL);
@@ -240,6 +243,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
     }
 
 // ------------------------------------------------------------------------
+    LogPrintf("Application started");
+    LogFlush(hwnd);
+// ------------------------------------------------------------------------
+
 	if (SUCCEEDED(hr))
 		{
         gState=StateStopped;
@@ -288,7 +295,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         {
         MessageBox(NULL,"Unable to open capture driver, program will exit !","TuxVision has a severe problem ...",MB_OK|MB_ICONSTOP);
         }
-
+// ------------------------------------------------------------------------
     HTTPStop();
     HTTPDeInit();
 // ------------------------------------------------------------------------
@@ -318,7 +325,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 			OnWM_Command(hwnd,message,wParam,lParam);
 			break;
 		case WM_KEYDOWN:
-			dprintf("KeyDown: WParam: %ld, LPARAM:%ld",wParam,lParam);
+			//dprintf("KeyDown: WParam: %ld, LPARAM:%ld",wParam,lParam);
 			switch(wParam)
 				{
                 case 27: //!!BS Escape Key
@@ -353,12 +360,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 				GetWindowRect (hwnd, &rc);
 				xPos = (rc.left+rc.right)/2;
 				yPos = rc.top+1;
-      			dprintf("MainWindow LButtonDown");
+      			//dprintf("MainWindow LButtonDown");
    				return (DefWindowProc (hwnd, WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(xPos, yPos)));
 				}
             else
                 {
-      			dprintf("Forwarding LButtonDown");
+      			//dprintf("Forwarding LButtonDown");
                 SendMessage(ghWndVideo,WM_KEYDOWN,27,0);
                 }
 		  break;
@@ -367,7 +374,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 			break;
 
         case WM_NCLBUTTONDBLCLK:
-            dprintf("WM_NCLBUTTONDBLCLK: %ld",wParam);
+            //dprintf("WM_NCLBUTTONDBLCLK: %ld",wParam);
             return(0);
 
         case WM_ERASEBKGND:
@@ -466,6 +473,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             break;
 
 		case WM_CLOSE:
+            LogPrintf("Application stopped");
+            LogFlush(hwnd);
             KillTimer(hwnd,1);
 			PostQuitMessage(0);
 			return (0);
@@ -497,7 +506,7 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 						{
 						if (gFullscreen)
 							{
-							dprintf("Restore from Fullscreen");
+							//dprintf("Restore from Fullscreen");
 							SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
 							}
 						//StopPlayback(ghWndVideo, &gState);
@@ -508,10 +517,10 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 			break;
 
 		case WM_KEYDOWN:
-			dprintf("VideoWindow KeyDown");
+			//dprintf("VideoWindow KeyDown");
             if ((gFullscreen)&&(wParam==27))
                 {
-                dprintf("Restore from Fullscreen");
+                //dprintf("Restore from Fullscreen");
                 SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                 return(0);
                 }
@@ -604,12 +613,12 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 		case WM_LBUTTONDOWN:
 		  if ((!gFullscreen)||gSetVideoToWindow)
             {
-  			dprintf("VideoWindow LButtonDown");
+  			//dprintf("VideoWindow LButtonDown");
 			SendMessage(ghWndApp,message,wParam,lParam);
             }
           else  
             {
-            dprintf("Restore from Fullscreen");
+            //dprintf("Restore from Fullscreen");
             SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
             }
 		  break;
@@ -619,7 +628,7 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
                 {
                 if (!gFullscreen)
                     {
-                    dprintf("Switching to Fullscreen");
+                    //dprintf("Switching to Fullscreen");
                     SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
                     }
                 return(0);
@@ -629,7 +638,7 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
                 {
                 if (gFullscreen)
                     {
-                    dprintf("Restore from Fullscreen");
+                    //dprintf("Restore from Fullscreen");
                     SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                     }
                 return(0);
@@ -641,16 +650,13 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
                 {
                 if (gFullscreen)
                     {
-                    dprintf("Restore from Fullscreen");
+                    //dprintf("Restore from Fullscreen");
                     SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                     }
                 else
                     {
-                    //!!BSTEST
                     gSetVideoToWindow=TRUE;    
-                    //!!BSTEST
-    
-                    dprintf("Switching to Fullscreen");
+                    //dprintf("Switching to Fullscreen");
                     SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
                     }
                 }
@@ -725,6 +731,8 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             SetDSoundVolume(gDSoundVoume);
             RunGraph(gpIGraphBuilder);
 			UpdateWindowState(hwnd);
+            LogPrintf("RECORD");
+            LogFlush(hwnd);
 			}
             break;
 
@@ -733,11 +741,15 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             DestroyGraph(gpIGraphBuilder);
             gState=StateStopped;
 			UpdateWindowState(hwnd);
+            LogPrintf("STOP");
+            LogFlush(hwnd);
 			break;
 
 		case IDC_PLAY:
             gState=StatePlayback;
 			UpdateWindowState(hwnd);
+            LogPrintf("PLAY");
+            LogFlush(hwnd);
 			break;
 
 		case IDC_PREVIEW:
@@ -748,6 +760,8 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             SetDSoundVolume(gDSoundVoume);
             RunGraph(gpIGraphBuilder);
             UpdateWindowState(hwnd);
+            LogPrintf("PREVIEW");
+            LogFlush(hwnd);
 			}
             break;
 
@@ -1018,6 +1032,8 @@ HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChanne
 void LoadParameter(void)
 {
     char regval[264];
+
+    dprintf("Loading settings ...");
 
     lstrcpy(gszDestinationFolder,"C:\\");
     gUseDeInterlacer=0;

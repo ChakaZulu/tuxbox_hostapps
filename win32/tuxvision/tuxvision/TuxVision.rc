@@ -210,23 +210,21 @@ BEGIN
     CONTROL         "Automatic AspectRatio",IDC_AUTOASPECTRATIO,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,136,48,88,10
     GROUPBOX        "VideoWindow",IDC_STATIC,128,14,106,54
-    GROUPBOX        "Priority",IDC_STATIC,13,14,102,54,WS_GROUP
+    GROUPBOX        "Priority",IDC_STATIC,14,14,101,54,WS_GROUP
     CONTROL         "RealTime",IDC_PRIORITY_REALTIME,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP,25,27,58,10
     CONTROL         "High",IDC_PRIORITY_HIGH,"Button",BS_AUTORADIOBUTTON,25,
                     41,58,10
     CONTROL         "Normal",IDC_PRIORITY_NORMAL,"Button",BS_AUTORADIOBUTTON,
                     25,54,58,10
-    GROUPBOX        "HTTPServer",IDC_STATIC,128,76,106,54,WS_GROUP
+    GROUPBOX        "HTTP/Streaming - Server",IDC_STATIC,14,76,220,54,
+                    WS_GROUP
     EDITTEXT        IDC_IPADDRESS,174,108,42,15,ES_AUTOHSCROLL | WS_GROUP
     LTEXT           "Port",IDC_STATIC,138,110,22,10,SS_SUNKEN
     CONTROL         "Enable Server",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,138,92,80,10
-    GROUPBOX        "StreamingServer",IDC_STATIC,13,76,102,54,WS_GROUP
+                    WS_TABSTOP,78,91,80,10
     EDITTEXT        IDC_IPADDRESS2,59,108,42,15,ES_AUTOHSCROLL | WS_GROUP
     LTEXT           "Port",IDC_STATIC,23,110,22,10,SS_SUNKEN
-    CONTROL         "Enable Server",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,23,92,80,10
 END
 
 

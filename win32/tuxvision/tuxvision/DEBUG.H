@@ -27,11 +27,11 @@ extern "C" {                    // Assume C declarations for C++
 
 #include <windows.h>
 
-#if defined(DEBUG) || defined(_DEBUG)
+//#if defined(DEBUG) || defined(_DEBUG)
   extern void FAR CDECL dprintf(LPSTR, ...);
-#else
-    #define dprintf / ## /
-#endif
+//#else
+//    #define dprintf / ## /
+//#endif
 
 #ifdef __cplusplus          //
         }                   // End of assume C declarations for C++
