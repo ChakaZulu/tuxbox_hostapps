@@ -1,0 +1,2 @@
+
+tuxvision was written by Bernd Scharping, bernd@transputer.escape.de
