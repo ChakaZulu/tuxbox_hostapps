@@ -69,7 +69,9 @@ pesstream::pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udp
 pesstream::~pesstream(void) {
 	m_st_nr--;
 	close(m_fd);
-	close(m_fd_udp);
+	if (m_fd_udp) {
+		close(m_fd_udp);
+	}
 	
 	delete mp_list;
 	delete mp_cbuf;
@@ -177,11 +179,14 @@ void pesstream::fill_video_pp (class propack * p_pp) {
 			m_elem = mp_list->get_elem();
 			ml_act     =  m_elem.lptr;
 			m_restlen  =  m_elem.len;
+
+			if ((m_elem.pts < 200000) && (m_correct > 0x100000000ULL)) {
+				m_correct -= 0x200000000ULL;
+			}
 		
 			if (m_elem.startflag == START_SEQ) {
 				if (fabs(m_elem.pts - m_correct - VIDEO_FORERUN - m_scr_wanted) > 90000) {
 					fprintf(stderr, "video pts gap = %10.1f s\n", fabs(m_elem.pts-m_correct-VIDEO_FORERUN-m_scr_wanted)/90000);
-			
 				}
 				m_startflag = m_elem.startflag;
 
@@ -334,12 +339,17 @@ void pesstream::fill_audio_pp (class propack * p_pp) {
 			m_act_pts    = m_elem.pts;
 			ml_act       = m_elem.lptr;
 			m_restlen    = m_elem.len;
-		
-			if (fabs(m_last_pts - m_act_pts) > 50000) {
-				fprintf(stderr, "audio pts gap = %10.1f\n", fabs(m_last_pts - m_act_pts)/90000);
+			
+			if ((m_elem.pts < 200000) && (m_correct > 0x100000000ULL)) {
+				m_correct -= 0x200000000ULL;
 			}
-			else {
-				m_pts_per_byte = (m_act_pts - m_last_pts) / m_elem.len;
+			else {	
+				if (fabs(m_last_pts - m_act_pts) > 50000) {
+					fprintf(stderr, "audio pts gap = %10.1f\n", fabs(m_last_pts - m_act_pts)/90000);
+				}
+				else {
+					m_pts_per_byte = (m_act_pts - m_last_pts) / m_elem.len;
+				}
 			}
 		}
 	}
@@ -634,7 +644,9 @@ void  * readstream (class pesstream & ss) {
 			fprintf(stderr, "WARNING: cannot enable real-time scheduling for read thread %d\n",r);
 		}	
 */
+#ifndef __CYGWIN__
 		nice(-10);
+#endif
 	}
 	if (ss.m_log) {
 		char a_logname[10];

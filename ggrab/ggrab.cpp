@@ -162,7 +162,7 @@ int main( int argc, char *argv[] ) {
 			}
 		} else if (!strcmp("-h", argv[i])) {
 
-			fprintf(stderr, "ggrab version 0.22, Copyright (C) 2002 Peter Menzebach\n"
+			fprintf(stderr, "ggrab version 0.22a, Copyright (C) 2002 Peter Menzebach\n"
 			                "ggrab comes with ABSOLUTELY NO WARRANTY; This is free software,\n"
 			                "and you are welcome to redistribute it under the conditions of the\n"
 			                "GNU Public License, see www.gnu.org\n"
@@ -456,6 +456,9 @@ void generate_program_stream (int a_pid[], int anz_pids, char * p_boxname, int p
 		p_act_st  = p_st[nextindex];
 
 		if (gflag_term && (nextindex == 0) && p_pp[0]->get_startflag() == START_SEQ) {
+			for (i = 0; i < anz_pids; i++) {
+				delete p_st[i];
+			}
 			fclose(fp);
 			toggle_sectionsd(p_boxname);
 			exit(0);
@@ -548,6 +551,7 @@ void generate_nomux_streams (int a_pid[], int anz_pids, char * p_boxname, int po
 	while (1) {
 		if (gflag_term) {
 			for (i = 0; i < anz_pids; i++) {
+				delete p_st[i];
 				fclose(fp[i]);
 			}
 			toggle_sectionsd(p_boxname);
@@ -635,6 +639,7 @@ void generate_raw_audio (int a_pid[], int anz_pids, char * p_boxname, int port, 
 	while (1) {
 		if (gflag_term) {
 			for (i = 0; i < anz_pids; i++) {
+				delete p_st[i];
 				fclose(fp[i]);
 			}
 			toggle_sectionsd(p_boxname);

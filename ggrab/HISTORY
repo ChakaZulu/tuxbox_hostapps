@@ -20,3 +20,4 @@ ggrab---------------------------------------------
 20.12.2002	Version 0.20	Versionssprung: alle Innereien neu, Viele neue Funktionen, siehe Readme
 06.01.2003	Version 0.21	Bug beseitigt Filesize > 2G, UDP Bug beseitigt, Streamudp auf 2 Prozesse geändert.
 19.01.2003	Version 0.22	Möglichkeit variable UDP-Länge, sserver Sonderzeichenfilter erweitert. einige andere kleinere Änderungen.
+				Bug, der zu video gap... führt beseitigt, Parameter -s 0 erweitert, daß kein File-Split durchgeführt wird.
