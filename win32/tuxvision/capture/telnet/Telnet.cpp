@@ -85,6 +85,7 @@ HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigne
         hr=WriteTerminal(hSocket, "sword: ", passwd);
     if (SUCCEEDED(hr))
         hr=WriteTerminal(hSocket, CMD_PROMPT, cmd);
+
     if (doReset)
         {
         if (SUCCEEDED(hr))

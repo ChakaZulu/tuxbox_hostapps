@@ -184,7 +184,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
 	hr=OpenInterface(ghWndVideo, ghInstApp);
 // ------------------------------------------------------------------------
-    long dtime=max(min((SPLASHTIME+stime-timeGetTime()),SPLASHTIME),0);
+    long dtime=(SPLASHTIME+stime-timeGetTime());
+    if (dtime<0) dtime=0;
     dprintf("Additional SplashDelay:%d ms",dtime);
     {
     int i;
@@ -233,6 +234,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
     glAppWidth=Width(rc);
     glAppHeight=Height(rc);
     }
+
 // ------------------------------------------------------------------------
 	if (SUCCEEDED(hr))
 		{
@@ -263,6 +265,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 			DispatchMessage((LPMSG)&msg);
 			}
 		}
+    else
+        {
+        MessageBox(NULL,"Unable to open capture driver, program will exit !","TuxVision has a severe problem ...",MB_OK|MB_ICONSTOP);
+        }
 // ------------------------------------------------------------------------
 	CloseInterface(ghWndVideo);
 // ------------------------------------------------------------------------
@@ -307,6 +313,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
         case WM_SYSCOMMAND:
             if (wParam==SC_MAXIMIZE)
                 {
+                //!!BSTEST
+                //gSetVideoToWindow=FALSE;    
+                
                 SendMessage(ghWndVideo, message, wParam, lParam);
                 return(0);
                 }
@@ -529,6 +538,9 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
                     }
                 else
                     {
+                    //!!BSTEST
+                    //gSetVideoToWindow=TRUE;    
+    
                     dprintf("Switching to Fullscreen");
                     SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
                     gIsWindowMaximized=TRUE;

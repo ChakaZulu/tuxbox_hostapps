@@ -78,6 +78,30 @@ void DeInitSockets(void)
     WSACleanup();
 }
 
+HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim)
+{
+    int ret=0;
+    int count=tim/10;
+    int i=0;
+
+    if (avail==NULL)
+        return(E_POINTER);
+    *avail=0;
+
+    for(i=0;i<count;i++)
+        {
+        Sleep(10);
+        ret=ioctlsocket(sock, FIONREAD, avail);
+        if (ret<0)
+            return(E_FAIL);
+        if (*avail>0)
+            break;
+        }
+
+    return(NOERROR);
+}
+
+
 int isDataAvailable(int socket, unsigned long size)
 {
     int ret;
@@ -251,6 +275,8 @@ char *MYstrstr(char *str, char *token)
 
 HRESULT EmptySocket(SOCKET s)
 {
+    #define MAXCLOOP    50
+    int count=MAXCLOOP;
     int ret=0;
     unsigned long avail=0;
 // -------------------------------------------------------------------
@@ -260,18 +286,28 @@ HRESULT EmptySocket(SOCKET s)
 	ling.l_linger=5;
 	setsockopt(s,SOL_SOCKET,SO_LINGER,(LPSTR)&ling,sizeof(ling));
     }
-    
-    ret=ioctlsocket(s, FIONREAD, &avail);
 
-    while(avail>0)
+    GetBufTCP (s, 4096, SO_RCVBUF);
+    
+    while(TRUE)
         {
-        if (ret==0)
+        if ((ret>=0) && (avail>0))
             {
             char *rbuffer=(char *)malloc(avail);
             ret=recv(s,rbuffer,avail,0);
             free(rbuffer);
+            count=MAXCLOOP;
             }
+        else 
+            {
+            count--;
+            Sleep(10);
+            }
+
         ret=ioctlsocket(s, FIONREAD, &avail);
+
+        if ((ret<0) || (count<0))
+            break;
         }
 // -------------------------------------------------------------------
     return(ret);
@@ -339,11 +375,16 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    Sleep(250);
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
+        {
+        EmptySocket(sock);
+        closesocket(sock);
+        return(hr);
+        }
 
     hr=E_FAIL;
-    ret=ioctlsocket(sock, FIONREAD, &avail);
-//    while(avail>0)
+
     while(TRUE)
         {
         if ((ret==0)&&(avail>0))
@@ -361,7 +402,29 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
                 hr=NOERROR;
                 break;
                 }
-            p1=MYstrstr(rbuffer,"\n\n");
+
+//            p1=MYstrstr(rbuffer,"\n\n");
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------  
+
+
             if (p1!=NULL)
                 {
                 if (!strcmp(p1,"ok"))
@@ -381,12 +444,16 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
                 }
             //dprintf("------");
             }
-        ret=ioctlsocket(sock, FIONREAD, &avail);
+        ret=WaitForSocketData(sock, &avail, 250);
         if (ret<0)
             break;
         if (i++>20)
             break;
-        Sleep(250);
+        }
+
+    if (FAILED(hr))
+        {
+        dprintf("SetChannel FAILED !!!");
         }
 
     EmptySocket(sock);
@@ -422,19 +489,46 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    Sleep(250);
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
+        {
+        EmptySocket(sock);
+        closesocket(sock);
+        return(hr);
+        }
 
-    ret=ioctlsocket(sock, FIONREAD, &avail);
     while(avail>0)
         {
-        if (ret==0)
+        if (ret>=0)
             {
             int pos=0;
             char *p1=NULL;
+            char *p2=NULL;
             char rbuffer[1024];
             ZeroMemory(rbuffer,sizeof(rbuffer));
             ret=recv(sock,rbuffer,sizeof(rbuffer),0);
-            p1=MYstrstr(rbuffer,"\n\n");
+
+//            p1=MYstrstr(rbuffer,"\n\n");
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------  
+
             if (p1!=NULL)
                 {
                 pos=strlen(p1)-1;
@@ -443,8 +537,20 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
                 *channel=atol(p1);
                 //dprintf(p1);
                 }
+            else
+                {
+                dprintf("uuups ...");
+                }
             }
+
         ret=ioctlsocket(sock, FIONREAD, &avail);
+        if ((!avail) && (*channel==0))
+            {
+            HRESULT hr=WaitForSocketData(sock, &avail, 1000);
+            if (FAILED(hr)||(avail==0))
+                break;
+            }
+
         }
 
 
@@ -486,6 +592,14 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
+        {
+        EmptySocket(sock);
+        closesocket(sock);
+        return(hr);
+        }
+
       while(TRUE)  
         {
         if ((ret==0)&&(avail>0))
@@ -526,12 +640,11 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
                 //dprintf(p1);
                 }
             }
-        ret=ioctlsocket(sock, FIONREAD, &avail);
+        ret=WaitForSocketData(sock, &avail, 250);
         if (ret<0)
             break;
         if (i++>20)
             break;
-        Sleep(250);
         }
 
 
@@ -549,6 +662,7 @@ HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
 {
     HRESULT hr=NOERROR;
     int ret=0;
+    unsigned long avail=0;
 	
     dprintf("ControlPlaybackOnDBOX from %s:%d ", name, (int)port);
 
@@ -582,6 +696,8 @@ HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
+    WaitForSocketData(sock, &avail, 5000);
+
 	EmptySocket(sock);
     closesocket(sock);
 
@@ -597,6 +713,9 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
     HRESULT hr=NOERROR;
     int ret=0;
     unsigned long avail;
+    int i=0;
+    int gotAudio=0;
+    int gotVideo=0;
 	
     *apid=0;
     *vpid=0;
@@ -621,19 +740,17 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    Sleep(250);
-
-    ret=ioctlsocket(sock, FIONREAD, &avail);
-    if (avail<=0)
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
         {
-	    EmptySocket(sock);
+        EmptySocket(sock);
         closesocket(sock);
-        return(E_FAIL);
+        return(hr);
         }
 
     while(avail>0)
         {
-        if (ret==0)
+        if (ret>=0)
             {
             int pos=0;
             unsigned int i;
@@ -644,25 +761,68 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
             ret=recv(sock,rbuffer,sizeof(rbuffer),0);
             //dprintf("------");
             //dprintf(rbuffer);
-            p1=MYstrstr(rbuffer,"\n\n");
+
+//            p1=MYstrstr(rbuffer,"\n\n");
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------  
+
             if (p1!=NULL)
                 p2=MYstrstr(p1,"\n");
             if (p1!=NULL)
                 {
                 for(i=0;i<strlen(p1);i++)
-                    if (p1[i]=='\n') {p1[i]=0;break;}
+                    {
+                    if (p1[i]=='\n') 
+                        {
+                        p1[i]=0;
+                        break;
+                        }
+                    }
                 *vpid=atoi(p1);
+                gotVideo=1;
                 }
             if (p2!=NULL)
                 {
                 for(i=0;i<strlen(p2);i++)
-                    if (p2[i]=='\n') {p2[i]=0;break;}
+                    {
+                    if (p2[i]=='\n') 
+                        {
+                        p2[i]=0;
+                        break;
+                        }
+                    }
                 *apid=atoi(p2);
+                gotAudio=1;
                 }
             //dprintf("------");
             }
-        ret=ioctlsocket(sock, FIONREAD, &avail);
+        if ((gotAudio)&&(gotVideo))
+            break;
+        ret=WaitForSocketData(sock, &avail, 250);
+        if (ret<0)
+            break;
+        if (i++>20)
+            break;
         }
+
+    dprintf("APID: %ld, VPID:%ld",*apid, *vpid);
 
 	EmptySocket(sock);
     closesocket(sock);
@@ -725,14 +885,17 @@ HRESULT CheckBoxStatus(const char *name, unsigned short port)
 
 HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, const char *name, unsigned short port)
 {
+    #define RCV_BUFFER_SIZE 1024 //(1024*1024)
+
     HRESULT hr=NOERROR;
     int ret=0;
-    unsigned long avail;
+    unsigned long avail=0;
 	
     *width=0;
     *height=0;
     *bitrate=0;
     *is4By3=1;
+    int i=0;
     
     dprintf("RetrieveStreamInfo from %s:%d ", name, (int)port);
 
@@ -740,6 +903,8 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
     if (sock==SOCKET_ERROR)
         return(E_FAIL);
 	
+    ret=GetBufTCP (sock, RCV_BUFFER_SIZE, SO_RCVBUF);
+
 	char wbuffer[1024];		
 	char wbody[1024];		
 	wsprintf(wbuffer, "GET /control/info?streaminfo HTTP/1.0\r\n");
@@ -754,19 +919,17 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-    Sleep(250);
-
-    ret=ioctlsocket(sock, FIONREAD, &avail);
-    if (avail<=0)
+    hr=WaitForSocketData(sock, &avail, 5000);
+    if (FAILED(hr)||(avail==0))
         {
-	    EmptySocket(sock);
+        EmptySocket(sock);
         closesocket(sock);
-        return(E_FAIL);
+        return(hr);
         }
 
     while(avail>0)
         {
-        if (ret==0)
+        if (ret>=0)
             {
             int pos=0;
             unsigned int i;
@@ -779,7 +942,29 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
             ret=recv(sock,rbuffer,sizeof(rbuffer),0);
             //dprintf("------");
             //dprintf(rbuffer);
-            p1=MYstrstr(rbuffer,"\n\n");
+
+//            p1=MYstrstr(rbuffer,"\n\n");
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------  
+
+
             if (p1!=NULL)
                 p2=MYstrstr(p1,"\n");
             if (p1!=NULL)
@@ -813,7 +998,11 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
                 }
             //dprintf("------");
             }
-        ret=ioctlsocket(sock, FIONREAD, &avail);
+        ret=WaitForSocketData(sock, &avail, 250);
+        if (ret<0)
+            break;
+        if (i++>20)
+            break;
         }
 
 	EmptySocket(sock);
@@ -823,10 +1012,14 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
 
 HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName, __int64 *count)
 {
+    #define RCV_BUFFER_SIZE 1024 //(1024*1024)
+
     HRESULT hr=NOERROR;
     int ret=0;
     unsigned long avail;
+    char rem_str[1024];
 	
+    lstrcpy(rem_str,"");
     if (*count<0)
         {
         dprintf("RetrieveChannelList from %s:%d ", name, (int)port);
@@ -845,6 +1038,8 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
         if (sock==SOCKET_ERROR)
             return(E_FAIL);
 	    
+        ret=GetBufTCP (sock, RCV_BUFFER_SIZE, SO_RCVBUF);
+
 	    char wbuffer[1024];		
 	    char wbody[1024];		
 	    wsprintf(wbuffer, "GET /control/channellist HTTP/1.0\r\n");
@@ -859,10 +1054,9 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
         lstrcat(wbuffer,wbody);
         ret=send(sock, wbuffer, strlen(wbuffer),0);
 
-        Sleep(250);
+        hr=WaitForSocketData(sock, &avail, 5000);
 
-        ret=ioctlsocket(sock, FIONREAD, &avail);
-        if (avail<=0)
+        if ((avail<=0)||FAILED(hr))
             {
     		EmptySocket(sock);
             closesocket(sock);
@@ -871,25 +1065,50 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
 
         while(avail>0)
             {
-            if (ret==0)
+            if (ret>=0)
                 {
                 int pos=0;
                 unsigned int i;
-                int srbuffer=1024*1024;
+                int srbuffer=RCV_BUFFER_SIZE;
                 char *p1=NULL;
                 char *p2=NULL;
                 char *rbuffer=(char *)malloc(srbuffer);
                 ZeroMemory(rbuffer,srbuffer);
-                ret=recv(sock,rbuffer,srbuffer-1,0);
+                if (lstrlen(rem_str)>0)
+                    lstrcpy(rbuffer, rem_str);
+                ret=recv(sock,rbuffer+lstrlen(rem_str),srbuffer-1-lstrlen(rem_str),0);
                 //dprintf("------");
                 //dprintf(rbuffer);
+
+                //p1=MYstrstr(rbuffer,"\n\n");
+// ---------------------------------------------------    
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
                 p1=MYstrstr(rbuffer,"\n\n");
+                }
+            else
+                {
+                p2=MYstrstr(rbuffer,"\n\n");
+                if (p2!=NULL)
+                    p1=p2;
+                else
+                    p1=rbuffer; 
+                if (p1!=NULL)
+                    {
+                    if (*p1=='\n')
+                        p1++;
+                    }
+                }
+// ---------------------------------------------------  
+
+
                 if (gTotalChannelCount>=(MAX_LIST_ITEM-1))
                     break;
                 while (p1!=NULL)
                     {
                     if (*p1!=0)
                         {
+                        int nlfound=0;
                         unsigned int k;
                         unsigned long lval=0;
                         char *sval=NULL;
@@ -897,7 +1116,21 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                             break;
                         gTotalChannelCount++;
                         for(i=0;i<strlen(p1);i++)
-                            if (p1[i]=='\n') {p2=p1+i+1;p1[i]=0;break;}
+                            {
+                            if (p1[i]=='\n') 
+                                {
+                                p2=p1+i+1;p1[i]=0;
+                                nlfound=1;
+                                break;
+                                }
+                            }
+                        if (!nlfound)
+                            {
+                            if (lstrlen(p1)<1024)
+                                lstrcpy(rem_str, p1);
+                            gTotalChannelCount--;
+                            break;
+                            }
                         dprintf(p1);
                         sscanf(p1,"%lu", &lval);
                         sval=p1;
@@ -918,9 +1151,17 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                         break;
                     }
                 //dprintf("------");
-                free(rbuffer);
+                if (rbuffer!=NULL)
+                    free(rbuffer);
+                rbuffer=NULL;
                 }
             ret=ioctlsocket(sock, FIONREAD, &avail);
+            if (!avail)
+                {
+                HRESULT hr=WaitForSocketData(sock, &avail, 250);
+                if (FAILED(hr)||(avail==0))
+                    break;
+                }
             }
 
 		EmptySocket(sock);
@@ -937,8 +1178,15 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
     else
         {
         __int64 index=*count;
-        lstrcpyn(szName, gChannelNameList[index], 264);
-        *count=gChannelIDList[index];
+        if (gChannelNameList[index]!=NULL)
+            {
+            lstrcpyn(szName, gChannelNameList[index], 264);
+            *count=gChannelIDList[index];
+            }
+        else
+            {
+            dprintf("ooooohhh");
+            }
         }
 
 	return(hr);

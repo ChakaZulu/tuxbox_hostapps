@@ -356,6 +356,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     m_DBOXPESStreamingPort=31338;
     m_DBOXPSStreamingPort=31337;
     m_DBOXHTTPPort=80;
+//    m_DBOXHTTPPort=8888;
     m_DBOXTelnetPort=23;
 
 
@@ -375,6 +376,19 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
 //    m_VideoWidth=352;
 //    m_VideoHeight=288;
+
+//!!BS nhttpd is really a bloody bastard ...
+#if 0
+    {
+    HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
+    if (SUCCEEDED(hr))
+        hr=ExecuteCommand("killall -9 nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+    if (SUCCEEDED(hr))
+        hr=ExecuteCommand("/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+    }
+#endif
+//!!BS nhttpd is really a bloody bastard ...
+
 
     m_VideoWidth=0;
     m_VideoHeight=0;

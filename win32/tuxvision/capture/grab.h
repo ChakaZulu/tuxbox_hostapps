@@ -47,6 +47,7 @@ extern long            gLastAVBitrateRequest;
 extern HRESULT InitSockets(void);
 extern void DeInitSockets(void);
 extern HRESULT EmptySocket(SOCKET s);
+extern HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim);
 
 extern HRESULT RetrievePIDs(int *vpid, int *apid, const char * name, unsigned short port);
 extern HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName, __int64 *count);
