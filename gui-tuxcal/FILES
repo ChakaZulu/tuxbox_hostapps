@@ -1,2 +1,6 @@
+ABOUT		-	About these sources
+FILES		-	This file
+LICENSE		-	GNU License
 tuxcal.sql	-	database structure
 tuxcal.list	-	data in CSV structure
+data.sql	-	data from above in SQL syntax
