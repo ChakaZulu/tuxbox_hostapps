@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.3 2005/03/02 11:20:56 mogway Exp $
+   $Id: checkImage.c,v 1.4 2005/03/03 23:08:17 mogway Exp $
 
    Check images for bad magics
 
@@ -44,7 +44,7 @@ int skipuboot = 0;
 
 void usage(char* name)
 {
-    fprintf(stderr, "%s - $Revision: 1.3 $\n",name);
+    fprintf(stderr, "%s - $Revision: 1.4 $\n",name);
 	fprintf(stderr, "Check images for bad magics\n\n");
 	fprintf(stderr, "Usage: %s [OPTION] <imagefile>\n\n", name);
 	fprintf(stderr, "Options:\n");
@@ -112,15 +112,31 @@ void checkimage(char* filename)
 		if (debug)
 		{
 			printf("0x%06x | ", pos);
-			printf("%02x %02x %02x %02x %02x ", value[0],  value[1],  value[2],  value[3],  value[4]);
-			printf("%02x %02x %02x %02x %02x ", value[5],  value[6],  value[7],  value[8],  value[9]);
-			printf("%02x %02x %02x %02x %02x ", value[10], value[11], value[12], value[13], value[14]);
-			printf("%02x %02x %02x %02x %02x ", value[15], value[16], value[17], value[18], value[19]);
-			printf("%02x %02x %02x",            value[20], value[21], value[22]);
+			printf("%02x %02x %02x %02x %02x  ", value[0],  value[1],  value[2],  value[3],  value[4]);
+			printf("%02x %02x %02x %02x %02x  ", value[5],  value[6],  value[7],  value[8],  value[9]);
+			printf("%02x %02x %02x %02x %02x  ", value[10], value[11], value[12], value[13], value[14]);
+			printf("%02x %02x %02x %02x %02x  ", value[15], value[16], value[17], value[18], value[19]);
+			printf("%02x %02x %02x",             value[20], value[21], value[22]);
 		}
 
 		if (pos == skipuboot)
 			DPRINT(" <- skip u-boot");
+		else if (
+					value[0]  == 0x20 && value[1]  == 0x00 && value[2]  == 0x27 && value[3]  == 0x7b && value[4]  == 0x00 &&
+					value[5]  == 0x00 && value[6]  == 0x00 && value[7]  == 0x00 && value[8]  == 0x20 && value[9]  == 0x00 &&
+					value[10] == 0x00 && value[11] == 0x00 && value[12] == 0x00 && value[13] == 0x00 && value[14] == 0x00 &&
+					value[15] == 0x00 && value[16] == 0x00 && value[17] == 0x00 && value[18] == 0x00 && value[19] == 0xff &&
+					value[20] == 0xff && value[21] == 0xc3 && value[22] == 0xfe
+				)
+		    DPRINT(" <- this is u-boot 1x");
+		else if (
+					value[0]  == 0x00 && value[1]  == 0xff && value[2]  == 0xff && value[3]  == 0x00 && value[4]  == 0x00 &&
+					value[5]  == 0x00 && value[6]  == 0x00 && value[7]  == 0x00 && value[8]  == 0x00 && value[9]  == 0x00 &&
+					value[10] == 0x00 && value[11] == 0x00 && value[12] == 0x00 && value[13] == 0x00 && value[14] == 0x3f &&
+					value[15] == 0xff && value[16] == 0xff && value[17] == 0xff && value[18] == 0xc0 && value[19] == 0xc3 &&
+					value[20] == 0xfe && value[21] == 0xc3 && value[22] == 0xff
+				)
+		    DPRINT(" <- this is u-boot 2x");
 		else
 		{
 			if (value[1] <= 0xFE && (value[21] >= 0xc0 && value[21] <=0xc4) && ((value[22] &0x0f) == 0x06 || (value[22] &0x0f) == 0x0e))
