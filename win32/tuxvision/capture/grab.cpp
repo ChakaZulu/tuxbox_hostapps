@@ -396,7 +396,7 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
     HRESULT hr=NOERROR;
     int ret=0;
 
-    dprintf("SetChannel from %s:%d to channel:%ld", name, (int)port, (int)channel);
+    dprintf("SetChannel from %s:%d to channel:%lu", name, (int)port, channel);
     	
 	int sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
@@ -405,7 +405,9 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
 	char wbuffer[1024];		
 	char wbody[1024];		
 
-    wsprintf(wbuffer, "GET /control/zapto?%lu HTTP/1.0\r\n", channel);
+    //!!BS attention data is delivered in SIGNED format !! (who the hack brought up this idea ...)
+    //!!BS internally we stay with unsigned format (of course)
+    wsprintf(wbuffer, "GET /control/zapto?%ld HTTP/1.0\r\n", channel);
     wsprintf(wbody,   "User-Agent: BS\r\n"
                       "Host: %s\r\n"
                       "Pragma: no-cache\r\n"
@@ -1221,16 +1223,10 @@ void __cdecl AVReadThread(void *thread_arg)
     int  bufferlenVideo=VIDEO_BUFFER_SIZE;
     unsigned char *bufferAudio=NULL;
     int  bufferlenAudio=AUDIO_BUFFER_SIZE;
-    BOOL firstAudio=TRUE;
-    BOOL firstVideo=TRUE;
-    DWORD smode = -1;
+    BOOL firstAudio=FALSE;
+    BOOL firstVideo=FALSE;
+    DWORD smode = 1;
     
-/*
-    if (gSocketVideoPES>0)
-        ioctlsocket(gSocketVideoPES, FIONBIO , &smode ) ;     // set nonblocking mode
-    if (gSocketAudioPES>0)
-        ioctlsocket(gSocketAudioPES, FIONBIO , &smode ) ;     // set nonblocking mode
-*/
 
     bufferVideo=(unsigned char *)malloc(bufferlenVideo);
     bufferAudio=(unsigned char *)malloc(bufferlenAudio);
@@ -1248,6 +1244,19 @@ void __cdecl AVReadThread(void *thread_arg)
         gFakeisDataAvailable=FALSE;
         }
 
+    //!!BS: to be straight foreward I think its fine to drive Win2k and Win9x in one
+    //!!BS: (non-blocking) mode ...
+    gFakeisDataAvailable=TRUE;
+
+    if (gFakeisDataAvailable)
+        {
+        if (gSocketVideoPES>0)
+            ioctlsocket(gSocketVideoPES, FIONBIO , &smode ) ;     // set nonblocking mode
+        if (gSocketAudioPES>0)
+            ioctlsocket(gSocketAudioPES, FIONBIO , &smode ) ;     // set nonblocking mode
+        }
+
+
     for (;;) 
         {
 		if (gfTerminateThread) 
@@ -1264,7 +1273,7 @@ void __cdecl AVReadThread(void *thread_arg)
                 break;
                 }
 
-            if (isDataAvailable(gSocketVideoPES, bufferlenVideo))
+            while (isDataAvailable(gSocketVideoPES, bufferlenVideo))
                 {
                 ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
                 if (ret>0)
@@ -1273,12 +1282,14 @@ void __cdecl AVReadThread(void *thread_arg)
                     gTotalVideoDataCount+=ret;
                     CRemuxer->supply_video_data(bufferVideo, ret);
                     wait=FALSE;
+                    firstVideo=TRUE;
                     }
+                else
+                    break;
                 }
             }
-
-        if (ret<0)
-            break;
+        else
+            firstVideo=TRUE;
 
         if (gSocketAudioPES>0)
             {
@@ -1288,7 +1299,7 @@ void __cdecl AVReadThread(void *thread_arg)
                 break;
                 }
 
-            if (isDataAvailable(gSocketAudioPES, bufferlenAudio))
+            while (isDataAvailable(gSocketAudioPES, bufferlenAudio))
                 {
                 ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
                 if (ret>0)
@@ -1297,16 +1308,19 @@ void __cdecl AVReadThread(void *thread_arg)
                     gTotalAudioDataCount+=ret;
                     CRemuxer->supply_audio_data(bufferAudio, ret);
                     wait=FALSE;
+                    firstAudio=TRUE;
                     }
+                else
+                    break;
                 }
             }
+        else
+            firstAudio=TRUE;
         
-        if (ret<0)
-            break;
-
         
         #if USE_REMUX
         //if (!wait)
+        if (firstAudio && firstVideo)
             {
             if ((gSocketVideoPES>0)&&(gSocketAudioPES>0))
                 {

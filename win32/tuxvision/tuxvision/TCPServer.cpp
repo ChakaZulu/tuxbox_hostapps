@@ -998,10 +998,10 @@ HRESULT AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
     lstrcpy(rdata->channelname, szchannelname);
 
     if (lstrlen(szvpid)>0)
-        rdata->vpid=atol(szvpid);
+        rdata->vpid=_atoi64(szvpid);
 
     if (lstrlen(szapid)>0)
-        rdata->apid=atol(szapid);
+        rdata->apid=_atoi64(szapid);
 
     if (!lstrcmp(szcommand,"record"))
         rdata->cmd=CMD_VCR_RECORD;

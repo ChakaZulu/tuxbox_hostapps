@@ -1527,7 +1527,6 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 			    }
 			
 			remove_audio_packets(1);
-
 		}
 
 

@@ -1065,7 +1065,7 @@ void CreateChannelList(HWND hwnd)
                     //dprintf("Update Channel: <%ld> <%s> <%ld>",i,buf,(unsigned long)cid);
                     }
                 }
-            RELEASE(pIDBOXIICapture);
+            RELEASE(pIDBOXIICapture); 
             }
         }
 }

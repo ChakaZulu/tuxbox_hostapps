@@ -817,7 +817,7 @@ STDMETHODIMP CDBOXIICapture::Pause()
             if (FAILED(hr))
                 return(E_FAIL);
 
-            hr=ExecuteCommand("killall -HUP controld", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+            hr=ExecuteCommand("killall -HUP controld;killall -HUP sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             if (FAILED(hr))
                 return(E_FAIL);
 
@@ -1092,7 +1092,7 @@ HRESULT CPushStream::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIES
 
     pProperties->cbAlign  = 1;
     pProperties->cbPrefix = 0;
-    //pProperties->cBuffers = BUFFER_COUNT;
+    //pProperties->cBuffers = BUFFER_COUNT; 
     //!!BS of cause we assume here larger VIDEO BufferSize ...
     //!!BS factor of 2 just for safety ...
 
@@ -1104,8 +1104,8 @@ HRESULT CPushStream::DecideBufferSize(IMemAllocator *pAlloc,ALLOCATOR_PROPERTIES
     else
         {
         pProperties->cBuffers = BUFFER_COUNT;
-        pProperties->cbBuffer = (AUDIO_BUFFER_SIZE+VIDEO_BUFFER_SIZE) * 2;
-        }
+        pProperties->cbBuffer = (AUDIO_BUFFER_SIZE+VIDEO_BUFFER_SIZE);
+        } 
 
     ASSERT(pProperties->cbBuffer);
 

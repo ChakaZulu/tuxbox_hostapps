@@ -164,7 +164,7 @@ public:
 	Remuxer(unsigned char _wanted_audio_stream = 0x00) 
         {
         m_framePTS=0;
-		abuf_size = 256*1024; //2*1024*1024; 
+		abuf_size = 512*1024; //2*1024*1024; 
 		abuf = new unsigned char[abuf_size];
 		abuf_valid = 0;
 		
@@ -174,7 +174,7 @@ public:
 
 		// -------------
 		
-		vbuf_size = 4*1024*1024; //12*1024*1024;
+		vbuf_size = 6*1024*1024; //12*1024*1024;
 		vbuf = new unsigned char[vbuf_size];
 		vbuf_valid = 0;
 		
@@ -209,7 +209,7 @@ public:
 		
 		total_bytes_written = 0;
 		
-		video_forerun   = 3600.0 * 6;
+		video_forerun   = 3600.0 * 4;
 		scr_play_offset = 2*3600 + (ULONGLONG)video_forerun;
 		allowed_frame_pts_skew = 0.1 * 90000.0;
 
