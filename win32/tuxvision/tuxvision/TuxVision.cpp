@@ -143,7 +143,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
     ghInstApp=hInstance;
 
-	wndclassex.style		= CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS ;
+	wndclassex.style		= /*CS_HREDRAW|CS_VREDRAW|*/CS_DBLCLKS ;
 	wndclassex.lpfnWndProc	= WndProc;
 	wndclassex.cbClsExtra	= 0;
 	wndclassex.cbWndExtra	= DLGWINDOWEXTRA;
@@ -157,7 +157,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	wndclassex.cbSize		= sizeof(WNDCLASSEX);
 	retval=RegisterClassEx(&wndclassex);
 
-	wndclassex.style		= CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS ;
+	wndclassex.style		= /*CS_HREDRAW|CS_VREDRAW|*/CS_DBLCLKS ;
 	wndclassex.lpfnWndProc	= WndProcVideo;
 	wndclassex.cbClsExtra	= 0;
 	wndclassex.cbWndExtra	= 0;
@@ -165,7 +165,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	wndclassex.hIcon		= NULL;
 	wndclassex.hIconSm		= NULL;
 	wndclassex.hCursor		= NULL;
-	wndclassex.hbrBackground= (HBRUSH)hbr; //(COLOR_WINDOW+1);
+	wndclassex.hbrBackground= (HBRUSH)hbr; 
 	wndclassex.lpszMenuName	= NULL;
 	wndclassex.lpszClassName= "VideoWindow";
 	wndclassex.cbSize		= sizeof(WNDCLASSEX);
@@ -344,7 +344,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 
         case WM_SIZE:
    		    if (gIsWindowMaximized && gSetVideoToWindow)
+                {
                 MoveVideoWindow();
+                return(0);
+                }
             break;
 
         case WM_HSCROLL:
@@ -363,65 +366,66 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             break;
 
         case WM_TIMER:
-            {
-            char szString[264];
-            char szString2[264];
-            lstrcpy(szString,"");
-            if ((wParam==1) && (gState==StateRecord))
+            if (!(gIsWindowMaximized && gSetVideoToWindow && gFullscreen))
                 {
-                __int64 val=0;
-                HRESULT hr=GetCaptureFileSize(&val);
-                if (SUCCEEDED(hr))
+                char szString[264];
+                char szString2[264];
+                lstrcpy(szString,"");
+                if ((wParam==1) && (gState==StateRecord))
                     {
-                    val=val/(1024*1024);
-                    ltoa((long)val, szString, 10);
-                    lstrcat(szString," MByte");
+                    __int64 val=0;
+                    HRESULT hr=GetCaptureFileSize(&val);
+                    if (SUCCEEDED(hr))
+                        {
+                        val=val/(1024*1024);
+                        ltoa((long)val, szString, 10);
+                        lstrcat(szString," MByte");
+                        }
                     }
-                }
-            SetDlgItemText(ghWndApp,IDC_CAPFILESIZE, szString);
+                SetDlgItemText(ghWndApp,IDC_CAPFILESIZE, szString);
 
-            lstrcpy(szString,"0");
-            if ((wParam==1) && ((gState==StateRecord)||(gState==StatePreview)))
-                {
-                __int64 val=0;
-                HRESULT hr=GetResyncCount(&val);
-                if (SUCCEEDED(hr))
+                lstrcpy(szString,"0");
+                if ((wParam==1) && ((gState==StateRecord)||(gState==StatePreview)))
                     {
-                    val=val/(1024*1024);
-                    ltoa((long)val, szString, 10);
+                    __int64 val=0;
+                    HRESULT hr=GetResyncCount(&val);
+                    if (SUCCEEDED(hr))
+                        {
+                        val=val/(1024*1024);
+                        ltoa((long)val, szString, 10);
+                        }
                     }
-                }
-            SetDlgItemText(ghWndApp,IDC_RESYNCCOUNT, szString);
+                SetDlgItemText(ghWndApp,IDC_RESYNCCOUNT, szString);
 
-            lstrcpy(szString,"0 kBit/s");
-            lstrcpy(szString2,"0 kBit/s");
-            if ((wParam==1) && ((gState==StateRecord)||(gState==StatePreview)))
-                {
-                __int64 val =0;
-                __int64 val2=0;
-                HRESULT hr=GetCurrentBitrates(&val, &val2);
-                if (SUCCEEDED(hr))
+                lstrcpy(szString,"0 kBit/s");
+                lstrcpy(szString2,"0 kBit/s");
+                if ((wParam==1) && ((gState==StateRecord)||(gState==StatePreview)))
                     {
-                    gFilteredAudioBitrate=(gFilteredAudioBitrate*8+val*2)/10;
-                    gFilteredVideoBitrate=(gFilteredVideoBitrate*8+val2*2)/10;
+                    __int64 val =0;
+                    __int64 val2=0;
+                    HRESULT hr=GetCurrentBitrates(&val, &val2);
+                    if (SUCCEEDED(hr))
+                        {
+                        gFilteredAudioBitrate=(gFilteredAudioBitrate*8+val*2)/10;
+                        gFilteredVideoBitrate=(gFilteredVideoBitrate*8+val2*2)/10;
 
-                    val=gFilteredAudioBitrate/(1024);
-                    ltoa((long)val, szString, 10);
-                    lstrcat(szString," kBit/s");
+                        val=gFilteredAudioBitrate/(1024);
+                        ltoa((long)val, szString, 10);
+                        lstrcat(szString," kBit/s");
 
-                    val2=gFilteredVideoBitrate/(1024);
-                    ltoa((long)val2, szString2, 10);
-                    lstrcat(szString2," kBit/s");
+                        val2=gFilteredVideoBitrate/(1024);
+                        ltoa((long)val2, szString2, 10);
+                        lstrcat(szString2," kBit/s");
+                        }
                     }
+                else
+                    {
+                    gFilteredVideoBitrate=0;
+                    gFilteredAudioBitrate=0;
+                    }
+                SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, szString);
+                SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, szString2);
                 }
-            else
-                {
-                gFilteredVideoBitrate=0;
-                gFilteredAudioBitrate=0;
-                }
-            SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, szString);
-            SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, szString2);
-            }
             break;
 
 		case WM_CLOSE:

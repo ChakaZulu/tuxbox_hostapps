@@ -166,7 +166,7 @@ void DisplaySplash(void)
         SelectObject(hdc, hfontSplash);
         SetTextColor(hdc,0x505050);
         SetBkMode(hdc,TRANSPARENT);
-        TextOut(hdc,250,258,REVISION,lstrlen(REVISION));
+        TextOut(hdc,240,258,REVISION,lstrlen(REVISION));
 	    SelectObject(hdc, ghfontApp);
         DeleteObject(hfontSplash);
 
@@ -260,21 +260,19 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
             if (gAlwaysOnTop)
                 style=HWND_TOPMOST;
 
-            SetParent(hWnd,hWndParent);
-            SetWindowPos(hWndParent, style, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
-            SetWindowPos(hWnd,HWND_TOP,
+            SetWindowPos(hWndParent, style, 0, 0, glAppWidth, glAppHeight, SWP_NOMOVE);
+
+            SetWindowPos(hWnd,NULL,
                         restore->left, 
                         restore->top , 
                         pWidth(restore), 
                         pHeight(restore),
-                        SWP_SHOWWINDOW);
+                        SWP_SHOWWINDOW|SWP_NOZORDER);
             CopyRect(&rc, restore);
             rc.top=0;
             rc.left=0;
             hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
 		    gFullscreen=FALSE;
-
-            SetWindowPos(ghWndApp,HWND_TOP,0 ,0, glAppWidth, glAppHeight, SWP_NOMOVE);
             InvalidateRect(ghWndApp, NULL, TRUE);
             UpdateWindow(ghWndApp);
             }
@@ -285,8 +283,8 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
 
 HRESULT MoveVideoWindow()
 { 
-    RECT rc;
-    DWORD val;
+    RECT rc={0,0,0,0};
+    DWORD val=0;
 
     if (!gFullscreen)
         return(NOERROR);
