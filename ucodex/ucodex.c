@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.3 2002/09/03 18:02:50 obi Exp $
+ * $Id: ucodex.c,v 1.4 2002/09/03 22:50:07 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -54,6 +54,7 @@ struct ucode_type_s types[] = {
 	},{
 		"avia600", "\x43\x33\x55\x58\x01", 832, 16,
 		{
+			{"avia600vb016", "18Nov99/1355b016", 138906, "\x6f\xd4\x53\x84\xd7\x05\x28\x9a\x2f\xc8\xf2\x12\xb2\x85\x5f\x5c"},
 			{"avia600vb017", "28Jan00/1750b017", 126846, "\xda\x49\x21\x46\xba\x7e\x17\x78\x83\xfe\xad\xaa\x0c\xf8\x9a\xa5"},
 			{"avia600vb018", "28Apr00/1514b018", 126878, "\xc3\x1d\xc5\x70\xcf\x94\x1a\xfb\x6f\xc4\x81\x3f\x56\x1a\xa3\x78"},
 			{"avia600vb022", "28Nov00/1412b022", 128214, "\x6a\x74\x8f\xb2\x80\x00\x73\x8c\xaf\xeb\x9e\x27\x44\x3a\xc6\x23"},
