@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------------------------
 
-This is version 0.0.0.14 of TuxVision/Capture/Render 
-Date: 30.06 2002
+This is version 0.0.0.16 of TuxVision/Capture/Render 
+Date: 08.07 2002
 
 This text describes usage of application and direct show filters running on a win32 OS
 which are written to give you preview, capture and playback capabilities for a lan
@@ -59,6 +59,21 @@ TODO:
 
 -------------------------------------------------------------------------------------------------
 
+*** WinAmp - Plugin ***
+
+Installing the WinAmp Output plugin should be quite simple.
+If you already installed WinAmp to its default directory "\Program Files\WinAmp" the exporter
+plugin (out_DBOXII.dll) should be copied to the Plugin directory. If you installed WinAmp to
+a different location or encounter some problems (e.g. you don´t find the output plugin in the 
+options/preferences/Plug-ins/output section (it is called BSE DBOXII OutputPlugin Rev.x.x) you
+should locate your TuxVision install directory and copy the out_DBOXII.dll manually to the plugin
+directory.
+
+Once installation is done open options/preferences/Plug-ins/output select the DBOXII plugin and
+hit configure to setup your user specific parameters (like IP-Address).
+
+-------------------------------------------------------------------------------------------------
+
 *** CAPTURE ***
 
 TODO:
@@ -108,6 +123,9 @@ TODO:
 - implement all the needed interfaces that a REAL Render filter should expose
 - pray for a nice guy to improve GTX playback performance (resyncing ...)
 - prevent using PS and V_ES/A_ES pins at the same time
+
+Rev.0.0.0.16: 
+- Support for WinAmp Audiorendering implemented
 
 
 Neutrino from 07.04.2002 with the actual versions of GTX_DVR.O and ENX_DVR.O
