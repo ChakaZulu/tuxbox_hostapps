@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -626,12 +627,14 @@ void  * readstream (class pesstream & ss) {
 		}
 #endif
 
-		struct sched_param sp;
+/*		struct sched_param sp;
 			
 		sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
 		if ((r = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))) {
 			fprintf(stderr, "WARNING: cannot enable real-time scheduling for read thread %d\n",r);
 		}	
+*/
+		nice(-10);
 	}
 	if (ss.m_log) {
 		char a_logname[10];

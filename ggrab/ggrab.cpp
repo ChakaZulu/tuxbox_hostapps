@@ -101,11 +101,16 @@ int main( int argc, char *argv[] ) {
 			// Parameter obsolete	
 		} else if (!strcmp("-s", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need max size in MB argument for -s\n"); return -1; }
-			if (atoi(argv[i]) < 5) {
-				fprintf(stderr,"min file size 5 MB ignoring -s\n");
+			if (atoi(argv[i]) == 0) {
+				max_file_size = 1024LL*1024LL*1024LL*1024LL;
 			}
-			else {
-				max_file_size = 1024LL*1024LL*((long long)atoi(argv[i]));
+			else {		
+				if (atoi(argv[i]) < 5) {
+					fprintf(stderr,"min file size 5 MB ignoring -s\n");
+				}
+				else {
+					max_file_size = 1024LL*1024LL*((long long)atoi(argv[i]));
+				}
 			}
 		
 		} else if (!strcmp("-port", argv[i])) {
@@ -172,7 +177,7 @@ int main( int argc, char *argv[] ) {
 					"-o -           output to stdout\n"
 					"-e <extension> extension of output files [vob]\n"
 					"-m <minutes>   number of minutes to record [24 h]\n"
-					"-s <megabyte>  maximum size per recorded file [2000]\n"
+					"-s <megabyte>  maximum size per recorded file [2000] 0 = no break\n"
 					"-q             be quiet\n"
 					"\n"
 					"------- advanced options: ----------\n"

@@ -28,7 +28,7 @@ double pes_pts(const unsigned char * p) {
 	res |= (p[13] & 0xfe) >> 1;
 	
 	ret += res;	
-	return res;
+	return ret;
 }
 
 

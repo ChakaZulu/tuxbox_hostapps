@@ -193,11 +193,19 @@ int main(int argc, char * argv[])
 						{
 							p_act = recdata.epgtitle;
 							do {
-								p_act +=  strcspn(p_act, "/ \"%&-\t`'~<>!,:;?^°$\\=*#@¤|µ");
+								p_act +=  strcspn(p_act, "/ \"%&-\t`'~<>!,:;?^°$\\=*#@¤|µöäüÖÄÜß");
 								if (*p_act) {
 									*p_act++ = '_';
 								}
 							} while (*p_act);
+
+							p_act = recdata.epgtitle;
+							do {
+								if ((unsigned char) (*p_act) > 128) {
+									*p_act = '_';
+								}
+							} while (*p_act++);
+							
 							strcat(a_filename, recdata.epgtitle);
 							strcat(a_filename, "_");
 						}
