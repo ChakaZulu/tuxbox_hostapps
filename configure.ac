@@ -17,5 +17,6 @@ AC_OUTPUT([
 Makefile
 bmp2raw/Makefile
 grab/Makefile
+stream/Makefile
 ])
 

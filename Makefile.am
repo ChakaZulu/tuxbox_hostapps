@@ -1,4 +1,4 @@
 AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = \
-	bmp2raw grab
+	bmp2raw grab stream
