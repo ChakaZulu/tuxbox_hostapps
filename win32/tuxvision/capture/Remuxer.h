@@ -51,6 +51,9 @@
 #define STREAM_MASK_VIDEO	0xF0
 #define STREAM_REST_VIDEO	0xE0
 
+extern int     m_NewAudioSegmentDetected;
+extern HANDLE  m_NewAudioSegmentEvent;
+
 // #######################################################
 // returns a PTS difference (l-r)
 inline double pts_diff(double l, double r) {

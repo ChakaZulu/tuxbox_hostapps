@@ -33,6 +33,9 @@
 #include "grab.h" 
 
 #pragma warning (disable : 4244)
+int     m_NewAudioSegmentDetected=0;
+HANDLE  m_NewAudioSegmentEvent=NULL;
+
 
 // #################################################################################
 
@@ -299,8 +302,12 @@ int Remuxer::create_audio_pes(unsigned char * orig_pes, double duration) {
 // ##################################################################
 
 
-bool Remuxer::audio_packet_wanted(unsigned char * pes) {
+bool Remuxer::audio_packet_wanted(unsigned char * pes) 
+{
 	
+    if ( (pes[3]>=STREAM_REST_AUDIO) && (pes[3]<=(STREAM_REST_AUDIO+0x1F)) )
+        pes[3]=0xC0;
+
 	if (wanted_audio_stream == 0) {
 		// make a guess: just take the first type of audio stream we find...
 		
@@ -316,15 +323,13 @@ bool Remuxer::audio_packet_wanted(unsigned char * pes) {
 		}
 	}
 	
-	if (pes[3] == wanted_audio_stream) {
+	if (pes[3] == wanted_audio_stream) 
+        {
 		return true;
-	}
+    	}
 
 	// PES packet did not belong to the stream we wanted..
-
 	return false;
-		
-
 }
 
 // ##################################################################
@@ -1587,6 +1592,16 @@ int Remuxer::write_mpp(FILE * mppfile) {
 			        }
 			    }
     		}
+		else
+    		{
+			if (orig_es_size >= 4 && orig_es_data[0] == 0xff && orig_es_data[1] == 0xfd && orig_es_data[2] == 0xa0 ) 
+                {
+				dprintf ("MPEG_Audio sync found !");
+                m_NewAudioSegmentDetected=TRUE;
+                if (m_NewAudioSegmentEvent!=NULL)
+                    SetEvent(m_NewAudioSegmentEvent);
+		    	}
+	    	}
 				
 		if (mpp_started)
             {

@@ -36,7 +36,7 @@
 #include "grab.h"
 
 //!!BS (n/t)httpd is really a bloody bastard ...
-#if 0
+#if 1
     #define _CRLFCRLF_ "\r\n\r\n"
     #define _CRLF_     "\r\n"
 #else
@@ -109,7 +109,7 @@ HRESULT ReadCompleteDataFromSocket(SOCKET s)
             {
             char rbuffer[1024];
             ZeroMemory(rbuffer,sizeof(rbuffer));
-            ret=recv(s,rbuffer,sizeof(rbuffer),0);
+            ret=recv(s,rbuffer,sizeof(rbuffer)-1,0);
             if (ret>0)
                 {
                 if (!pHTMLCircularBuffer->canWrite(ret))
@@ -325,48 +325,6 @@ char *MYstrstr(char *str, char *token)
 
     return(NULL);
 }
-
-/*
-HRESULT EmptySocket(SOCKET s)
-{
-    #define MAXCLOOP    50
-    int count=MAXCLOOP;
-    int ret=0;
-    unsigned long avail=0;
-// -------------------------------------------------------------------
-    {
-	LINGER ling;
-	ling.l_onoff=1;
-	ling.l_linger=5;
-	setsockopt(s,SOL_SOCKET,SO_LINGER,(LPSTR)&ling,sizeof(ling));
-    }
-
-    GetBufTCP (s, 4096, SO_RCVBUF);
-    
-    while(TRUE)
-        {
-        if ((ret>=0) && (avail>0))
-            {
-            char *rbuffer=(char *)malloc(avail);
-            ret=recv(s,rbuffer,avail,0);
-            free(rbuffer);
-            count=MAXCLOOP;
-            }
-        else 
-            {
-            count--;
-            Sleep(10);
-            }
-
-        ret=ioctlsocket(s, FIONREAD, &avail);
-
-        if ((ret<0) || (count<0))
-            break;
-        }
-// -------------------------------------------------------------------
-    return(ret);
-}
-*/
 
 int OpenSocket(const char *name, unsigned short port)
 {

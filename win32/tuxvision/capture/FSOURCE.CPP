@@ -387,7 +387,8 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
     m_VPid=0;
     m_APid=0;
-
+    m_NewAudioSegmentDetected=0;
+    m_NewAudioSegmentEvent   =NULL;
 
     LoadInternalData();
     val=-1;
@@ -520,6 +521,17 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
 
         case CMD_SKIPPREPARATION:
             m_SkipPreparation=(int)data1;
+            hr=NOERROR;
+            break;
+
+        case CMD_GETNEWAUDIOSEG:
+            m_NewAudioSegmentDetected=(int)data1;
+            hr=NOERROR;
+            break;
+
+        case CMD_SETNEWAUDIOEVENT:
+            m_NewAudioSegmentEvent=(HANDLE)data1;
+            hr=NOERROR;
             break;
 
         }
@@ -725,12 +737,21 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                 return(E_POINTER);
             *data1=m_APid;
             *data2=m_VPid;
+            hr=NOERROR;
             break;
         
         case CMD_SKIPPREPARATION:
             if (data1==NULL)
                 return(E_POINTER);
             *data1=m_SkipPreparation;
+            hr=NOERROR;
+            break;
+
+        case CMD_GETNEWAUDIOSEG:
+            if (data1==NULL)
+                return(E_POINTER);
+            *data1=m_NewAudioSegmentDetected;
+            hr=NOERROR;
             break;
 
         }
@@ -749,6 +770,7 @@ STDMETHODIMP CDBOXIICapture::Stop()
 
     m_VPid=0;
     m_APid=0;
+    m_NewAudioSegmentDetected=0;
 
     return(hr);
 }
@@ -762,6 +784,8 @@ STDMETHODIMP CDBOXIICapture::Pause()
         {
         int vpid=0;
         int apid=0;
+        
+        m_NewAudioSegmentDetected=0;
 
         m_StartSucceeded=TRUE;
 
@@ -1275,6 +1299,15 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                         return(NOERROR);
                         }
                     }
+                {
+                LONGLONG ts=0, te=0;
+                LONGLONG ms=0, me=0;
+                ts=CRemuxer->m_framePTS;
+                te=ts;
+                pms->SetTime(&ts,&te);
+                pms->SetMediaTime(&ms, &me);
+                }
+
                 CMultiplexBuffer->Read(0, pData, VIDEO_BUFFER_SIZE);
 			    pms->SetActualDataLength(VIDEO_BUFFER_SIZE);
                 pms->SetSyncPoint(TRUE);
@@ -1296,6 +1329,16 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
                         return(NOERROR);
                         }
                     }
+
+                {
+                LONGLONG ts=0, te=0;
+                LONGLONG ms=0, me=0;
+                ts=CRemuxer->m_framePTS;
+                te=ts;
+                pms->SetTime(&ts,&te);
+                pms->SetMediaTime(&ms, &me);
+                }
+
                 CMultiplexBuffer->Read(0, pData, AUDIO_BUFFER_SIZE);
 			    pms->SetActualDataLength(AUDIO_BUFFER_SIZE);
                 pms->SetSyncPoint(TRUE);

@@ -44,23 +44,25 @@ STDMETHOD(getParameter) (THIS_ __int64 command, __int64 *data1, __int64 *data2) 
 
 // ----------------------------------------------------------------------------
 
-#define CMD_IPADDRESS       1   // set/get char* in data1, pass IP (or resolvable name)
-#define CMD_LOGIN           2   // set/get char* in data1, usually default "root" should be fine
-#define CMD_PASSWORD        3   // set/get char* in data1, usually default "dbox2" should be fine
-#define CMD_STOPPLAYBACK    4   // set/get val in data1 (0: playback is NOT stopped during capture, 1: playback IS stopped)
-#define CMD_STATUS          5   //     get val in data1 (0: box can not be reached, 1: box connection is ok)
-#define CMD_GETCHANNELLIST  6   //     get char* in data1, *__int64 itemcount, if itemcount==-1 get is triggered and totalcount is passed back !
-#define CMD_SETCHANNEL      7   // set     data1 contains ChannelID to set
-#define CMD_GETCHANNEL      8   //     get *__int64 in data1 contains current ChannelID
-#define CMD_GETCHANNELINFO  9   //     get *__int64 in data2 contains ChannelInfo string
-#define CMD_GETTIME         10
-#define CMD_GETDATE         11
-#define CMD_GETSYNCCOUNT    12  //     get *__int64 in data1 contains current resyc counter
-#define CMD_GETASPECTRATIO  13  //     get *__int64 in data1 contains current aspect ratio, 1: for 4/3, 0: otherwise
-#define CMD_GETBITRATE      14  //     get *__int64 in data1, data2 contains current audio,video bitrate in bit per second
-#define CMD_GETWIDTHEIGHT   15  //     get *__int64 in data1 width and in data2 height
-#define CMD_GETAUDIOFREQ    16  //     get *__int64 in data1 audio sample frequency at the start of the streaming
-#define CMD_GETEPG          17  //     get *__int64 in data2 contains EPGInfo string
-#define CMD_SKIPPREPARATION 18  // set/get *__int64 in data1 TRUE/FALSE to skip DBox Preparation or not
-#define CMD_AUDIOVIDEOPID   19  //     get *__int64 in data1 Audio PID and in data2 Video PID, set lower 32 Bit Audio, upper 32 Bit Video PID (default:0,0 for automatic selection)
-#define CMD_RESTARTNHTTPD   20  // set (data ignored)        simply triggers restart of nhttpd (the pure evil ...)
+#define CMD_IPADDRESS           1   // set/get char* in data1, pass IP (or resolvable name)
+#define CMD_LOGIN               2   // set/get char* in data1, usually default "root" should be fine
+#define CMD_PASSWORD            3   // set/get char* in data1, usually default "dbox2" should be fine
+#define CMD_STOPPLAYBACK        4   // set/get val in data1 (0: playback is NOT stopped during capture, 1: playback IS stopped)
+#define CMD_STATUS              5   //     get val in data1 (0: box can not be reached, 1: box connection is ok)
+#define CMD_GETCHANNELLIST      6   //     get char* in data1, *__int64 itemcount, if itemcount==-1 get is triggered and totalcount is passed back !
+#define CMD_SETCHANNEL          7   // set     data1 contains ChannelID to set
+#define CMD_GETCHANNEL          8   //     get *__int64 in data1 contains current ChannelID
+#define CMD_GETCHANNELINFO      9   //     get *__int64 in data2 contains ChannelInfo string
+#define CMD_GETTIME             10
+#define CMD_GETDATE             11
+#define CMD_GETSYNCCOUNT        12  //     get *__int64 in data1 contains current resyc counter
+#define CMD_GETASPECTRATIO      13  //     get *__int64 in data1 contains current aspect ratio, 1: for 4/3, 0: otherwise
+#define CMD_GETBITRATE          14  //     get *__int64 in data1, data2 contains current audio,video bitrate in bit per second
+#define CMD_GETWIDTHEIGHT       15  //     get *__int64 in data1 width and in data2 height
+#define CMD_GETAUDIOFREQ        16  //     get *__int64 in data1 audio sample frequency at the start of the streaming
+#define CMD_GETEPG              17  //     get *__int64 in data2 contains EPGInfo string
+#define CMD_SKIPPREPARATION     18  // set/get *__int64 in data1 TRUE/FALSE to skip DBox Preparation or not
+#define CMD_AUDIOVIDEOPID       19  //     get *__int64 in data1 Audio PID and in data2 Video PID, set lower 32 Bit Audio, upper 32 Bit Video PID (default:0,0 for automatic selection)
+#define CMD_RESTARTNHTTPD       20  // set (data ignored)        simply triggers restart of nhttpd (the pure evil ...)
+#define CMD_GETNEWAUDIOSEG      21  // set/get *__int64 in data1 TRUE signals new audio segment detected
+#define CMD_SETNEWAUDIOEVENT    22  // set      __int64 in data1 sets the event handle for new AudioSegments
