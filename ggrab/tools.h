@@ -1,8 +1,10 @@
-#define MAX_PP_LEN	2048          // Program Packet Size
+#define MAX_PP_LEN	2048			// Program Packet Size
 #define MPLEX_RATE	10080000     
-#define VIDEO_FORERUN 	18000         // Video Vorlauf in 90kHz
-#define AUDIO_FORERUN 	4500          // Audio Vorlauf in 90 kHz
-#define UDPBASE		30000	      // UDP Base Port
+#define VIDEO_FORERUN 	18000			// Video Vorlauf in 90kHz
+#define AUDIO_FORERUN 	4500			// Audio Vorlauf in 90 kHz
+#define UDPBASE		30000	      		// UDP Base Port
+#define UDP_MSG_LEN     65536			// UDP Message-Laenge
+#define TIMEOUT_QUEUE	3
 
 extern bool gcore;
 extern bool gloop;

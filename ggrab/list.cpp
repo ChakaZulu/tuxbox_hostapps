@@ -44,7 +44,7 @@ void * m_fill_video (void * p_arg) {
 		pthread_mutex_lock (& (p_this->m_mutexlock));
 		
 		if (p_this->m_actcount == p_this->m_maxcount) {
-			timeout.tv_sec = time(0) + 5;
+			timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 			if (pthread_cond_timedwait(& (p_this->m_condreadwait), & (p_this->m_mutexlock), & timeout) == ETIMEDOUT) {
 				errexit ("m_fill_video: timeout waiting with all buffers filled");
 			}
@@ -117,7 +117,7 @@ void  * m_fill_audio (void * p_arg) {
 		pthread_mutex_lock (& (p_this->m_mutexlock));
 		
 		if (p_this->m_actcount == p_this->m_maxcount) {
-			timeout.tv_sec = time(0) + 5;
+			timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 			if (pthread_cond_timedwait(& (p_this->m_condreadwait), & (p_this->m_mutexlock), & timeout) == ETIMEDOUT) {
 				errexit ("m_fill_audio: timeout waiting with all buffers filled");
 			}
@@ -252,7 +252,7 @@ xlist::get_elem (void) {
 	
 	pthread_mutex_lock (& m_mutexlock);  
 	while (m_actcount == 0) {
-		timeout.tv_sec = time(0) + 5;
+		timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 		if (pthread_cond_timedwait(& m_condreadwait, & m_mutexlock, & timeout) == ETIMEDOUT) {
 			errexit ("xlist::getelem timeout wait for data");
 		}
@@ -268,7 +268,7 @@ xlist::sid(void) {
 	static struct timespec timeout;
 	pthread_mutex_lock (& m_mutexlock);  
 	while (m_actcount == 0) {
-		timeout.tv_sec = time(0) + 5;
+		timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 		if (pthread_cond_timedwait(& m_condreadwait, & m_mutexlock, & timeout) == ETIMEDOUT) {
 			errexit ("xlist::sid: timeout wait for data");
 		}

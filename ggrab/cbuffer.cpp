@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include "cbuffer.h"
+#include "tools.h"
 
 int	gpadding;
 
@@ -192,7 +193,7 @@ CBUFPTR CBuffer::SearchStreamId (CBUFPTR ptr, int len, unsigned char pattern, un
 		}
 		
 		if (!found && len) {
-			timeout.tv_sec = time(0) + 5;
+			timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 			if (pthread_cond_timedwait(& m_condreadwait, & m_mutexlock, & timeout) == ETIMEDOUT) {
 				errexit ("SearchStreamId: timeout wait for data");
 			}
@@ -224,7 +225,7 @@ int CBuffer::CopyBuffer(CBUFPTR ptr, unsigned char * p_buf, int len)  {
 	}
 
 	while ((ptr+len) > m_lIn) {
-		timeout.tv_sec = time(0) + 5;
+		timeout.tv_sec = time(0) + TIMEOUT_QUEUE;
 		if (pthread_cond_timedwait(& m_condreadwait, & m_mutexlock, & timeout) == ETIMEDOUT) {
 			fprintf (stderr,"ptr:%lld, lIn:%lld, lOut:%lld len:%d\n",ptr,m_lIn,m_lOut,len);
 			errexit ("CopyBuffer: timeout waiting for data");

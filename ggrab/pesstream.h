@@ -6,7 +6,7 @@ void  * readstream (class pesstream & ss);
 class pesstream {
 
 	public:
-		pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udpport, bool log, bool debug);
+		pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udpport, bool log, bool debug, bool realtime);
 		~pesstream(void);
 		int get_sid (void);
 		void set_sid (int sid);
@@ -43,6 +43,7 @@ class pesstream {
 	
 		bool			m_first;
 		bool			m_log;
+		bool			m_realtime;
 
 		PTS			m_correct;
 

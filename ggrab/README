@@ -96,6 +96,7 @@ Optionen ggrab
 -m <minuten>   			Anzahl Minuten Aufzeichnungsdauer Default: 24 h
 -s <megabyte>  			Maximale Dateigröße, Default: 2000 MB
 -q             			Keine Ausgaben
+-rt           			Priorität auf Real-Time-Scheduling setzen 
 -pes           			Ausgabe in mehreren ungemuxten PES-Dateien (z.B. für Clipmode) 
 -raw           			Ausgabe von MPEG audio Frames, direkt in Playern abspielbar
 -log           			schreibt die empfangenen Streams unverändert in Log-Datei log.x Nummer Stream

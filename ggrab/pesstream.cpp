@@ -20,7 +20,7 @@
 #include "pesstream.h"
 
 
-pesstream::pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udpport, bool logging, bool debug) {
+pesstream::pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udpport, bool logging, bool debug, bool realtime) {
 
 	static struct 	timezone tz;
 	int 		bufsiz;
@@ -41,6 +41,8 @@ pesstream::pesstream (S_TYPE stype, char * p_boxname, int pid, int port, int udp
 	m_act_pts	= 0;
 	m_xaudio	= 0;
 	m_padding	= 0;
+	m_realtime	= realtime;
+	
 
 
 	if (stype == S_AUDIO) {
@@ -615,20 +617,22 @@ void  * readstream (class pesstream & ss) {
 	int 		pnr = 0;
 	FILE * 		fp;
 	
-	unsigned char * a_buf = new unsigned char[1500];
+	unsigned char * a_buf = new unsigned char[UDP_MSG_LEN];
 
+	if (ss.m_realtime) {
 #ifdef __linux__ 
-	if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
-		fprintf(stderr, "WARNING: unable to lock memory. Swapping may disturb the read thread\n");			
-	}
+		if (mlockall(MCL_CURRENT | MCL_FUTURE)) {
+			fprintf(stderr, "WARNING: unable to lock memory. Swapping may disturb the read thread\n");			
+		}
 #endif
-		
-	struct sched_param sp;
+
+		struct sched_param sp;
 			
-	sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	if ((r = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))) {
-		fprintf(stderr, "WARNING: cannot enable real-time scheduling for read thread %d\n",r);
-	}	
+		sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+		if ((r = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))) {
+			fprintf(stderr, "WARNING: cannot enable real-time scheduling for read thread %d\n",r);
+		}	
+	}
 	if (ss.m_log) {
 		char a_logname[10];
 		sprintf(a_logname, "log.%d", ss.m_nr);
@@ -643,7 +647,7 @@ void  * readstream (class pesstream & ss) {
 
 		if (ss.m_fd_udp) {
 			if (!rest) {
-				if (len > 1500) {
+				if (len > UDP_MSG_LEN) {
 					r = recv(ss.m_fd_udp, pBuf, len, 0);
 					if (r > 0) {
 						r -=4;
@@ -651,7 +655,7 @@ void  * readstream (class pesstream & ss) {
 					ss.m_packloss = pnr++ - ntohl(*((int *) (pBuf + r)));
 				}
 				else {
-					rest = recv(ss.m_fd_udp, a_buf, 1500, 0);
+					rest = recv(ss.m_fd_udp, a_buf, UDP_MSG_LEN, 0);
 					if (rest > 0) {
 						rest -=4;
 					}

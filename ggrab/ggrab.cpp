@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-program: ggrab version 0.21 by Peter Menzebach <pm-ggrab at menzebach.de>
+program: ggrab version 0.22 by Peter Menzebach <pm-ggrab at menzebach.de>
 
 */
 
@@ -41,6 +41,7 @@ bool	gflag_new_file;
 
 char    ga_basename[256] = "vts_01_";
 char	ga_ext[20] = "vob";
+bool	g_realtime = false;
 
 // Default parameters
 bool	 gnosectionsd	 = false;
@@ -136,8 +137,8 @@ int main( int argc, char *argv[] ) {
 			dbox2name = argv[i];
 		} else if (!strcmp("-nonfos", argv[i])) {
 			// obsolete	
-		} else if (!strcmp("-nort", argv[i])) {
-			// obsolete	
+		} else if (!strcmp("-rt", argv[i])) {
+			g_realtime = true;	
 		} else if (!strcmp("-log", argv[i])) {
 			logging = true;
 		} else if (!strcmp("-nos", argv[i])) {
@@ -156,7 +157,7 @@ int main( int argc, char *argv[] ) {
 			}
 		} else if (!strcmp("-h", argv[i])) {
 
-			fprintf(stderr, "ggrab version 0.21, Copyright (C) 2002 Peter Menzebach\n"
+			fprintf(stderr, "ggrab version 0.22, Copyright (C) 2002 Peter Menzebach\n"
 			                "ggrab comes with ABSOLUTELY NO WARRANTY; This is free software,\n"
 			                "and you are welcome to redistribute it under the conditions of the\n"
 			                "GNU Public License, see www.gnu.org\n"
@@ -184,6 +185,7 @@ int main( int argc, char *argv[] ) {
 					"-debug         generate debug information\n"
 					"-loop          Looping output files basename1/2\n"
 					"-udp [uport]   UDP Streaming, (experimental)[30000]\n"
+					"-rt            Real Time Scheduling for read threads\n"
 					"\n"
 					"------- handled signals: -----------\n"
 					"SIGUSR2        force write to next file\n"
@@ -390,7 +392,7 @@ void generate_program_stream (int a_pid[], int anz_pids, char * p_boxname, int p
 
 	toggle_sectionsd(p_boxname);
 
-	p_st[0] = new class pesstream (S_VIDEO, p_boxname, a_pid[0],  port, udpbase + 0, logging, debug);
+	p_st[0] = new class pesstream (S_VIDEO, p_boxname, a_pid[0],  port, udpbase + 0, logging, debug, g_realtime);
 	p_pp[0] = new class propack;
 
 	startpts = p_st[0]->get_start_pts () - VIDEO_FORERUN - 1;	
@@ -407,7 +409,7 @@ void generate_program_stream (int a_pid[], int anz_pids, char * p_boxname, int p
 	p_act += 15;
 	
 	for (i = 1; i < anz_pids; i++) {
-		p_st[i] = new class pesstream (S_AUDIO, p_boxname, a_pid[i],  port, udpbase + i, logging, debug);
+		p_st[i] = new class pesstream (S_AUDIO, p_boxname, a_pid[i],  port, udpbase + i, logging, debug, g_realtime);
 		p_pp[i] = new class propack;
 
 		if (p_st[i]->get_sid() != 0xbd) {
@@ -525,7 +527,7 @@ void generate_nomux_streams (int a_pid[], int anz_pids, char * p_boxname, int po
 
 	sid = 0xc0;
 	for (i = 0; i < anz_pids; i++) {
-		p_st[i] = new class pesstream (S_UNDEF, p_boxname, a_pid[i],  port, udpbase + i, logging, debug);
+		p_st[i] = new class pesstream (S_UNDEF, p_boxname, a_pid[i],  port, udpbase + i, logging, debug, g_realtime);
 		p_basename[i] = new char[256];
 		sprintf(p_basename[i], "%ss%d_p", ga_basename, i);
 		seq[i] 		 = 0;
@@ -615,7 +617,7 @@ void generate_raw_audio (int a_pid[], int anz_pids, char * p_boxname, int port, 
 	
 
 	for (i = 0; i < anz_pids; i++) {
-		p_st[i] = new class pesstream (S_AUDIO, p_boxname, a_pid[i],  port, udpbase + i, logging, debug);
+		p_st[i] = new class pesstream (S_AUDIO, p_boxname, a_pid[i],  port, udpbase + i, logging, debug, g_realtime);
 		p_basename[i] = new char[256];
 		sprintf(p_basename[i], "%ss%d_p", ga_basename, i);
 		seq[i] 		 = 0;
