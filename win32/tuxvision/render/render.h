@@ -22,7 +22,7 @@
 #include "filter.h"
 
 #define VIDEO_BUFFER_SIZE       (32*1024)
-#define AUDIO_BUFFER_SIZE       (768*16)  //(8*1024)
+#define AUDIO_BUFFER_SIZE       (768*16)  
 #define BUFFER_COUNT                 64
 
 extern CDBOXIIRender  *gpFilter;

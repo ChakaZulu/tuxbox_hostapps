@@ -24,26 +24,26 @@
 #define __TCPSERVER_H__
 
 typedef enum CVCRStates 
-{
+    {
     CMD_VCR_UNKNOWN     = 0,
     CMD_VCR_RECORD      = 1,
     CMD_VCR_STOP        = 2,
     CMD_VCR_PAUSE       = 3,
     CMD_VCR_RESUME      = 4,
     CMD_VCR_AVAILABLE   = 5
-}CVCRCommand;
+    }CVCRCommand;
 
 enum CVCRDevices
-{
+    {
     DEVICE_VCR,
     DEVICE_SERVER
-};
+    };
 
 HRESULT HTTPInit(void);
 HRESULT HTTPDeInit(void);
 HRESULT HTTPRun(void);
 HRESULT HTTPStop(void);
 
-HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID);
+HRESULT AnalyzeXMLRequest(char *szXML, RecordingData   *rdata);
 
 #endif

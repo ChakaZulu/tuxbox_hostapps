@@ -396,7 +396,7 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
     HRESULT hr=NOERROR;
     int ret=0;
 
-    dprintf("SetChannel from %s:%d ", name, (int)port);
+    dprintf("SetChannel from %s:%d to channel:%ld", name, (int)port, (int)channel);
     	
 	int sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
@@ -439,7 +439,7 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p1!=NULL)
                     {
-                    if (lstrcmp(p1,"ok")==0)
+                    if (lstrcmpi(p1,"ok")==0)
                         {
                         hr=NOERROR;
                         }

@@ -379,6 +379,10 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
     m_StartSucceeded=TRUE;
 
+    m_VPid=0;
+    m_APid=0;
+
+
     LoadInternalData();
     val=-1;
 
@@ -404,7 +408,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     {
     HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
     if (SUCCEEDED(hr))
-        hr=ExecuteCommand("killall -9 nhttpd;killall -9 inetd;sleep 1;/sbin/inetd/;sleep 3;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+        hr=ExecuteCommand("killall -HUP nhttpd;killall -9 inetd;sleep 2;/bin/nhttpd/;sleep 2;/sbin/inetd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
 //        hr=ExecuteCommand("killall -SIGQUIT nhttpd;sleep 1;kill -SIGQUIT `ps | grep inetd | sed 's/[a-zA-Z]//g'`;sleep 2;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
     }
 #endif
@@ -512,6 +516,13 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
                 hr=ExecuteCommand("killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             break;
             }
+
+        case CMD_AUDIOVIDEOPID:
+            m_VPid=((data1&0xFFFFFFFF00000000)>>32);
+            m_APid=(data1&0x00000000FFFFFFFF);
+            hr=NOERROR;
+            break;
+
         }
 	return(hr);
 }
@@ -710,6 +721,13 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             hr=GetEPGInfo(m_DBOXAddress, m_DBOXHTTPPort, (char*)data1, (char*)data2);
             break;
 
+        case CMD_AUDIOVIDEOPID:
+            if ( (data1==NULL) || (data2==NULL) )
+                return(E_POINTER);
+            *data1=m_APid;
+            *data2=m_VPid;
+            break;
+
         }
 	return(hr);
 }
@@ -723,6 +741,10 @@ STDMETHODIMP CDBOXIICapture::Stop()
     if (m_StartSucceeded)
         ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 0);
 //    hr=ExecuteCommand("killall -9 streampes", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+
+    m_VPid=0;
+    m_APid=0;
+
     return(hr);
 }
 
@@ -756,7 +778,16 @@ STDMETHODIMP CDBOXIICapture::Pause()
         #if USE_DBOX
             {
             char dtxt[264];
-            hr=RetrievePIDs( &vpid, &apid, m_DBOXAddress, m_DBOXHTTPPort);
+
+            if ( (m_VPid!=0) && (m_APid!=0) )
+                {
+                hr=NOERROR;
+                vpid=(int)m_VPid;
+                apid=(int)m_APid;
+                }
+            else
+                hr=RetrievePIDs( &vpid, &apid, m_DBOXAddress, m_DBOXHTTPPort);
+
             if (FAILED(hr))
                 return(E_FAIL);
 

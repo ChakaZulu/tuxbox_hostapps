@@ -61,6 +61,14 @@ extern long         gEnableTCPServer;
 extern long         gHTTPPort;
 extern long         gSTREAMPort;
                     
+typedef struct 
+    {    
+    __int64 cmd; 
+    __int64 onidsid;
+    __int64 apid;
+    __int64 vpid;
+    char    channelname[264];
+    }RecordingData;
 
 #define ID_ALWAYSONTOP  (40000)
 #define ID_FULLSCREEN   (40001)
@@ -87,7 +95,7 @@ HRESULT StopPlayback(HWND hWnd, RecorderState *state);
 
 
 HRESULT SetInput(long input);
-HRESULT SetTVChannel(long channel);
+HRESULT SetTVChannel(HWND hwnd, __int64 channel, __int64 apid, __int64 vpid);
 HRESULT SetTVStandard(long std);
 
 HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag);

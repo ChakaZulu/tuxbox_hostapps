@@ -35,8 +35,8 @@
 
 #include "wsasimpl.h"
 #include "debug.h"
-#include "TCPServer.h"
 #include "TuxVision.h"
+#include "TCPServer.h"
 
 #define HTTP_CONTROL_REQUEST	"/control/?"
 
@@ -71,6 +71,8 @@ SOCKET      gListenSocketSTREAM=INVALID_SOCKET;
 #define TX_PACK_DELAY   2		//1000:modem, 1:network, 2:
 #define TX_PACK_TIMEOUT 60000	//40000
 #define RX_PACK_TIMEOUT 60000	//40000
+
+RecordingData   gRecordingData;
 
 // -----------
 
@@ -147,8 +149,10 @@ void __cdecl CreateSTREAMResponse(void *rs)
     int keepSocketOpen=0;
     __int64 cmd=0;
     __int64 onidsid=0;
+    int apid=0;
+    int vpid=0;
     HRESULT hr=NOERROR;
-    
+
     BYTE InBuffer[MAX_MSG_LENGTH];    // packet buffer
 
 	rSock=(SOCKET)rs;
@@ -172,11 +176,12 @@ void __cdecl CreateSTREAMResponse(void *rs)
 		  return;
 		  }
 
-    hr=AnalyzeXMLRequest((char *)InBuffer, &cmd, &onidsid);
+    hr=AnalyzeXMLRequest((char *)InBuffer, &gRecordingData);
+    
     if (SUCCEEDED(hr))
         {
-        dprintf("Parsing succeeded: CMD:%ld, ONIDSID:%ld", (DWORD)cmd, (DWORD)onidsid);
-        PostMessage(ghWndApp, WM_STREAMNOTIFY, (WPARAM)cmd, (LPARAM)onidsid);
+        dprintf("Parsing succeeded: CMD:%ld, ONIDSID:%ld, APID:%ld, VPID:%ld", (int)gRecordingData.cmd, (int)gRecordingData.onidsid, (int)gRecordingData.apid, (int)gRecordingData.vpid);
+        PostMessage(ghWndApp, WM_STREAMNOTIFY, (WPARAM)&gRecordingData, 0);
         }
 
 /*
@@ -896,17 +901,27 @@ char* ExtractQuotedString(char *szStr, char *szResult, int ptrToEnd)
     return(NULL);
 }
 
-HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID)
+HRESULT AnalyzeXMLRequest(char *szXML, RecordingData   *rdata)
+//__int64 *iCMD, __int64 *iONIDSID, int *apid, int *vpid)
 {
     char *p1=NULL;
     char *p2=NULL;
     char *p3=NULL;
-    char command[264]="";
-    char onidsid[264]="";
+    char szcommand[264]="";
+    char szonidsid[264]="";
+    char szapid[264]="";
+    char szvpid[264]="";
+    char szchannelname[264]="";
     HRESULT hr=E_FAIL;
 
-    if ( (szXML==NULL) || (iCMD==NULL) || (iONIDSID==NULL) )
+    if ( (szXML==NULL) || (rdata==NULL) )
         return(E_POINTER);
+
+    rdata->apid=0;
+    rdata->vpid=0;
+    rdata->cmd=CMD_VCR_UNKNOWN;
+    rdata->onidsid=0;
+    lstrcpy(rdata->channelname,"");
 
     p1=ParseForString(szXML,"<record ", 1);
     if (p1!=NULL)
@@ -914,10 +929,29 @@ HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID)
         p2=ParseForString(p1,"command=", 1);
         p1=NULL;
         if (p2!=NULL)
-            p3=ExtractQuotedString(p2, command, 1);
+            p3=ExtractQuotedString(p2, szcommand, 1);
         if (p3!=NULL)
             p1=ParseForString(p3,">", 1);
         }
+
+    if (p1!=NULL)
+        {
+        p2=ParseForString(p1,"<channelname>", 1);
+        p3=p2;
+        p1=NULL;
+        if (p2!=NULL)
+            {
+            p1=ParseForString(p2,"</channelname>", 0);
+            if (p1!=NULL)
+                {
+                memcpy(szchannelname,p3,p1-p3);
+                szchannelname[p1-p3]=0;
+                hr=NOERROR;
+                }
+            }
+        }
+
+
 
     if (p1!=NULL)
         {
@@ -929,31 +963,58 @@ HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID)
             p1=ParseForString(p2,"</onidsid>", 0);
             if (p1!=NULL)
                 {
-                memcpy(onidsid,p3,p1-p3);
-                onidsid[p1-p3]=0;
+                memcpy(szonidsid,p3,p1-p3);
+                szonidsid[p1-p3]=0;
                 hr=NOERROR;
                 }
             }
+        }
+    
+    p2=ParseForString(szXML,"<videopid>", 1);
+    if (p2!=NULL)
+        {
+        p3=p2;
+        p1=NULL;
+        p1=ParseForString(p2,"</videopid>", 0);
+        if (p1!=NULL)
+            {
+            memcpy(szvpid,p3,p1-p3);
+            szvpid[p1-p3]=0;
+            hr=NOERROR;
+            }
+        }
+
+    p2=ParseForString(szXML,"<audiopids selected=", 1);
+    if (p2!=NULL)
+        {
+        p3=ExtractQuotedString(p2, szapid, 1);
+        if (p3!=NULL)
+            p1=ParseForString(p3,">", 1);
         }
 
     if (FAILED(hr))
         return(hr);
 
-    *iCMD     = CMD_VCR_UNKNOWN;
-    *iONIDSID = 0;
+    lstrcpy(rdata->channelname, szchannelname);
 
-    if (!lstrcmp(command,"record"))
-        *iCMD=CMD_VCR_RECORD;
-    if (!lstrcmp(command,"stop"))
-        *iCMD=CMD_VCR_STOP;
-    if (!lstrcmp(command,"pause"))
-        *iCMD=CMD_VCR_PAUSE;
-    if (!lstrcmp(command,"resume"))
-        *iCMD=CMD_VCR_RESUME;
-    if (!lstrcmp(command,"available"))
-        *iCMD=CMD_VCR_AVAILABLE;
+    if (lstrlen(szvpid)>0)
+        rdata->vpid=atol(szvpid);
 
-    *iONIDSID=atol(onidsid);
+    if (lstrlen(szapid)>0)
+        rdata->apid=atol(szapid);
+
+    if (!lstrcmp(szcommand,"record"))
+        rdata->cmd=CMD_VCR_RECORD;
+    if (!lstrcmp(szcommand,"stop"))
+        rdata->cmd=CMD_VCR_STOP;
+    if (!lstrcmp(szcommand,"pause"))
+        rdata->cmd=CMD_VCR_PAUSE;
+    if (!lstrcmp(szcommand,"resume"))
+        rdata->cmd=CMD_VCR_RESUME;
+    if (!lstrcmp(szcommand,"available"))
+        rdata->cmd=CMD_VCR_AVAILABLE;
+
+    rdata->onidsid=atol(szonidsid);
 
     return(hr);
 }

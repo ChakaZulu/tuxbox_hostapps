@@ -129,7 +129,6 @@ BOOL	DoesInstanceExist(void);
 int		UpdateWindowState(HWND hWnd);
 int     CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 void    CreateChannelList(HWND hwnd);
-HRESULT SetTVChannel(HWND hwnd, unsigned long channel);
 HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChannel);
 void    ComposeCaptureFileName(LPSTR szFileName);
 void    LoadParameter(void);
@@ -157,14 +156,23 @@ BOOL  DoesInstanceExist(void)
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
 	MSG msg;
-	HWND hwnd;
+	HWND hwnd=NULL;
 	WNDCLASSEX wndclassex;
-	RECT rect1;
-	int topV,leftV,widthV,heightV;
-	int retval;
-	HRESULT hr;
+	RECT rect1={0,0,0,0};
+	int topV=0,leftV=0,widthV=0,heightV=0;
+	int retval=0;
+	HRESULT hr=NOERROR;
     HBRUSH hbr=CreateSolidBrush(0x000000);
 
+
+// ------------------------------------------------------------------------
+// !!BS:TESTING only 
+/*
+    RecordingData   rdata;
+    hr=AnalyzeXMLRequest(STREAM_TEST_DATA, &rdata);
+    return(0);
+*/
+// !!BS:TESTING only 
 // ------------------------------------------------------------------------
 	if (DoesInstanceExist())
 		return(-1);
@@ -414,22 +422,24 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 			break;
 
         case WM_STREAMNOTIFY:
-            dprintf("WM_STREAMNOTIFY: CMD:%ld, ONIDSID:%ld", (DWORD)wParam, (DWORD)lParam);
             {
+            RecordingData   *rdata=(RecordingData*)wParam;
+            dprintf("WM_STREAMNOTIFY: CMD:%ld, ONIDSID:%ld, APID:%ld, VPID:%ld", (int)rdata->cmd, (int)rdata->onidsid, (int)rdata->apid, (int)rdata->vpid);
             int i=0;
-            if (wParam==CMD_VCR_RECORD)
+            if (rdata->cmd==CMD_VCR_RECORD)
                 {
 				//SendMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
                 //SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
                 for(;;)
                     {
-				    int channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, i, 0 );
+                    char buffer[264];
+				    int channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETLBTEXT, i, (LPARAM)buffer );
                     if (channel==CB_ERR)
                         break;
-                    if (channel==lParam)
+                    if (!lstrcmp(buffer, rdata->channelname))
                         {
     				    SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETCURSEL, i, 0 );
-                        SetTVChannel(hwnd, channel);
+                        SetTVChannel(hwnd, rdata->onidsid, rdata->apid, rdata->vpid);
 				        gCurrentChannel=i;
 						PostMessage(ghWndApp,WM_COMMAND,IDC_RECORD,0);
                         break;
@@ -438,7 +448,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                     }
                 }
             else
-            if (wParam==CMD_VCR_STOP)
+            if (rdata->cmd==CMD_VCR_STOP)
                 {
 				PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
                 //SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
@@ -922,7 +932,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 				int sel=0;
 				sel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETCURSEL, 0, 0 );
 				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
-				SetTVChannel(hwnd, channel);
+				SetTVChannel(hwnd, channel, 0, 0);
 				gCurrentChannel=sel;
 				}
 			break;
@@ -1060,13 +1070,19 @@ void CreateChannelList(HWND hwnd)
         }
 }
 
-HRESULT SetTVChannel(HWND hwnd, unsigned long channel)
+HRESULT SetTVChannel(HWND hwnd, __int64 channel, __int64 apid, __int64 vpid)
 {
     HRESULT hr=NOERROR;
     if (gpVCap!=NULL)
         {
+        __int64 val=0;
         IDBOXIICapture *pIDBOXIICapture=NULL;
         hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+
+        val|=(apid&0x00000000FFFFFFFF)|((vpid&0x00000000FFFFFFFF)<<32);
+        if (SUCCEEDED(hr))
+            hr=pIDBOXIICapture->setParameter(CMD_AUDIOVIDEOPID, (__int64)val);
+
         if (SUCCEEDED(hr))
             hr=pIDBOXIICapture->setParameter(CMD_SETCHANNEL, (__int64)channel);
 
