@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------------------------
 
-This is version 0.0.1.1 of TuxVision/Capture/Render 
+This is version 0.0.2.0 of TuxVision/Capture/Render 
 Date: 10.10 2002
 
 This text describes usage of application and direct show filters running on a win32 OS
@@ -53,6 +53,9 @@ Usually it doesn´t matter where you install the components.
 -------------------------------------------------------------------------------------------------
 
 *** TUXVISION ***
+Rev.0.0.2.0
+- nhttpd reset
+- MCE support
 
 Rev.0.0.1.1
 - added button for HTTP reset
@@ -80,6 +83,10 @@ hit configure to setup your user specific parameters (like IP-Address).
 -------------------------------------------------------------------------------------------------
 
 *** CAPTURE ***
+
+Rev.0.0.2.0
+- Multiplex BUG with some FTA channels fixed (Audio PID)
+- MCE support
 
 Rev.0.0.1.1
 - use more relaxed A/V sync
