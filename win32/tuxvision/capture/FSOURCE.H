@@ -140,19 +140,19 @@ public:
     int     m_VideoBitrate;
     int     m_IsAspectRatio4By3;
 
-private:
-    // It is only allowed to to create these objects with CreateInstance
+    // It should (is) only allowed to to create these objects with CreateInstance
     CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr);
 	~CDBOXIICapture();
+    HRESULT SaveInternalData(void);
+    HRESULT LoadInternalData(void);
+
+private:
     
     CPushStream *pPushStreamVideoRAW;
     CPushStream *pPushStreamAudioRAW;
 	CPushStream *pPushStreamVideo;
 	CPushStream *pPushStreamAudio;
     CPushStream *pPushStreamMultiplex;
-
-    HRESULT SaveInternalData(void);
-    HRESULT LoadInternalData(void);
 
 
 }; // CDBOXIICapture

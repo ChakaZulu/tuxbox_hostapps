@@ -187,9 +187,20 @@ int g_Instance=0;
 //
 STDAPI DllRegisterServer( void )
 {
+    HRESULT hr=NOERROR;
+    CDBOXIICapture *pTempFilter=new CDBOXIICapture(NULL, &hr);
+
+    if (pTempFilter!=NULL)
+        {
+        lstrcpy(pTempFilter->m_DBOXAddress,"192.168.0.13");
+        lstrcpy(pTempFilter->m_DBOXLogin,"root");
+        lstrcpy(pTempFilter->m_DBOXPassword,"dbox2");
+        pTempFilter->LoadInternalData();
+        }
+
 
     // register the server
-    HRESULT hr = AMovieDllRegisterServer2( TRUE );
+    hr = AMovieDllRegisterServer2( TRUE );
     if( FAILED(hr) )
         return hr;
 
@@ -225,6 +236,13 @@ STDAPI DllRegisterServer( void )
 
     pFm2->Release();
  
+    if (pTempFilter!=NULL)
+        {
+        pTempFilter->SaveInternalData();
+        delete pTempFilter;
+        }
+
+
     return hr;
 
 }
