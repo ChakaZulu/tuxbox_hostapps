@@ -1,0 +1,11 @@
+rec + udpstreampes:
+- Nach der Aufnahme DMX-Buffer entleeren
+
+mkdvd
+- Universeller AC3-Support (derzeit nur Premiere 1/2)
+- Behandlung von DTS/PTS-Discontinuities
+- Behandlung von Stream-Fehler (derzeit oft Programmabbruch)
+- fehlender Ton nach Audio-Stream-Fehler
+- Automatische Kapiteleinteilung
+- Mehrere Streames auf eine DVD (z.B. fuer Serien)
+- Behandlung einzelner AC3-2.0-Frames in AC3-5.1-Streams auf Premiere 1/2

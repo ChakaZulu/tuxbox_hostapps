@@ -1,0 +1,12 @@
+mkdvd -------------------------------------------
+05.01.2003	Version 0.01	First try
+16.01.2003      Verison 0.02    README vervollstaendigt
+                                CYGWIN Support
+21.01.2003      Version 0.03a   RESEND-Mechanismus optimiert
+26.01.2003      Version 0.04    RESEND-Mechanismus optimiert
+                                mkdvd -cut: manuelle Schnittfunktion
+                                rec -toff: UDP Timout abschaltbar
+17.09.2003      Version 0.05    Umstellung auf cvs-head
+                                Betrieb im Flash mit Neutrino
+                                Reboot nicht mehr notwendig
+                                geteilte DVD (bei >4.7GB) geht jetzt

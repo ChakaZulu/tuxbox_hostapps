@@ -27,6 +27,7 @@ ggrab/Makefile
 grab/Makefile
 libcrypto++/Makefile
 libflashimage/Makefile
+mkdvd/Makefile
 mkflfs/Makefile
 stream/Makefile
 ucodex/Makefile

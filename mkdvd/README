@@ -1,0 +1,298 @@
+Einleitung
+==========
+
+mkdvd ist ein Streaming-Paket fuer eine DBox2 auf der udpstreampes
+installiert ist. Eintwicklungsziel war die automtische Erstellung 
+von DVD's ohne Stoerungen durch Resyncs.
+
+Installation
+============
+
+   zcat mkdvd-0.05.tar.gz | tar xv
+   cd mkdvd-0.05
+   make
+
+Alle Programme sind vom Verzeichnis "mkdvd-0.05" aus lauffaehig. Die
+Unterverzeichnisse zur DVD-Erstellung sind dort bereits eingereichtet.
+
+Ein modifiziertes cdk.cramfs (Original von dbuxupdate.berlios.de) fuer 
+die DBox kann steht auf www.haraldmaiss.de zur Verfuegung.
+
+
+Die eigentliche Aufnahme:
+-------------------------
+(das Arbeitsverzeichnis ist immer noch "mkdvd-0.05")
+
+   ./rec -tv 1 5 -time 8.1.03 18:00 19:00
+  
+    oder
+
+   ./rec -host 192.168.0.98 -ip 192.168.0.100 -tv 1 5 -time 8.1.03 18:00 19:00
+
+
+Dieser Befehl speichert die Streams vom Sender "1 5" (pzapit-Notation) im
+angegebenen Zeitraum in die Dateien: 
+
+   stream.m2v
+   stream.a0
+   ...
+   stream.a7
+
+Auf dem Bildschirm erscheint ein Log-Protokoll, das mit der Option "-log"
+in die Datei "stream.log" umgeleitet werden kann. 
+
+
+Weitere Optionen:
+-o    -> Dateiname (Voreinstellung: "stream")
+-ip   -> IP-Adresse der Linux-Rechners 
+         (Voreinstellung: Ermittlung mittels hostname) 
+-host -> hostname/IP-Adresse der DBox2 (Voreinstellung: dbox)
+-toff -> Timeout deaktivieren fuer Aufnamen von Premiere Direkt
+...
+
+Wenn nicht mit Neutrino gestreamt wird, duerfen die Optionen -tv/-ra nicht
+verwendet werden. In diesem Fall muss das TV-Programm auf der DBox
+umgeschaltet und die PID's mit -vp/-ap angegeben werden. Bei Problemen mit
+dem DBox-Arbeitspeicher hilft die -buf-Option weiter.
+
+Erzeugen der DVD-Dateien (Multiplexen)
+======================================
+(das Arbeitsverzeichnis ist immer noch "mkdvd-0.05")
+
+   ./mkdvd
+
+Dieser Befehle liest die Dateien stream.m2v/a0..a7. Die VOB/IFO/BUP-Dateien
+fuer die DVD werden in das Verzeichniss ./dvd/001/VIDEO_TS geschrieben. Das
+Verzeichniss "dvd" sollte moeglichst auf eine separate Festplatte gemountet 
+sein, da dies die Image-Erstellung mit "mkisofs" starkt beschleunigt.
+
+Optionen:
+-f       -> Dateiname (Voreinstellung: "stream")
+-onevob  -> Alle DVD-Daten in ein VOB-File Schreiben, anstatt mehrere 1GB-VOB's
+-cut     -> manuelle Schnittfunktion (s.u.)
+
+mkdvd ist mit einer automatischen Schnittfunktion ausgestattet, die alle
+Filmbestandteile herausschneidet, die nicht das gleiche Audio-/Video-Format
+(Aufloesung, Seitenverhaeltniss, Bitrate, Kanalanzahl) haben, wie der Haup-
+filmbestandteil. Auf Premiere 1/2 fuehrt dies dazu, das die Trailer bei 
+Filmen in Dolby-AC3-5.1 bzw. in 16:9 (anamorph) automatisch weggeschnitten
+werden. Zusaetzlich gibt es eine manuelle Schnittfunktion.
+
+Ablauf manueller Schnitt:
+-------------------------
+1) mkdvd -onevob  
+   Der ganze Film kommt in eine VOB-Datei. "stream.seq" enthaelt jetzt die 
+   genauen Startzeiten jeder MPEG-Sequenz, z.B:
+  
+   1234 - 01:45:10.12
+
+   SequenzNr - Stunde:Minute:Sekunde.Bild
+
+2) Mit z.B. WinDVD 4.0 und "stream.seq" die Sequenznummer zu jedem
+   Schnittpunkt ermitteln.
+
+3) Die Datei "stream.cut" anlegen, z.B:
+
+- Beginn -
+233
+500
+1000
+15134
+- Ende -
+
+Jede Sequenznummer steht in einer Zeile. Im Beispiel wird Sequenz 
+
+  0 bis 232,
+  500 bis 999  und
+  15134 bis Ende 
+
+weggeschnitten.
+
+4) mkdvd -cut
+   Der Film wird jetzt mit den Schnitten erzeugt. Gff. sollte man zuvor die 
+   alte "stream.seq" sichern, da sie jetzt mit den aktuellen Daten ueber-
+   schrieben wird. 
+ 
+
+mkdvd ist derzeit noch auf (fast) fehlerfreie Streams angewiesen (bei
+Audio-Fehlern ist nach dem Fehler kein Ton mehr, obwohl das Programm
+durchlaeuft!). Intensive Test wurden bisher nur mit Premiere 1/2 durchgefuehrt.
+Die uebrigen Sender im Telekom Kabel wurden alle mit einer 1-Minuten-Aufnahme
+erfolgreich getestet. 
+
+
+Brennen der DVD
+===============
+(siehe auch: http://dvd.chevelless230.com)
+
+   mkisofs -dvd-video -o dvd.img dvd/001
+   dvdrecord dev=0,0,0 blank=fast            (nur DVD-RW)
+   dvdrecord speed=1 -dao dev=0,0,0 dvd.img
+
+Der zweite Befehl dient zum Loeschen von DVD-RW's. On-The-Fly-Brennen ist
+auf meinem Rechner (AMD K6-300) nicht moeglich. Die Option "dev=0,0,0" bezieht
+sich auf den Fall, dass kein weiters CD/DVD-ROM Laufwerk vorhanden ist. Mit
+
+   cdrecord -scanbus 
+
+kann die korrekte Einstellung ermittelt werden.
+
+Das Programm "Verify" fuehrt einen Vergleich der Dateien "dvd.img" und 
+"/dev/scd0" durch und schreibt das Ergebnis ans Ende von "stream.log"
+
+Brennvorgang miniDVD (-> CD-Rohling )
+-------------------------------------
+
+   mkisofs -dvd-video -o dvd.img dvd/001
+   cdrecord dev=0,0,0 blank=fast          (nur CD-RW)
+   cdrecord dev=0,0,0 dvd.img
+
+miniDVD's werden leider nur von wenigen DVD-Playern wiedergegeben 
+(von meinem leider auch nicht - siehe auch http://www.vcdhelp.com).
+Mit WinDVD/PowerDVD lassen sich miniDVD's jedoch in jedem Fall abspielen.
+
+Hinweise zur Installation des DVD-Brenners
+------------------------------------------
+Der Linux-Kernel muss mit der Option "IDE SCSI Emulation" kompiliert sein.
+In der "/etc/lilo.conf" muss die Zeile:
+
+- Beginn -
+append="hdc=ide-scsi"  (hdc -> Brenner ist secondary master)
+- Ende -
+
+eingefuegt werden. Danach "lilo" starten, damit der Boot-Loader neu
+installiert wird. 
+
+
+Optional: Quellcode von udpstreampes ins CVS einfuegen
+====================================================== 
+
+CVS herunterladen:
+   mkdir <cvs-dir>
+   cd <cvs-dir>
+   cvs -d:pserver:anonymous@cvs.tuxbox.org:/cvs/tuxbox login
+      => PASSWORD: <RETURN>
+   cvs -d:pserver:anonymous@cvs.tuxbox.org:/cvs/tuxbox -z3 co -P .
+
+   
+Modifikationen am CVS:
+
+   cp <mkdvd-dir>/udpstreampes.cpp <cvs-dir>/apps/dvb/zapit/src
+   cp <mkdvd-dir>/udpstreampes.h <cvs-dir>/apps/dvb/zapit/src
+ 
+In der Datei "<cvs-dir>/apps/dvb/zapit/src/Makefile.am" die Zeilen:
+(vor "installdir = ...") 
+
+- Beginn -
+udpstreampes_SOURCES = \
+	udpstreampes.cpp
+
+udpstreampes_LDADD = \
+	$(top_builddir)/lib/libzapitclient.la \
+	@CONNECTION_LIBS@ \
+	-lpthread
+- Ende -
+
+einfuegen.  Ausserdem muss im "Makefile.am" die "bin_PROGRAMS" Variable 
+so aussehen:
+
+- Begin -
+bin_PROGRAMS = pzapit zapit udpstreampes
+- End -
+
+Jetzt kann das CVS wie in <cvs-dir>/cdk/doc/INSTALL.en uebersetzt werden.
+
+Wenn dass CDK schon einmal uebersetzt wurde, muessen im Verzeichnis 
+"<cvs-dir>/apps/dvb/zapit" folgende Befehle eingegeben werden, um 
+"Makefile.in" und "Makefile" erneut aus "Makefile.am" zu erstellen.
+
+   ./autogen.sh
+   ./config.status --recheck
+   ./config.status
+
+"udpstreampes" wird dann beim Compilen von "zapit" mituebersetzt
+und installiert. Dazu muessen im Verzeichniss "<cvs-dir>/cdk" folgende
+Befehle eingegeben werden:
+
+    rm .zapit
+    make 
+
+"udpstreampes" steht dann im Verzichnis <dbox>/cdkroot/bin. (<dbox> entspricht
+dem Verzeichnis "$HOME/dbox2" aus "configure --perfix=...".)
+
+
+Modifikation damit "udpstreampes" um zu starten
+===============================================
+ 
+In der Datei "<dbox>/cdkroot/etc/inetd.conf" folgende Zeile einfuegen:
+
+- Beginn -
+udpstreampes	stream	tcp	nowait	root	/bin/udpstreampes	udpstreampes
+- Ende -
+
+In der Datei "/dbox/cdkroot/etc/services" folgende Zeilen einfuegen:
+
+- Beginn -
+udpstreampes    31340/tcp
+udpstreampes    31341/udp
+- Ende -
+
+
+Fuer ein Minimalsystem reicht es aus, wenn auf der DBox 
+
+/bin/zapit
+/bin/camd2
+
+laufen. Der Frambuffer kann mit "avifbtool -u" aktiviert werden. Bei 
+Problemen kann das Playback mit "pzapit -p" abgeschaltet werden. 
+
+Umbau des CVS (350MB) zu einer downloadbaren YADD (13MB)
+========================================================
+<dbox> entspricht dem Verzeichnis "$HOME/dbox2" aus "configure --perfix=...".
+
+tar cvf dbox.tar <dbox>    // als Backup
+
+cd <dbox>         
+find . -type f -perm -100 -exec ./cdk/powerpc-tuxbox-linux-gnu/bin/strip \{} \;
+rm -r cdk
+rm -r cdkroot/info
+rm -r cdkroot/man
+rm -r cdkroot/doc
+rm -r cdkroot/include
+rm -r cdkroot/share/doc
+rm cdkroot/bin/gdb
+find cdkroot/lib -name *.la -exec rm \{} \;
+find cdkroot/lib -name *.a -exec rm \{} \;
+
+cd ..
+tar cvf yadd.tar <dbox>
+gzpip yadd.tar
+rm -r <dbox>
+tar xcv dbox.tar  // Backup wiederherstellen
+
+
+Modifikation einer cdk.cramfs
+=============================
+Das Original gibt es unter 
+http://dboxupdate.berlios.de
+
+Benoetigt wird ausserdem cramfs-1.1.tar.gz von 
+ftp://download.sourceforge.net/pub/sourceforge/cramfs/
+
+mv cdk.cramfs cdk.cramfs.org
+cramfsck -x dbox cdk.cramfs.org
+
+cp udpstrempes dbox/bin       (besser dbox/sbin; ggf. User/Group anpassen)
+dbox/etc/services       und
+dbox/etc/inetd.conf     wie oben beschrieben modifizieren
+
+Das cdk.cramfs darf anscheinend nicht mehr laenger werden, deshalb:
+rm dbox/share/locale/sv/LC_MESSAGES/tuxbox-enigma.mo
+
+mkcramfs -n "1106200309130956" dbox cdk.cramfs
+
+Die Zahlenfolge steht in dbox/.version
+
+ 
+ 
+  
