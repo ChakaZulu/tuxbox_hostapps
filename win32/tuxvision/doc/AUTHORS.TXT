@@ -1,4 +1,4 @@
-(... ...)
+(... ... ...)
 DBOXII Capture/Render Filter and the TuxVision app
 was written by Bernd Scharping, bernd@transputer.escape.de
 
