@@ -181,48 +181,122 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
     RECT rc;
     HRESULT hr;
     HWND style=HWND_TOP;
-    if (flag)
-        { 
-        rc.left=0;
-        rc.top=0;
-        rc.right =GetSystemMetrics(SM_CXSCREEN);
-        rc.bottom=GetSystemMetrics(SM_CYSCREEN);
-    	SetParent(hWnd,hWndParent);
 
-        if (gAlwaysOnTop)
-            style=HWND_TOPMOST;
-
-    	SetWindowPos(hWnd,style,
-                     rc.left,
-                     rc.top,
-                     Width(rc),
-                     Height(rc),
-                     SWP_SHOWWINDOW);
-        hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
-		gFullscreen=TRUE;
-        } 
-    else
-    if (gFullscreen)
+// ---------------------------------------------------------------------------------    
+//                          FULLSCREEN - MODE
+// ---------------------------------------------------------------------------------    
+    if (!gSetVideoToWindow)
         {
-        RECT rc;
+        if (flag)
+            { 
+            rc.left=0;
+            rc.top=0;
+            rc.right =GetSystemMetrics(SM_CXSCREEN);
+            rc.bottom=GetSystemMetrics(SM_CYSCREEN);
+    	    SetParent(hWnd,hWndParent);
 
-        if (gAlwaysOnTop)
-            style=HWND_TOPMOST;
+            if (gAlwaysOnTop)
+                style=HWND_TOPMOST;
 
-        SetParent(hWnd,hWndParent);
-        SetWindowPos(hWndParent, style, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
-        SetWindowPos(hWnd,HWND_TOP,
-                    restore->left, 
-                    restore->top , 
-                    pWidth(restore), 
-                    pHeight(restore),
-                    SWP_SHOWWINDOW);
-        CopyRect(&rc, restore);
-        rc.top=0;
-        rc.left=0;
-        hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
-		gFullscreen=FALSE;
+    	    SetWindowPos(hWnd,style,
+                         rc.left,
+                         rc.top,
+                         Width(rc),
+                         Height(rc),
+                         SWP_SHOWWINDOW);
+            hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
+		    gFullscreen=TRUE;
+            } 
+        else
+        if (gFullscreen)
+            {
+            RECT rc;
+
+            if (gAlwaysOnTop)
+                style=HWND_TOPMOST;
+
+            SetParent(hWnd,hWndParent);
+            SetWindowPos(hWndParent, style, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+            SetWindowPos(hWnd,HWND_TOP,
+                        restore->left, 
+                        restore->top , 
+                        pWidth(restore), 
+                        pHeight(restore),
+                        SWP_SHOWWINDOW);
+            CopyRect(&rc, restore);
+            rc.top=0;
+            rc.left=0;
+            hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
+		    gFullscreen=FALSE;
+            }
         }
-    
+    else
+// ---------------------------------------------------------------------------------    
+//                          WINDOW - MODE
+// ---------------------------------------------------------------------------------    
+        {
+        if (flag)
+            { 
+            RECT rc;
+            DWORD val;
+
+            if (gAlwaysOnTop)
+                style=HWND_TOPMOST;
+
+            GetWindowRect(ghWndApp, &rc);
+            val=GetWindowLong(ghWndApp, GWL_STYLE);
+            SetWindowLong(ghWndApp, GWL_STYLE, (val|WS_THICKFRAME) & (~(WS_CAPTION|WS_CLIPSIBLINGS)) );
+            SetWindowPos(ghWndApp, style ,rc.left, rc.top, 352, 288, 0);
+            gFullscreen=TRUE;
+            MoveVideoWindow();
+            }
+        else
+            { 
+            DWORD val;
+            RECT rc;
+            val=GetWindowLong(ghWndApp,GWL_STYLE);
+            SetWindowLong(ghWndApp,GWL_STYLE, (val & (~(WS_THICKFRAME)) ) | (WS_CAPTION|WS_CLIPSIBLINGS) );
+
+            if (gAlwaysOnTop)
+                style=HWND_TOPMOST;
+
+            SetParent(hWnd,hWndParent);
+            SetWindowPos(hWndParent, style, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+            SetWindowPos(hWnd,HWND_TOP,
+                        restore->left, 
+                        restore->top , 
+                        pWidth(restore), 
+                        pHeight(restore),
+                        SWP_SHOWWINDOW);
+            CopyRect(&rc, restore);
+            rc.top=0;
+            rc.left=0;
+            hr=ConnectVideoWindow(gpIGraphBuilder, hWnd, &rc, gIs16By9);
+		    gFullscreen=FALSE;
+
+            SetWindowPos(ghWndApp,HWND_TOP,0 ,0, glAppWidth, glAppHeight, SWP_NOMOVE);
+            InvalidateRect(ghWndApp, NULL, TRUE);
+            UpdateWindow(ghWndApp);
+            }
+        }                    
     return(hr);
 }
+
+
+HRESULT MoveVideoWindow()
+{ 
+    RECT rc;
+    DWORD val;
+
+    if (!gFullscreen)
+        return(NOERROR);
+
+    val=GetWindowLong(ghWndApp, GWL_STYLE);
+    GetClientRect(ghWndApp, &rc);
+    SetWindowPos(ghWndVideo, NULL ,0 ,0, Width(rc), Height(rc), SWP_NOZORDER);
+    HRESULT hr=ConnectVideoWindow(gpIGraphBuilder, ghWndVideo, &rc, gIs16By9);
+
+    return(hr);
+}
+
+ 

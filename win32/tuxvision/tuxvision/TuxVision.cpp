@@ -62,8 +62,10 @@
 HINSTANCE	  ghInstApp=NULL;
 HWND		  ghWndApp=NULL;
 HWND		  ghWndVideo=NULL;
+long          glAppWidth=0;
+long          glAppHeight=0;
 RecorderState gState=StateUninitialized;
-BOOL		  gIsWindowMaximized=FALSE;
+long		  gIsWindowMaximized=FALSE;
 RECT		  gRestoreRect={0,0,0,0};
 long		  gCurrentChannel=0;
 long		  gNumChannels=0;
@@ -79,6 +81,7 @@ long          gApplicationPriority=NORMAL_PRIORITY_CLASS;
 long          gAlwaysOnTop=FALSE;
 long          gAutomaticAspectRatio=FALSE;
 long          gLastPropertyPage=0;
+long          gSetVideoToWindow=FALSE;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -224,6 +227,12 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	ShowWindow(ghWndApp,SW_SHOW);
 	ShowWindow(ghWndVideo,SW_SHOW);
     SetWindowPos(ghWndVideo,ghWndApp,leftV,topV,0,0,SWP_NOSIZE);
+    {
+    RECT rc;
+    GetWindowRect(ghWndApp,&rc);
+    glAppWidth=Width(rc);
+    glAppHeight=Height(rc);
+    }
 // ------------------------------------------------------------------------
 	if (SUCCEEDED(hr))
 		{
@@ -304,7 +313,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             break;
 
 		case WM_LBUTTONDOWN:
-		    if (!gIsWindowMaximized)
+		    if ((!gIsWindowMaximized)||gSetVideoToWindow)
 				{
 				RECT rc;
 				int xPos, yPos;
@@ -328,6 +337,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             dprintf("WM_NCLBUTTONDBLCLK: %ld",wParam);
             return(0);
 
+        case WM_ERASEBKGND:
+   		    if (gIsWindowMaximized && gSetVideoToWindow && gFullscreen)
+                return(1);
+            break;
+
+        case WM_SIZE:
+   		    if (gIsWindowMaximized && gSetVideoToWindow)
+                MoveVideoWindow();
+            break;
 
         case WM_HSCROLL:
 			switch(LOWORD(wParam))
@@ -459,7 +477,7 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 			break;
 
 		case WM_LBUTTONDOWN:
-		  if (!gIsWindowMaximized)
+		  if ((!gIsWindowMaximized)||gSetVideoToWindow)
             {
   			dprintf("VideoWindow LButtonDown");
 			SendMessage(ghWndApp,message,wParam,lParam);
@@ -904,6 +922,10 @@ void LoadParameter(void)
     
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AutomaticAspectRatio", (unsigned char *)regval, sizeof(regval)))
         gAutomaticAspectRatio=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "SetVideoToWindow", (unsigned char *)regval, sizeof(regval)))
+        gSetVideoToWindow=atoi(regval);
+
 }
 
 void SaveParameter(void)
@@ -936,6 +958,9 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%ld",gAutomaticAspectRatio);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AutomaticAspectRatio", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gSetVideoToWindow);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "SetVideoToWindow", (unsigned char *)regval, lstrlen(regval));
 }
 
 

@@ -174,7 +174,7 @@ BEGIN
     PUSHBUTTON      "Update",IDC_GETCHANNELLIST,257,41,36,14
     CONTROL         "HWOutput",IDC_HWOUTPUT,"Button",BS_AUTOCHECKBOX | 
                     WS_DISABLED | WS_TABSTOP,364,94,50,10
-    CTEXT           "1000MB",IDC_CAPFILESIZE,286,157,43,10,SS_SUNKEN
+    CTEXT           "",IDC_CAPFILESIZE,286,157,43,10,SS_SUNKEN
     LTEXT           "CapFile",IDC_STATIC,252,157,30,10,SS_SUNKEN
     CONTROL         "16:9",IDC_16BY9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     251,106,52,10
@@ -209,8 +209,8 @@ BEGIN
                     WS_GROUP,26,30,58,10
     CONTROL         "Allways on top",IDC_ALLWAYSONTOP,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,30,92,10
-    CONTROL         "Window",IDC_WINDOW,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED,26,48,58,10
+    CONTROL         "Window",IDC_WINDOW,"Button",BS_AUTORADIOBUTTON,26,48,58,
+                    10
     GROUPBOX        "On Maximize Video",IDC_STATIC,14,16,94,52,WS_GROUP
     CONTROL         "Automatic AspectRatio",IDC_AUTOASPECTRATIO,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,48,92,10

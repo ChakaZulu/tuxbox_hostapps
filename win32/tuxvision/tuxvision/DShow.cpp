@@ -358,6 +358,13 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
                     t=t+(h-hh)/2;
                 h=hh;
                 }
+            else
+                {
+                int hh=((3*w)/4);
+                if (hh<h)
+                    t=t+(h-hh)/2;
+                h=hh;
+                }
             hr=pVideoWindow->SetWindowPosition(l,t,w,h);
             }
         
@@ -536,6 +543,25 @@ HRESULT CreateCaptureGraph()
 
     if (lstrlen(gszDestinationFile)==0)
         lstrcpy(gszDestinationFile, "DBOXIICapture");
+    
+    for(int i=0;i<lstrlen(gszDestinationFile);i++)
+        {
+        if (
+            (gszDestinationFile[i]=='.')||
+            (gszDestinationFile[i]==':')||
+            (gszDestinationFile[i]=='\\')||
+            (gszDestinationFile[i]=='/')||
+            (gszDestinationFile[i]==',')||
+            (gszDestinationFile[i]==';')||
+            (gszDestinationFile[i]=='*')||
+            (gszDestinationFile[i]=='?')||
+            (gszDestinationFile[i]=='"')||
+            (gszDestinationFile[i]=='<')||
+            (gszDestinationFile[i]=='>')||
+            (gszDestinationFile[i]=='|')
+           )
+            gszDestinationFile[i]=' ';
+        }
     _makepath(szFilename, NULL, gszDestinationFolder, gszDestinationFile, "mpg" );
 
     MultiByteToWideChar(CP_ACP, 

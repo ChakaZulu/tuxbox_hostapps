@@ -27,12 +27,14 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.4"
+#define REVISION            "Rev.0.0.0.10"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 
 extern HINSTANCE		ghInstApp;
 extern HWND				ghWndApp;
 extern HWND				ghWndVideo;
+extern long             glAppWidth;
+extern long             glAppHeight;
 extern TCHAR            gszDestinationFolder[264];
 extern TCHAR            gszDestinationFile[264];
 extern long             gUseDeInterlacer;
@@ -42,6 +44,7 @@ extern long             gApplicationPriority;
 extern long             gAlwaysOnTop;
 extern long             gAutomaticAspectRatio;
 extern long             gLastPropertyPage;
+extern long             gSetVideoToWindow;
 
 
 

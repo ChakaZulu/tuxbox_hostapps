@@ -29,12 +29,14 @@
 #define EZ_ATTR_STRIKEOUT     8
 
 extern HWND ghwndSplash;
+extern BOOL gFullscreen;
+
 
 HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
                     int iDeciPtWidth, int iAttributes, BOOL fLogRes);
 void  DisplaySplash(void);
 void CenterWindow(HWND hwnd);
 HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag);
-
+HRESULT MoveVideoWindow();
 
 #endif
