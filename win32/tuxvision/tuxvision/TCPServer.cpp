@@ -36,6 +36,7 @@
 #include "wsasimpl.h"
 #include "debug.h"
 #include "TCPServer.h"
+#include "TuxVision.h"
 
 #define HTTP_CONTROL_REQUEST	"/control/?"
 
@@ -58,8 +59,6 @@ volatile    BOOL gEnable=TRUE;
 
 char		gStartingPoint[264]="local";
 char		gStartingPage[264]="index.htm";
-int			gTalkPortHTTP=80;
-int			gTalkPortSTREAM=4000;
 
 SOCKADDR_IN gstSockNameServerHTTP;
 SOCKET      gListenSocketHTTP=INVALID_SOCKET;
@@ -160,6 +159,7 @@ void __cdecl CreateSTREAMResponse(void *rs)
     //dprintf("Exit Receive");
 
     dprintf("STREAM received %ld byte.",nData);
+    dprintf("--------------------------\r\n%s",(char *)InBuffer);
 
 	if (nData==-1)
 		  {
@@ -591,8 +591,8 @@ int OnWM_Create(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 {
 	OpenTCP(hwnd);
 	CancelAllConnections();
-	gListenSocketHTTP=InitLstnSockTCP(gTalkPortHTTP,&gstSockNameServerHTTP,hwnd,MY_CONNECT_HTTP);
-	gListenSocketSTREAM=InitLstnSockTCP(gTalkPortSTREAM,&gstSockNameServerSTREAM,hwnd,MY_CONNECT_STREAM);
+	gListenSocketHTTP=InitLstnSockTCP(gHTTPPort,&gstSockNameServerHTTP,hwnd,MY_CONNECT_HTTP);
+	gListenSocketSTREAM=InitLstnSockTCP(gSTREAMPort,&gstSockNameServerSTREAM,hwnd,MY_CONNECT_STREAM);
 	return(0);
 }
 
@@ -680,7 +680,21 @@ int OnMY_READ_STREAM(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			return(0);
 			}
 
+#if 1
 		dThread=_beginthread(CreateSTREAMResponse,1000000,(void *)rSock);
+#else
+        {
+        int nData=0;
+        BYTE InBuffer[MAX_MSG_LENGTH];    // packet buffer
+        memset(InBuffer,0,MAX_MSG_LENGTH);
+        //dprintf("Enter Receive");
+        nData=RecvDataTCP(rSock, (char *)InBuffer,MAX_MSG_LENGTH, -1);
+        //dprintf("Exit Receive");
+
+        dprintf("STREAM received %ld byte.",nData);
+        dprintf("--------------------------\r\n%s",(char *)InBuffer);
+        }
+#endif
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_ABOVE_NORMAL);
 		//SetThreadPriority((HANDLE)dThread, THREAD_PRIORITY_BELOW_NORMAL);
 		return(0);
@@ -715,6 +729,8 @@ HRESULT HTTPDeInit(void)
 {
     gEnable=FALSE;
 	CancelAllConnections();
+	closesocket(gListenSocketHTTP);
+	closesocket(gListenSocketSTREAM);
 	CloseTCP();
     Sleep(500);
     DestroyWindow(ghWndTCP);
@@ -769,6 +785,7 @@ LRESULT CALLBACK WndProcTCP (HWND hwnd, UINT message , WPARAM wParam, LPARAM lPa
 	switch(message)
 		{
 		case WM_CREATE:
+            dprintf("MY_CREATE");
 			OnWM_Create(hwnd,message,wParam,lParam);
 			return (0);
 

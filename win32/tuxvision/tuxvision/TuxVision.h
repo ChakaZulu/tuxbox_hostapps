@@ -27,27 +27,38 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.13"
+#define REVISION            "Rev.0.0.0.14"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
+#define AUDIO_PCM       0
+#define AUDIO_MPEG1L2   1
+#define AUDIO_MPEG1L3   2
 
-extern HINSTANCE		ghInstApp;
-extern HWND				ghWndApp;
-extern HWND				ghWndVideo;
-extern long             glAppTop;
-extern long             glAppLeft;
-extern long             glAppWidth;
-extern long             glAppHeight;
-extern TCHAR            gszDestinationFolder[264];
-extern TCHAR            gszDestinationFile[264];
-extern long             gUseDeInterlacer;
-extern long             gIs16By9;
-extern long             gRecNoPreview;
-extern long             gApplicationPriority;
-extern long             gAlwaysOnTop;
-extern long             gAutomaticAspectRatio;
-extern long             gLastPropertyPage;
-extern long             gSetVideoToWindow;
-
+extern HINSTANCE	ghInstApp;
+extern HWND			ghWndApp;
+extern HWND			ghWndVideo;
+extern long         glAppTop;
+extern long         glAppLeft;
+extern long         glAppWidth;
+extern long         glAppHeight;
+extern TCHAR        gszDestinationFolder[264];
+extern TCHAR        gszDestinationFile[264];
+extern long         gUseDeInterlacer;
+extern long         gIs16By9;
+extern long         gRecNoPreview;
+extern long         gApplicationPriority;
+extern long         gAlwaysOnTop;
+extern long         gAutomaticAspectRatio;
+extern long         gLastPropertyPage;
+extern long         gSetVideoToWindow;
+extern long         gCaptureAudioOnly;
+extern long         gTranscodeAudio;
+extern long         gTranscodeAudioFormat;
+extern long         gTranscodeAudioBitRate;
+extern long         gTranscodeAudioSampleRate;
+extern long         gEnableTCPServer;
+extern long         gHTTPPort;
+extern long         gSTREAMPort;
+                    
 
 #define ID_ALWAYSONTOP  (40000)
 #define ID_FULLSCREEN   (40001)

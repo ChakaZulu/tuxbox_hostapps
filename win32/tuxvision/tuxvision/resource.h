@@ -10,8 +10,10 @@
 #define SPLASH                          113
 #define IDB_BITMAP_SPLASH               114
 #define MISC                            114
+#define AUDIO                           115
 #define IDC_IPADDRESS                   1001
 #define IDC_IPADDRESS2                  1002
+#define IDC_HTTPPORT                    1002
 #define IDC_STOPPLAYBACK                1003
 #define IDC_LOGIN                       1004
 #define IDC_PASSWORD                    1005
@@ -23,6 +25,7 @@
 #define IDC_EXIT                        1026
 #define IDC_PLAY                        1028
 #define IDC_CHANNEL                     1056
+#define IDC_AUDIOSAMPLEFREQUENCY        1057
 #define IDC_DESTINATION                 1064
 #define IDC_DESTINATION_NAME            1065
 #define IDC_DEINTERLACE                 1068
@@ -44,7 +47,12 @@
 #define IDC_PRIORITY_HIGH               1084
 #define IDC_PRIORITY_NORMAL             1085
 #define IDC_CHECK2                      1086
-#define IDC_CHECK3                      1087
+#define IDC_ENABLETCPSERVER             1086
+#define IDC_AUDIOONLY                   1087
+#define IDC_AUDIOTHROUGH                1088
+#define IDC_AUDIORECODE                 1089
+#define IDC_AUDIOFORMAT                 1090
+#define IDC_CTRLPORT                    1091
 
 // Next default values for new objects
 // 
@@ -52,7 +60,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40017
-#define _APS_NEXT_CONTROL_VALUE         1087
+#define _APS_NEXT_CONTROL_VALUE         1092
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

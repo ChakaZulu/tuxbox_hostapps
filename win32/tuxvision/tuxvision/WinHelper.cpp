@@ -97,23 +97,15 @@ HFONT EzCreateFont (HDC hdc, char * szFaceName, int iDeciPtHeight,
      lf.lfPitchAndFamily = 0 ;
 
      lstrcpy (lf.lfFaceName, szFaceName) ;
-
      hFont = CreateFontIndirect (&lf) ;
-
      if (iDeciPtWidth != 0)
           {
           hFont = (HFONT) SelectObject (hdc, hFont) ;
-
           GetTextMetrics (hdc, &tm) ;
-
           DeleteObject (SelectObject (hdc, hFont)) ;
-
-          lf.lfWidth = (int) (tm.tmAveCharWidth *
-                              fabs (pt.x) / fabs (pt.y) + 0.5) ;
-
+          lf.lfWidth = (int) (tm.tmAveCharWidth * fabs (pt.x) / fabs (pt.y) + 0.5) ;
           hFont = CreateFontIndirect (&lf) ;
           }
-
      RestoreDC (hdc, -1) ;
 
      return hFont ;

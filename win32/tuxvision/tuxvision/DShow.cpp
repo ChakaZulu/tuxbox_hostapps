@@ -586,7 +586,7 @@ HRESULT CreateCaptureGraph()
         }
     else
         {
-            hr=TryConnectingFilters(gpIGraphBuilder, gpVCap, 2, pFileWriter, 0, TRUE);
+        hr=TryConnectingFilters(gpIGraphBuilder, gpVCap, 2, pFileWriter, 0, TRUE);
         }
 
 	RELEASE(pFileSink);
@@ -636,7 +636,7 @@ HRESULT GetCaptureFileSize(__int64 *size)
     return(hr);
 }
 
-HRESULT GetResyncCount(__int64 *val)
+HRESULT GetResyncCount(__int64 *val, __int64 *avStatus)
 {
     IDBOXIICapture *pSource=NULL;
     HRESULT hr=NOERROR;
@@ -645,6 +645,7 @@ HRESULT GetResyncCount(__int64 *val)
         return(E_POINTER);
 
     *val=0;
+    *avStatus=1;
 
     if (gpIGraphBuilder==NULL)
         return(E_POINTER);
@@ -655,7 +656,7 @@ HRESULT GetResyncCount(__int64 *val)
     hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pSource);
 
     if (SUCCEEDED(hr))
-        hr=pSource->getParameter(CMD_GETSYNCCOUNT, val, NULL);
+        hr=pSource->getParameter(CMD_GETSYNCCOUNT, val, avStatus);
 
     RELEASE(pSource);
     return(hr);

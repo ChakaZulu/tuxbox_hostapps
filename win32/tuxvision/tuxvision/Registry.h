@@ -24,9 +24,9 @@
 #define __REGISTRY_H__
 
 BOOL GetRegStringValue (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey,
-                               LPCSTR RegVal, LPBYTE pValue, DWORD Size);
+                        LPCSTR RegVal, LPBYTE pValue, DWORD Size);
 BOOL SetRegStringValue (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey,
-                               LPCSTR RegVal, LPBYTE pValue, DWORD Size);
-BOOL CreateRegKey  (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey);
+                        LPCSTR RegVal, LPBYTE pValue, DWORD Size);
+BOOL CreateRegKey (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey);
 
 #endif

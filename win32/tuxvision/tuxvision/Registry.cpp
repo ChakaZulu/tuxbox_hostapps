@@ -24,84 +24,84 @@
 #include "registry.h"
 
 BOOL GetRegStringValue (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey,
-                               LPCSTR RegVal, LPBYTE pValue, DWORD Size)
+                        LPCSTR RegVal, LPBYTE pValue, DWORD Size)
 {
-  HKEY   hkOpenKey;
-  HKEY   hkSubOpenKey;
-  DWORD  ValueType = REG_SZ;
-  DWORD  cb = Size;
-  LONG   Result = ERROR_SUCCESS;
+    HKEY   hkOpenKey;
+    HKEY   hkSubOpenKey;
+    DWORD  ValueType = REG_SZ;
+    DWORD  cb = Size;
+    LONG   Result = ERROR_SUCCESS;
 
-  if (RegOpenKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
-    return FALSE;
+    if (RegOpenKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
+        return FALSE;
 
-  if (RegOpenKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
-    {
-    RegCloseKey(hkOpenKey);
-    return FALSE;
-    }
+    if (RegOpenKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
+        {
+        RegCloseKey(hkOpenKey);
+        return FALSE;
+        }
 
-  pValue[0]=0;
-  Result = RegQueryValueEx(hkSubOpenKey, RegVal, NULL , &ValueType, pValue, &cb);
+    pValue[0]=0;
+    Result = RegQueryValueEx(hkSubOpenKey, RegVal, NULL , &ValueType, pValue, &cb);
 
-  RegCloseKey(hkSubOpenKey);
+    RegCloseKey(hkSubOpenKey);
 
-  if (hkOpenKey!=hkSubOpenKey)
-      RegCloseKey(hkOpenKey);
+    if (hkOpenKey!=hkSubOpenKey)
+        RegCloseKey(hkOpenKey);
 
-  return (Result == ERROR_SUCCESS ? TRUE : FALSE);
+    return (Result == ERROR_SUCCESS ? TRUE : FALSE);
 }
 
 
 BOOL SetRegStringValue (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey,
                                LPCSTR RegVal, LPBYTE pValue, DWORD Size)
 {
-  HKEY  hkOpenKey;
-  HKEY  hkSubOpenKey;
+    HKEY  hkOpenKey;
+    HKEY  hkSubOpenKey;
 
-  if (RegOpenKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
-    return FALSE;
+    if (RegOpenKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
+        return FALSE;
 
-  if (RegOpenKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
-    {
-    RegCloseKey(hkOpenKey);
-    return FALSE;
-    }
+    if (RegOpenKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
+        {
+        RegCloseKey(hkOpenKey);
+        return FALSE;
+        }
 
-  RegSetValueEx (hkSubOpenKey, RegVal, 0, REG_SZ, pValue, Size);
+    RegSetValueEx (hkSubOpenKey, RegVal, 0, REG_SZ, pValue, Size);
 
-//  RegFlushKey(hkSubOpenKey);
-  RegCloseKey(hkSubOpenKey);
+    //  RegFlushKey(hkSubOpenKey);
+    RegCloseKey(hkSubOpenKey);
 
-  if (hkOpenKey!=hkSubOpenKey)
-  {
-//      RegFlushKey(hkOpenKey);
-      RegCloseKey(hkOpenKey);
-  }
+    if (hkOpenKey!=hkSubOpenKey)
+        {
+        //      RegFlushKey(hkOpenKey);
+        RegCloseKey(hkOpenKey);
+        }
 
-  return TRUE;
+    return TRUE;
 }
 
 
 BOOL CreateRegKey  (HKEY hKey, LPCSTR SubKey, LPCSTR SubSubKey)
 {
-  HKEY  hkOpenKey;
-  HKEY  hkSubOpenKey;
+    HKEY  hkOpenKey;
+    HKEY  hkSubOpenKey;
 
-  if (RegCreateKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
-    return FALSE;
+    if (RegCreateKey(hKey, SubKey, &hkOpenKey) != ERROR_SUCCESS)
+        return FALSE;
 
-  if (SubSubKey[0])
-	{
-	  if (RegCreateKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
-		{
-	    RegCloseKey(hkOpenKey);
-		return FALSE;
-	    }
-    RegCloseKey(hkSubOpenKey);
-    }
+    if (SubSubKey[0])
+        {
+        if (RegCreateKey(hkOpenKey, SubSubKey, &hkSubOpenKey) != ERROR_SUCCESS)
+            {
+            RegCloseKey(hkOpenKey);
+            return FALSE;
+            }
+        RegCloseKey(hkSubOpenKey);
+        }
 
-  RegCloseKey(hkOpenKey);
+    RegCloseKey(hkOpenKey);
 
-  return TRUE;
+    return TRUE;
 }

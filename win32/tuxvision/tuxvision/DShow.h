@@ -40,7 +40,7 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
 HRESULT RebuildGraph();
 HRESULT SetDeInterlacerState(long useDeInterlacer);
 HRESULT GetCaptureFileSize(__int64 *size);
-HRESULT GetResyncCount(__int64 *val);
+HRESULT GetResyncCount(__int64 *val, __int64 *avStatus);
 HRESULT GetCurrentBitrates(__int64 *val, __int64 *val2);
 
 HRESULT GetDSoundVolume(__int64 *val);

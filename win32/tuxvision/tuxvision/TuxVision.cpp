@@ -84,9 +84,17 @@ __int64       gFilteredAudioBitrate=0;
 __int64       gDSoundVoume=100;
 long          gApplicationPriority=NORMAL_PRIORITY_CLASS;
 long          gAlwaysOnTop=FALSE;
-long          gAutomaticAspectRatio=FALSE;
+long          gAutomaticAspectRatio=TRUE;
 long          gLastPropertyPage=0;
 long          gSetVideoToWindow=FALSE;
+long          gCaptureAudioOnly=FALSE;
+long          gTranscodeAudio=FALSE;
+long          gTranscodeAudioFormat=AUDIO_MPEG1L2;
+long          gTranscodeAudioBitRate=192000;
+long          gTranscodeAudioSampleRate=44100;
+long          gEnableTCPServer=FALSE;
+long          gHTTPPort=8080;
+long          gSTREAMPort=4000;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -193,7 +201,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
     long dtime=(SPLASHTIME+stime-timeGetTime());
     if (dtime<0) dtime=0;
-    dprintf("Additional SplashDelay:%d ms",dtime);
+    //dprintf("Additional SplashDelay:%d ms",dtime);
     {
     int i;
     for(i=0;i<50;i++)
@@ -282,8 +290,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
         AppendMenu(ghPopUpMenu,	 MF_STRING, ID_EXIT, "Exit");
 
-        //HTTPInit();
-        //HTTPRun();
+        if (gEnableTCPServer)
+            {
+            HTTPInit();
+            HTTPRun();
+            }
 
     	while(GetMessage(&msg,NULL,0,0))
 			{
@@ -409,7 +420,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
         case WM_TIMER:
             if (!gFullscreen)
                 {
-
+                BOOL aStatus=TRUE;
+                BOOL vStatus=TRUE;
                 //dprintf("WM_TIMER");
 
                 char szString[264];
@@ -432,10 +444,28 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                 if ((wParam==1) && ((gState==StateRecord)||(gState==StatePreview)))
                     {
                     __int64 val=0;
-                    HRESULT hr=GetResyncCount(&val);
+                    __int64 avStatus=0;
+                    HRESULT hr=GetResyncCount(&val, &avStatus);
                     if (SUCCEEDED(hr))
                         {
                         ltoa((long)val, szString, 10);
+                        if (avStatus&0x80)
+                            {
+                            SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, "fail !");
+                            vStatus=FALSE;
+                            dprintf("Video failed");
+                            }
+                        if (avStatus&0x40)
+                            {
+                            SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, "fail !");
+                            aStatus=FALSE;
+                            dprintf("Audio failed");
+                            }
+                        if (avStatus&0x01)
+                            {
+                            lstrcpy(szString,"search...");
+                            dprintf("still synching ....");
+                            }
                         }
                     }
                 SetDlgItemText(ghWndApp,IDC_RESYNCCOUNT, szString);
@@ -466,8 +496,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                     gFilteredVideoBitrate=0;
                     gFilteredAudioBitrate=0;
                     }
-                SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, szString);
-                SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, szString2);
+                if (aStatus)
+                    SetDlgItemText(ghWndApp,IDC_AUDIOBITRATE, szString);
+                if (vStatus)
+                    SetDlgItemText(ghWndApp,IDC_VIDEOBITRATE, szString2);
                 }
             break;
 
@@ -765,7 +797,17 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             break;
 
 		case IDC_OPTIONS:
+            HTTPStop();
+            HTTPDeInit();
+
 			CreatePropertySheet(ghWndApp, ghInstApp, gLastPropertyPage);
+
+            if (gEnableTCPServer)
+                {
+                HTTPInit();
+                HTTPRun();
+                }
+
             CreateChannelList(ghWndApp);
 			UpdateWindowState(hwnd);
 			break;
@@ -1064,6 +1106,28 @@ void LoadParameter(void)
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "SetVideoToWindow", (unsigned char *)regval, sizeof(regval)))
         gSetVideoToWindow=atoi(regval);
 
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudio", (unsigned char *)regval, sizeof(regval)))
+        gTranscodeAudio=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioFormat", (unsigned char *)regval, sizeof(regval)))
+        gTranscodeAudioFormat=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioBitRate", (unsigned char *)regval, sizeof(regval)))
+        gTranscodeAudioBitRate=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioSampleRate", (unsigned char *)regval, sizeof(regval)))
+        gTranscodeAudioSampleRate=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "EnableTCPServer", (unsigned char *)regval, sizeof(regval)))
+        gEnableTCPServer=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "HTTPPort", (unsigned char *)regval, sizeof(regval)))
+        gHTTPPort=atoi(regval);
+
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "STREAMPort", (unsigned char *)regval, sizeof(regval)))
+        gSTREAMPort=atoi(regval);
+
 }
 
 void SaveParameter(void)
@@ -1099,7 +1163,32 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%ld",gSetVideoToWindow);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "SetVideoToWindow", (unsigned char *)regval, lstrlen(regval));
+
+
+	wsprintf((char *)regval,"%ld",gTranscodeAudio);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudio", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gTranscodeAudioFormat);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioFormat", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gTranscodeAudioBitRate);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioBitRate", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gTranscodeAudioSampleRate);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "TranscodeAudioSampleRate", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gEnableTCPServer);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "EnableTCPServer", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gHTTPPort);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "HTTPPort", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gSTREAMPort);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "STREAMPort", (unsigned char *)regval, lstrlen(regval));
+
+
 }
+
 
 
 
