@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: flashsign.cpp,v 1.3 2002/05/28 18:56:09 waldi Exp $
+ * $Id: flashsign.cpp,v 1.4 2002/06/03 17:41:11 waldi Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -161,7 +161,7 @@ int main ( int argc, char ** argv )
       throw std::runtime_error ( "image too large" );
 
     buf = new char[4096];
-    memset ( buf, 0, 4096 );
+    memset ( buf, 0xff, 4096 );
 
     int pad = padsize / 4096;
 
