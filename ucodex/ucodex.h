@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.h,v 1.4 2003/04/04 17:32:47 obi Exp $
+ * $Id: ucodex.h,v 1.5 2003/07/18 13:40:15 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -32,6 +32,6 @@ struct ucode_s {
 struct ucode_type_s {
 	char name[10];
 	char magic[6];
-	struct ucode_s ucodes[22];
+	struct ucode_s ucodes[32];
 };
 
