@@ -36,20 +36,11 @@
 #define IDC_AUDIOBITRATE                1075
 #define IDC_VIDEOBITRATE                1076
 #define IDC_RESYNCCOUNT                 1077
-#define IDC_SLIDER1                     1078
 #define IDC_VOLUME                      1078
-#define IDC_RADIO1                      1079
-#define IDC_FULLSCREEN                  1079
-#define IDC_CHECK1                      1080
 #define IDC_ALLWAYSONTOP                1080
-#define IDC_RADIO2                      1081
-#define IDC_WINDOW                      1081
 #define IDC_AUTOASPECTRATIO             1082
-#define IDC_RADIO3                      1083
 #define IDC_PRIORITY_REALTIME           1083
-#define IDC_RADIO4                      1084
 #define IDC_PRIORITY_HIGH               1084
-#define IDC_RADIO5                      1085
 #define IDC_PRIORITY_NORMAL             1085
 #define IDC_CHECK2                      1086
 
@@ -57,8 +48,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        115
-#define _APS_NEXT_COMMAND_VALUE         40010
+#define _APS_NEXT_RESOURCE_VALUE        116
+#define _APS_NEXT_COMMAND_VALUE         40017
 #define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

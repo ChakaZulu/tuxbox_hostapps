@@ -182,10 +182,10 @@ switch (msg)
         if (gAutomaticAspectRatio)
             SendMessage(GetDlgItem(hDlg,IDC_AUTOASPECTRATIO),BM_SETCHECK, 1, 0);
 
-        if (gSetVideoToWindow)
-            SendMessage(GetDlgItem(hDlg,IDC_WINDOW),BM_SETCHECK, 1, 0);
-        else
-            SendMessage(GetDlgItem(hDlg,IDC_FULLSCREEN),BM_SETCHECK, 1, 0);
+//        if (gSetVideoToWindow)
+//            SendMessage(GetDlgItem(hDlg,IDC_WINDOW),BM_SETCHECK, 1, 0);
+//        else
+//            SendMessage(GetDlgItem(hDlg,IDC_FULLSCREEN),BM_SETCHECK, 1, 0);
 
 		return TRUE;
 
@@ -217,7 +217,7 @@ switch (msg)
 			case PSN_APPLY:
                 gAlwaysOnTop=SendMessage( GetDlgItem(hDlg,IDC_ALLWAYSONTOP), BM_GETCHECK, 0, 0 );
                 gAutomaticAspectRatio=SendMessage( GetDlgItem(hDlg,IDC_AUTOASPECTRATIO), BM_GETCHECK, 0, 0 );
-                gSetVideoToWindow=SendMessage(GetDlgItem(hDlg,IDC_WINDOW),BM_GETCHECK, 1, 0);
+//                gSetVideoToWindow=SendMessage(GetDlgItem(hDlg,IDC_WINDOW),BM_GETCHECK, 1, 0);
 
                 if (gAlwaysOnTop)
                     SetWindowPos(ghWndApp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);

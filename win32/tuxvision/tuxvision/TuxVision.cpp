@@ -62,10 +62,13 @@
 HINSTANCE	  ghInstApp=NULL;
 HWND		  ghWndApp=NULL;
 HWND		  ghWndVideo=NULL;
+HMENU         ghPopUpMenu=NULL;
+long          gMuted=FALSE;
+long          glAppTop=0;
+long          glAppLeft=0;
 long          glAppWidth=0;
 long          glAppHeight=0;
 RecorderState gState=StateUninitialized;
-long		  gIsWindowMaximized=FALSE;
 RECT		  gRestoreRect={0,0,0,0};
 long		  gCurrentChannel=0;
 long		  gNumChannels=0;
@@ -209,7 +212,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 	heightV=rect1.bottom-rect1.top - 2*GetSystemMetrics(SM_CYFRAME);
 	ghWndVideo=CreateWindow("VideoWindow",
 							NULL,
-							WS_CHILD|WS_CLIPCHILDREN|WS_VISIBLE, 
+							WS_CHILD/*|WS_CLIPCHILDREN*/|WS_VISIBLE, 
 							leftV,
 							topV,
 							widthV,
@@ -259,7 +262,20 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
     
         CreateChannelList(ghWndApp);
 
-		while(GetMessage(&msg,NULL,0,0))
+   
+        ghPopUpMenu=CreatePopupMenu();
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_ALWAYSONTOP, "Allways on top");
+        AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_FULLSCREEN, "Fullscreen");
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_WINDOW, "Window");
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_NORMAL, "Normal");
+        AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_MUTE, "Mute");
+        AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
+        AppendMenu(ghPopUpMenu,	 MF_STRING, ID_EXIT, "Exit");
+
+
+    	while(GetMessage(&msg,NULL,0,0))
 			{
 			TranslateMessage((LPMSG)&msg);
 			DispatchMessage((LPMSG)&msg);
@@ -286,10 +302,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 // ------------------------------------------------------------------------
 LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 {
+
 	switch(message)
 		{
-		case WM_CREATE:
-			return (0);
+//		case WM_CREATE:
+//			return (0);
 
 		case WM_COMMAND:
 			OnWM_Command(hwnd,message,wParam,lParam);
@@ -314,7 +331,8 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             if (wParam==SC_MAXIMIZE)
                 {
                 //!!BSTEST
-                //gSetVideoToWindow=FALSE;    
+                gSetVideoToWindow=FALSE;    
+                //!!BSTEST
                 
                 SendMessage(ghWndVideo, message, wParam, lParam);
                 return(0);
@@ -322,7 +340,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             break;
 
 		case WM_LBUTTONDOWN:
-		    if ((!gIsWindowMaximized)||gSetVideoToWindow)
+		    if ((!gFullscreen) || (gFullscreen && gSetVideoToWindow) )
 				{
 				RECT rc;
 				int xPos, yPos;
@@ -347,12 +365,12 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
             return(0);
 
         case WM_ERASEBKGND:
-   		    if (gIsWindowMaximized && gSetVideoToWindow && gFullscreen)
+   		    if (gFullscreen)
                 return(1);
             break;
 
         case WM_SIZE:
-   		    if (gIsWindowMaximized && gSetVideoToWindow)
+   		    if (gFullscreen && gSetVideoToWindow)
                 {
                 MoveVideoWindow();
                 return(0);
@@ -369,14 +387,18 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 						{
 						gDSoundVoume=SendMessage((HWND)lParam, TBM_GETPOS, 0, 0L);
                         SetDSoundVolume(gDSoundVoume);
+                        gMuted=FALSE;
 						}
 					break;
                 }
             break;
 
         case WM_TIMER:
-            if (!(gIsWindowMaximized && gSetVideoToWindow && gFullscreen))
+            if (!gFullscreen)
                 {
+
+                //dprintf("WM_TIMER");
+
                 char szString[264];
                 char szString2[264];
                 lstrcpy(szString,"");
@@ -454,8 +476,10 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 		{
 //		case WM_CREATE:
 //			return (0);
+
 //		case WM_COMMAND:
 //			break;
+
 		case WM_GRAPHNOTIFY:
 			dprintf("FilterGraph: Message:%ld, wParam:%ld, lParam:%ld",message,wParam,lParam);
 			switch(wParam)
@@ -465,11 +489,10 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 				case EC_COMPLETE:
 					if (gState==StatePlayback)
 						{
-						if (gIsWindowMaximized)
+						if (gFullscreen)
 							{
 							dprintf("Restore from Fullscreen");
 							SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-							gIsWindowMaximized=FALSE;
 							}
 						//StopPlayback(ghWndVideo, &gState);
 						PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
@@ -480,17 +503,100 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 
 		case WM_KEYDOWN:
 			dprintf("VideoWindow KeyDown");
-            if ((gIsWindowMaximized)&&(wParam==27))
+            if ((gFullscreen)&&(wParam==27))
                 {
                 dprintf("Restore from Fullscreen");
                 SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-                gIsWindowMaximized=FALSE;
                 return(0);
                 }
 			break;
 
+        case WM_RBUTTONDOWN:
+            {
+            int ret;
+            POINT pt;
+            GetCursorPos(&pt);
+            // ------------------------------------------------------------------------------------------------
+            if (gAlwaysOnTop)
+                CheckMenuItem(ghPopUpMenu, ID_ALWAYSONTOP, MF_CHECKED);
+            else
+                CheckMenuItem(ghPopUpMenu, ID_ALWAYSONTOP, MF_UNCHECKED);
+            if (gFullscreen&&!gSetVideoToWindow)
+                {
+                CheckMenuItem(ghPopUpMenu, ID_FULLSCREEN, MF_CHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_WINDOW, MF_UNCHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_NORMAL, MF_UNCHECKED);
+                }
+            else
+            if (gFullscreen&&gSetVideoToWindow)
+                {
+                CheckMenuItem(ghPopUpMenu, ID_FULLSCREEN, MF_UNCHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_WINDOW, MF_CHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_NORMAL, MF_UNCHECKED);
+                }
+            else
+                {
+                CheckMenuItem(ghPopUpMenu, ID_FULLSCREEN, MF_UNCHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_WINDOW, MF_UNCHECKED);
+                CheckMenuItem(ghPopUpMenu, ID_NORMAL, MF_CHECKED);
+                }
+            if (gMuted)
+                CheckMenuItem(ghPopUpMenu, ID_MUTE, MF_CHECKED);
+            else
+                CheckMenuItem(ghPopUpMenu, ID_MUTE, MF_UNCHECKED);
+
+            // ------------------------------------------------------------------------------------------------
+            ret=TrackPopupMenu(ghPopUpMenu,TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD,pt.x,pt.y,0,hwnd,NULL);
+            // ------------------------------------------------------------------------------------------------
+            switch (ret)
+                {
+                case ID_ALWAYSONTOP:
+                    if (gAlwaysOnTop)
+                        {
+                        gAlwaysOnTop=FALSE;
+                        SetWindowPos(ghWndApp, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+                        }
+                    else
+                        {
+                        gAlwaysOnTop=TRUE;
+                        SetWindowPos(ghWndApp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+                        }
+                    break;
+                case ID_FULLSCREEN: 
+                    SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
+                    gSetVideoToWindow=FALSE;
+                    SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
+                    break;
+                case ID_WINDOW:    
+                    SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
+                    gSetVideoToWindow=TRUE;
+                    SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
+                    break;
+                case ID_NORMAL:     
+                    SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
+                    break;
+                case ID_MUTE:       
+                    if (gMuted)
+                        {
+                        SetDSoundVolume(gDSoundVoume);
+                        gMuted=FALSE;
+                        }
+                    else
+                        {
+                        SetDSoundVolume(0);
+                        gMuted=TRUE;
+                        }
+                    break;
+                case ID_EXIT:       
+                    SendMessage(ghWndApp,WM_COMMAND, IDC_EXIT, 0);
+                    break;
+                }
+            // ------------------------------------------------------------------------------------------------
+            }
+            return(0);
+
 		case WM_LBUTTONDOWN:
-		  if ((!gIsWindowMaximized)||gSetVideoToWindow)
+		  if ((!gFullscreen)||gSetVideoToWindow)
             {
   			dprintf("VideoWindow LButtonDown");
 			SendMessage(ghWndApp,message,wParam,lParam);
@@ -499,29 +605,26 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
             {
             dprintf("Restore from Fullscreen");
             SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-            gIsWindowMaximized=FALSE;
             }
 		  break;
 
         case WM_SYSCOMMAND:
             if (wParam==SC_MAXIMIZE)
                 {
-                if (!gIsWindowMaximized)
+                if (!gFullscreen)
                     {
                     dprintf("Switching to Fullscreen");
                     SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
-                    gIsWindowMaximized=TRUE;
                     }
                 return(0);
                 }
             else 
             if (wParam==SC_RESTORE)
                 {
-                if (gIsWindowMaximized)
+                if (gFullscreen)
                     {
                     dprintf("Restore from Fullscreen");
                     SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-                    gIsWindowMaximized=FALSE;
                     }
                 return(0);
                 }
@@ -530,20 +633,19 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
         case WM_LBUTTONDBLCLK:
             //if (gState==StatePlayback)
                 {
-                if (gIsWindowMaximized)
+                if (gFullscreen)
                     {
                     dprintf("Restore from Fullscreen");
                     SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-                    gIsWindowMaximized=FALSE;
                     }
                 else
                     {
                     //!!BSTEST
-                    //gSetVideoToWindow=TRUE;    
+                    gSetVideoToWindow=TRUE;    
+                    //!!BSTEST
     
                     dprintf("Switching to Fullscreen");
                     SetFullscreen(NULL, hwnd, &gRestoreRect, TRUE);
-                    gIsWindowMaximized=TRUE;
                     }
                 }
             break;
@@ -628,7 +730,6 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDC_PLAY:
-            gIsWindowMaximized=FALSE;
             gState=StatePlayback;
 			UpdateWindowState(hwnd);
 			break;
