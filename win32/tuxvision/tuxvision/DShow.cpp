@@ -395,7 +395,7 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
 
     hr = pFg->QueryInterface(IID_IMediaEventEx, (void **)&pMediaEvent);  
     if (SUCCEEDED(hr)) 
-       pMediaEvent->SetNotifyWindow((LONG)hwnd, WM_GRAPHNOTIFY, 0);
+       hr=pMediaEvent->SetNotifyWindow((LONG)ghWndApp, WM_GRAPHNOTIFY, 0);
 
     RELEASE(pVideoWindow);
     RELEASE(pMediaEvent);

@@ -592,6 +592,36 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 
             break;
 
+		case WM_GRAPHNOTIFY:
+			IMediaEvent *pMediaEvent;
+			if (gpIGraphBuilder!=NULL)
+				{
+				HRESULT hr;
+                BOOL graphStoppedMsg=FALSE;
+				hr = gpIGraphBuilder->QueryInterface(IID_IMediaEvent, (void**) &pMediaEvent);
+				if (SUCCEEDED(hr)&&(pMediaEvent!=NULL))
+					{
+					long lEventCode,  lParam1,  lParam2;  
+					pMediaEvent->GetEvent(&lEventCode,&lParam1,&lParam2,1000);
+					dprintf("Graph signaled event. EventCode:%lx, Param1:%lx, Param2:%lx",lEventCode,lParam1,lParam2);
+					if ((lEventCode==EC_COMPLETE)||
+						(lEventCode==EC_USERABORT)||
+						(lEventCode==EC_ERRORABORT))
+						{
+						if (gFullscreen)
+							{
+							//dprintf("Restore from Fullscreen");
+							SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
+							}
+						//StopPlayback(ghWndVideo, &gState);
+						PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
+						}
+					pMediaEvent->FreeEventParams(lEventCode,lParam1,lParam2);
+					RELEASE(pMediaEvent);
+					}
+				}
+			break;
+
 		case WM_CLOSE:
             LogPrintf("Application stopped");
             LogFlush(hwnd);
@@ -614,27 +644,6 @@ LRESULT CALLBACK WndProcVideo (HWND hwnd, UINT message , WPARAM wParam, LPARAM l
 
 //		case WM_COMMAND:
 //			break;
-
-		case WM_GRAPHNOTIFY:
-			dprintf("FilterGraph: Message:%ld, wParam:%ld, lParam:%ld",message,wParam,lParam);
-			switch(wParam)
-				{
-				case EC_ERRORABORT:
-				case EC_USERABORT:
-				case EC_COMPLETE:
-					if (gState==StatePlayback)
-						{
-						if (gFullscreen)
-							{
-							//dprintf("Restore from Fullscreen");
-							SetFullscreen(ghWndApp, hwnd, &gRestoreRect, FALSE);
-							}
-						//StopPlayback(ghWndVideo, &gState);
-						PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
-						}
-					break;
-				}
-			break;
 
 		case WM_KEYDOWN:
 			//dprintf("VideoWindow KeyDown");
