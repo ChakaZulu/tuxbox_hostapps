@@ -810,12 +810,14 @@ STDMETHODIMP CDBOXIICapture::Pause()
                 return(E_FAIL);
                 }
 
+#if 0
             if (m_DBOXStopPlayback)
                 hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 2);
             else
                 hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 1);
             if (FAILED(hr))
                 return(E_FAIL);
+#endif
 
             hr=ExecuteCommand("killall -HUP controld;killall -HUP sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             if (FAILED(hr))
@@ -1177,6 +1179,7 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
 
     if (m_Abort)
         {
+        pms->SetActualDataLength(0);
         Sleep(5);
         return(NOERROR);
         }
