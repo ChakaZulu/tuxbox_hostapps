@@ -1,0 +1,51 @@
+<html>
+<body>
+<center><h2><u>DBox II Calender (TuxCal)</u></h2>
+</center>
+
+<?php
+
+include ("tuxcal.conf.php");
+
+// Database Connect here
+
+$db = mysql_pconnect($sql_server, $sql_user, $sql_password);
+mysql_select_db($sql_db,$db);
+$result = mysql_query("SELECT * FROM $sql_table order by datum",$db);
+
+
+// Output
+
+echo "<table border=1 align=center> \n";
+
+
+echo "<tr><td><b>Type</b></td><td><b>Date</b></td><td><b>Subject</b></td></tr>\n";
+
+
+
+while ($myrow = mysql_fetch_row($result)) {
+
+
+
+		printf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+		$myrow[0], $myrow[1], $myrow[2]);
+
+
+
+}
+
+
+
+echo "</table>\n";
+
+
+?>
+
+<p>
+<center><b>looks ugly, but works. dateformat in tuxcal sux, btw..no sorting by date possible that way</b></center>
+<p>
+<blockquote>
+<b>anyway, lets get to the input fields here, if my time permits. maybe a nice doener by homar first of all? :-)</b>
+</blockquote>
+</body>
+</html>
