@@ -17,12 +17,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: flashsign.cpp,v 1.2 2002/03/10 18:18:42 waldi Exp $
+ * $Id: flashsign.cpp,v 1.3 2002/05/28 18:56:09 waldi Exp $
  */
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -32,15 +28,15 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include <getopt.h>
-#include <sys/time.h>
-#include <time.h>
 
-#include <openssl/bio.h>
-#include <openssl/pem.h>
-#include <openssl/x509.h>
+#include <libcrypto++/rand.hpp>
+
+#include <libflashimage/flashimage.hpp>
+#include <libflashimage/flashimagecramfs.hpp>
 
 #define PROGRAM_NAME "flashsign"
 
@@ -50,10 +46,9 @@ const char * program_name;
 
 static struct option long_options [] =
 {
-  { "certificate", required_argument, 0, 'c' },
-  { "flash", required_argument, 0, 'f' },
+  { "image", required_argument, 0, 'i' },
   { "privatekey", required_argument, 0, 'k' },
-  { "status", required_argument, 0, 's' },
+  { "size", required_argument, 0, 's' },
   { "help", no_argument, 0, 250 },
   { "version", no_argument, 0, 251 },
   { 0, 0, 0, 0 }
@@ -67,17 +62,11 @@ void usage ( int status )
     std::cout
       << "Usage: " << program_name << " [OPTIONS]\n\n"
       << "Sign a flash image\n\n"
-      << "  -c, --certificate=FILE      certificate to sign\n"
-      << "  -f, --flash=FILE            flash file for sign\n"
-      << "  -k, --privatekey=FILE       private key to sign\n"
-      << "  -s, --status=FILE           status file for flash\n"
+      << "  -i, --image=FILE            image file\n"
+      << "  -k, --privatekey=FILE       private key for sign\n"
+      << "  -s, --size=SIZE             size of output file in kb\n"
       << "      --help                  display this help and exit\n"
-      << "      --version               output version information and exit\n\n"
-      << "The status file looks like the follow:\n"
-      << "  Format: 1.0                                         (required)\n"
-      << "  Date: <RFC822 compliant date>                       (optional)\n"
-      << "  Maintainer: <RFC822 compliant name and email>       (required)\n"
-      << "  Version: <version of flash>                         (required)\n";
+      << "      --version               output version information and exit\n";
 
   exit ( status );
 }
@@ -92,23 +81,20 @@ std::map < std::string, std::string > parse_options ( int argc, char ** argv )
   {
     option_index = 0;
 
-    c = getopt_long (argc, argv, "c:f:k:s:", long_options, &option_index);
+    c = getopt_long (argc, argv, "i:k:o:s:", long_options, &option_index);
 
     if ( c == -1 )
       break;
     switch ( c )
     {
-      case 'c':
-        options.insert ( std::pair < std::string, std::string > ( "certificate", optarg ) );
-        break;
-      case 'f':
-        options.insert ( std::pair < std::string, std::string > ( "flash", optarg ) );
+      case 'i':
+        options.insert ( std::pair < std::string, std::string > ( "image", optarg ) );
         break;
       case 'k':
         options.insert ( std::pair < std::string, std::string > ( "privatekey", optarg ) );
         break;
       case 's':
-        options.insert ( std::pair < std::string, std::string > ( "status", optarg ) );
+        options.insert ( std::pair < std::string, std::string > ( "size", optarg ) );
         break;
       case 250:
         usage ( EXIT_SUCCESS );
@@ -129,215 +115,85 @@ std::map < std::string, std::string > parse_options ( int argc, char ** argv )
   return options;
 }
 
-std::map < std::string, std::string > parse_status ( std::istream & stream )
-{
-  std::map < std::string, std::string > fields;
-  std::string field;
-  std::string data;
-
-  while ( ! stream.fail () )
-  {
-    std::getline ( stream, field, ':' );
-
-    if ( field == "" )
-      break;
-
-    std::getline ( stream, data, ' ' );
-    std::getline ( stream, data );
-
-    if ( data == "" )
-      break;
-
-    fields.insert ( std::pair < std::string, std::string > ( field, data ) );
-  }
-
-  return fields;
-}
-
-std::string digest ( std::istream & stream )
-{
-  EVP_MD_CTX ctx;
-  unsigned char buf[1024];
-  unsigned int s;
-
-  EVP_DigestInit ( &ctx, EVP_sha1 () );
-
-  while ( ! stream.fail () )
-  {
-    stream.read ( reinterpret_cast < char * > ( buf ), 1024 );
-    EVP_DigestUpdate ( &ctx, buf, stream.gcount () );
-  }
-
-  EVP_DigestFinal ( &ctx, buf, &s );
-
-  return std::string ( reinterpret_cast < char * > ( buf ), s );
-}
-
-std::string sign ( std::istream & stream, EVP_PKEY * key )
-{
-  EVP_MD_CTX ctx;
-  unsigned char buf[1024];
-  unsigned int s;
-
-  EVP_DigestInit ( &ctx, EVP_sha1 () );
-
-  while ( ! stream.fail () )
-  {
-    stream.read ( reinterpret_cast < char * > ( buf ), 1024 );
-    EVP_DigestUpdate ( &ctx, buf, stream.gcount () );
-  }
-
-  EVP_SignFinal ( &ctx, buf, &s, key );
-
-  return std::string ( reinterpret_cast < char * > ( buf ), s );
-}
-
-std::string date ()
-{
-  char buf[256];
-  timeval time;
-  int ret;
-
-  gettimeofday ( &time, NULL );
-  ret = strftime ( buf, 255, "%a, %_d %b %Y %H:%M:%S %z", localtime ( &time.tv_sec ) );
-
-  return std::string ( buf, ret );
-}
-
 int main ( int argc, char ** argv )
 {
   program_name = argv[0];
 
   std::map < std::string, std::string > options = parse_options ( argc, argv );
   
-  if ( options["flash"] == "" )
+  if ( options["image"] == "" )
   {
-    std::cerr << program_name << ": need a flash file!\n";
+    std::cerr << program_name << ": need a image file!\n";
     usage ( 1 );
   }
 
-  if ( options["status"] == "" )
+  if ( options["size"] == "" )
   {
-    std::cerr << program_name << ": need a status file!\n";
+    std::cerr << program_name << ": need a size for output image file!\n";
     usage ( 1 );
   }
 
-  if ( options["certificate"] == "" || options["privatekey"] == "" )
-    std::cerr << "don't append a signature, i hope you know what you do!" << std::endl;
-
-  std::fstream status_stream ( options["status"].c_str (), std::ios::in );
-
-  std::map < std::string, std::string > status = parse_status ( status_stream );
-
-  if ( status["Format"] < "1.0" || status["Format"] > "1.0" )
+  if ( options["privatekey"] == "" )
   {
-    std::cerr << "can't recognize format of status file (" << status["Format"] << ")" << std::endl;
-    return 2;
+    std::cerr << program_name << ": need a privatekey file!\n";
+    usage ( 1 );
   }
 
-  if ( status["Date"] == "" )
-    status["Date"] = date ();
+  Crypto::rand::load_file ( "/dev/urandom", 128 );
 
-  if ( status["Maintainer"] == "" )
+  std::fstream image_in ( options["image"].c_str (), std::ios::in | std::ios::out );
+  char * buf = NULL;
+
+  try
   {
-    std::cerr << "you must define a maintainer!" << std::endl;
-    return 2;
-  }
+    image_in.seekg ( 0, std::ios::end );
+    int size = image_in.tellg ();
+    int endsize = atoi ( options["size"].c_str () ) * 1024;
+    int padsize = endsize - size;
 
-  if ( status["Version"] == "" )
-  {
-    std::cerr << "you must define a version!" << std::endl;
-    return 2;
-  }
+    if ( size % 4096 )
+      throw std::runtime_error ( "image not alligned" );
 
-  std::fstream flash_stream ( options["flash"].c_str (), std::ios::in );
+    if ( endsize % 4096 )
+      throw std::runtime_error ( "size not alligned" );
 
-  status["Digest"] = "SHA1";
+    if ( size - 4096 > endsize )
+      throw std::runtime_error ( "image too large" );
 
-  {
-    BIO * bio = BIO_new ( BIO_s_mem () );
-    BIO * bio_base64 = BIO_new ( BIO_f_base64 () );
-    BIO_push ( bio_base64, bio );
-    BUF_MEM * mem_buf;
-    BIO_get_mem_ptr ( bio, &mem_buf );
+    buf = new char[4096];
+    memset ( buf, 0, 4096 );
 
-    std::string flash_digest = digest ( flash_stream );
-    BIO_write ( bio_base64, flash_digest.data (), flash_digest.length () );
-    BIO_flush ( bio_base64 );
+    int pad = padsize / 4096;
 
-    status["Hash-Flash"] = std::string ( mem_buf -> data, mem_buf -> length - 1 );
-
-    BIO_free_all ( bio_base64 );
-  }
-
-  std::stringstream status_out;
-
-  status_out
-    << "Format: " << status["Format"] << "\n"
-    << "Date: " << status["Date"] << "\n"
-    << "Version: " << status["Version"] << "\n"
-    << "Maintainer: " << status["Maintainer"] << "\n";
-
-  if ( options["certificate"] != "" && options["privatekey"] != "" )
-  {
-    BIO * bio = BIO_new_file ( options["certificate"].c_str (), "r" );
-    
-    if ( ! bio )
-      abort ();
-
-    X509 * cert = PEM_read_bio_X509 ( bio, NULL, NULL, NULL );
-    char * buf = X509_NAME_oneline ( X509_get_subject_name ( cert ), NULL, 0 );
-    status_out
-      << "Signer: " << std::string ( buf ) << "\n";
-    free ( buf );
-    BIO_free_all ( bio );
-  }
-
-  status_out
-    << "Digest: " << status["Digest"] << "\n"
-    << "Hash-Flash: " << status["Hash-Flash"] << "\n" << std::endl;
-
-  if ( options["certificate"] != "" && options["privatekey"] != "" )
-  {
-    BIO * bio = BIO_new_file ( options["privatekey"].c_str (), "r" );
-    
-    if ( ! bio )
-      abort ();
-
-    EVP_PKEY * key = PEM_read_bio_PrivateKey ( bio, NULL, NULL, NULL );
-
-    BIO * mem = BIO_new ( BIO_s_mem () );
-    BIO * mem_base64 = BIO_new ( BIO_f_base64 () );
-    BIO_push ( mem_base64, mem );
-    BUF_MEM * mem_buf;
-    BIO_get_mem_ptr ( mem, &mem_buf );
-
-    std::string status_signature = sign ( status_out, key );
-    BIO_write ( mem_base64, status_signature.data (), status_signature.length () );
-    BIO_flush ( mem_base64 );
-
-    std::cout
-      << status_out.str ()
-      << "-----BEGIN SIGNATURE-----\n"
-      << "Digest: SHA1\n\n"
-      << std::string ( mem_buf -> data, mem_buf -> length )
-      << "-----END SIGNATURE-----\n";
-
-    std::fstream cert ( options["certificate"].c_str (), std::ios::in );
-    std::string buf;
-
-    while ( ! cert.fail () )
+    image_in.seekp ( 0, std::ios::end );
+    while ( pad )
     {
-      getline ( cert, buf );
-      std::cout << buf << "\n";
+      image_in.write ( buf, 4096 );
+      pad--;
     }
 
-    BIO_free_all ( mem_base64 );
-    BIO_free_all ( bio );
+    FlashImage::FlashImageCramFS fs ( image_in );
+    FlashImage::FlashImage image ( fs );
+
+    std::ifstream privatekey_in ( options["privatekey"].c_str (), std::ios::in );
+    Crypto::evp::key::privatekey key;
+    key.read ( privatekey_in );
+
+    if ( image.get_control_field ( "Digest" ) == "MD5" )
+      fs.sign ( key, Crypto::evp::md::md5 () );
+    else if ( image.get_control_field ( "Digest" ) == "SHA1" )
+      fs.sign ( key, Crypto::evp::md::sha1 () );
+    else if ( image.get_control_field ( "Digest" ) == "RIPEMD160" )
+      fs.sign ( key, Crypto::evp::md::ripemd160 () );
   }
-  else
-    std::cout
-      << status_out.str ();
+
+  catch ( std::runtime_error & except )
+  {
+    std::cout << "exception: " << except.what () << std::endl;
+  }
+
+  image_in.close ();
+  delete buf;
 
   return 0;
 }

@@ -8,36 +8,20 @@ flashsign \- manual page for flashsign (tuxbox-hostapps) 0.0.1
 .SH DESCRIPTION
 Sign a flash image
 .TP
-\fB\-c\fR, \fB\-\-certificate\fR=\fIFILE\fR
-certificate to sign
-.TP
-\fB\-f\fR, \fB\-\-flash\fR=\fIFILE\fR
-flash file for sign
+\fB\-i\fR, \fB\-\-image\fR=\fIFILE\fR
+image file
 .TP
 \fB\-k\fR, \fB\-\-privatekey\fR=\fIFILE\fR
-private key to sign
+private key for sign
 .TP
-\fB\-s\fR, \fB\-\-status\fR=\fIFILE\fR
-status file for flash
+\fB\-s\fR, \fB\-\-size\fR=\fIFILE\fR
+size of output file in kb
 .TP
 \fB\-\-help\fR
 display this help and exit
 .TP
 \fB\-\-version\fR
 output version information and exit
-.SS "The status file looks like the follow:"
-.TP
-Format: 1.0
-(required)
-.TP
-Date: <RFC822 compliant date>
-(optional)
-.TP
-Maintainer: <RFC822 compliant name and email>
-(required)
-.TP
-Version: <version of flash>
-(required)
 .SH AUTHOR
 Written by Bastian Blank.
 .PP
