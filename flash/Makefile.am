@@ -1,4 +1,10 @@
-bin_PROGRAMS = flashsign
+bin_PROGRAMS = flashcheck flashsign
+
+flashcheck_SOURCES = \
+	flashcheck.cpp
+
+flashcheck_LDADD = \
+	$(top_builddir)/libflashimage/libflashimage.la
 
 flashsign_SOURCES = \
 	flashsign.cpp
