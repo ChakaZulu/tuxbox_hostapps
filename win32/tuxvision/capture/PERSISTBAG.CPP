@@ -72,6 +72,11 @@ if (hr == NOERROR)
                         var.lVal=(long)i64val;
 					    hr = pBag->Write(L"StopPlayback", &var);
 
+                        getParameter(CMD_SKIPPREPARATION, &i64val, NULL); 
+                        var.lVal=(long)i64val;
+					    hr = pBag->Write(L"SkipPreparation", &var);
+
+
 					    var.vt = VT_BSTR;
                         var.bstrVal=wBuffer;
 
@@ -144,6 +149,10 @@ if (hr == NOERROR)
 						if (SUCCEEDED(hr))
 							setParameter(CMD_STOPPLAYBACK, var.lVal);
 
+					    hr = pBag->Read(L"SkipPreparation", &var, NULL);
+						if (SUCCEEDED(hr))
+							setParameter(CMD_SKIPPREPARATION, var.lVal);
+
 					    var.vt = VT_BSTR;
                         var.bstrVal=wBuffer;
 
@@ -167,7 +176,8 @@ if (hr == NOERROR)
                             WideCharToMultiByte(CP_ACP, 0, var.bstrVal, -1, pStr, 264, NULL, NULL);
                             setParameter(CMD_PASSWORD, (__int64)pStr);
                             }
-						}
+
+                        }
 					SysFreeString(var.bstrVal);
 					}
 				pBag->Release();

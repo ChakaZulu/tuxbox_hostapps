@@ -1312,7 +1312,9 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 			double av_pts_diff = pts_diff(audio_pts, video_pts);
 			
 			//if (fabs(av_pts_diff) < (90000.0/22)) { // /2 ?			
-			if (fabs(av_pts_diff) < (3600.0*1.25)) { 		
+            dprintf("AV ResyncDelta :%ld",(int)av_pts_diff);
+            if (fabs(av_pts_diff) <= (3600.0*1.5)) 
+                { 		
 				// ha - we found a place...
 				
 				playtime_offset += pts_diff(system_clock_ref, system_clock_ref_start);
@@ -1329,7 +1331,7 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 				resyncs += 1;
 				resync = false;
 				break;
-			}
+			    }
 			
 			// alas, we cannot decide whether audio or video is incorrect -
 			// so we have to throw away both packets...

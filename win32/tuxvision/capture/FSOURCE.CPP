@@ -356,7 +356,7 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
 	g_Instance++;
 
-	pPushStreamVideoRAW =(CPushStream*)m_paStreams[0];
+	pPushStreamVideoRAW =(CPushStream*)m_paStreams[0]; 
 	pPushStreamAudioRAW =(CPushStream*)m_paStreams[1];
 	pPushStreamMultiplex=(CPushStream*)m_paStreams[2];
 	pPushStreamVideo    =(CPushStream*)m_paStreams[3];
@@ -380,6 +380,8 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     m_DBOXPSStreamingPort=31337;
     m_DBOXHTTPPort=80;
     m_DBOXTelnetPort=23;
+
+    m_SkipPreparation=TRUE;
 
     m_StartSucceeded=TRUE;
 
@@ -406,18 +408,6 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 
 //    m_VideoWidth=352;
 //    m_VideoHeight=288;
-
-//!!BS nhttpd is really a bloody bastard ...
-#if 0
-    {
-    HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
-    if (SUCCEEDED(hr))
-        hr=ExecuteCommand("killall -HUP nhttpd;killall -9 inetd;sleep 2;/bin/nhttpd/;sleep 2;/sbin/inetd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
-//        hr=ExecuteCommand("killall -SIGQUIT nhttpd;sleep 1;kill -SIGQUIT `ps | grep inetd | sed 's/[a-zA-Z]//g'`;sleep 2;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
-    }
-#endif
-//!!BS nhttpd is really a bloody bastard ...
-
 
     m_VideoWidth=0;
     m_VideoHeight=0;
@@ -513,11 +503,12 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
                 hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
             break;
 
+        //!!BS (n/t)httpd is really a bloody bastard ...
         case CMD_RESTARTNHTTPD:
             {
             HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
             if (SUCCEEDED(hr))
-                hr=ExecuteCommand("killall -9 thttpd;sleep 1;/bin/thttpd -C /etc/thttpd.conf", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+                hr=ExecuteCommand("killall -9 thttpd;killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             break;
             }
 
@@ -525,6 +516,10 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             m_VPid=((data1&0xFFFFFFFF00000000)>>32);
             m_APid=(data1&0x00000000FFFFFFFF);
             hr=NOERROR;
+            break;
+
+        case CMD_SKIPPREPARATION:
+            m_SkipPreparation=(int)data1;
             break;
 
         }
@@ -731,6 +726,12 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             *data1=m_APid;
             *data2=m_VPid;
             break;
+        
+        case CMD_SKIPPREPARATION:
+            if (data1==NULL)
+                return(E_POINTER);
+            *data1=m_SkipPreparation;
+            break;
 
         }
 	return(hr);
@@ -742,9 +743,9 @@ STDMETHODIMP CDBOXIICapture::Stop()
 
     hr=CSource::Stop();
     DeInitStreaming();
+
     if (m_StartSucceeded)
         ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 0);
-//    hr=ExecuteCommand("killall -9 streampes", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
 
     m_VPid=0;
     m_APid=0;
@@ -814,16 +815,16 @@ STDMETHODIMP CDBOXIICapture::Pause()
                 return(E_FAIL);
                 }
 
-#if 0
             if (m_DBOXStopPlayback)
                 hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 2);
             else
                 hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 1);
             if (FAILED(hr))
                 return(E_FAIL);
-#endif
 
-            hr=ExecuteCommand("killall -HUP controld;killall -HUP sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+            if (!m_SkipPreparation)
+                hr=ExecuteCommand("killall -HUP controld;killall -HUP sectionsd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+
             if (FAILED(hr))
                 return(E_FAIL);
 

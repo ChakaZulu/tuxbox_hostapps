@@ -6,6 +6,7 @@
 #define IDC_STOPPLAYBACK                1003
 #define IDC_LOGIN                       1004
 #define IDC_PASSWORD                    1005
+#define IDC_SKIPPREPARATION             1006
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

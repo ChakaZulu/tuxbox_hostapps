@@ -147,6 +147,8 @@ public:
     __int64 m_VPid;
     __int64 m_APid;
 
+    int     m_SkipPreparation;
+
     // It should (is) only allowed to to create these objects with CreateInstance
     CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr);
 	~CDBOXIICapture();

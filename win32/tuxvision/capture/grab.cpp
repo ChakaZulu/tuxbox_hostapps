@@ -19,7 +19,7 @@
 * along with this program; see the file COPYING.  If not, write to
 * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 */
-
+ 
 #include <winsock2.h>
 #include <streams.h>
 #include <string.h>
@@ -34,6 +34,16 @@
 #include "ccircularbuffer.h"
 #include "Remuxer.h"
 #include "grab.h"
+
+//!!BS (n/t)httpd is really a bloody bastard ...
+#if 0
+    #define _CRLFCRLF_ "\r\n\r\n"
+    #define _CRLF_     "\r\n"
+#else
+    #define _CRLFCRLF_ "\n\n"
+    #define _CRLF_     "\n"
+#endif
+//!!BS (n/t)httpd is really a bloody bastard ...
 
 // -------------------------------------------
 char         *gChannelNameList[MAX_LIST_ITEM];
@@ -224,7 +234,7 @@ int openPES(const char * name, unsigned short port, int pid, int bsize)
 	    }
 	
 	char buffer[264];		
-	wsprintf(buffer, "GET /%x HTTP/1.0\r\n\r\n", pid);
+	wsprintf(buffer, "GET /%x HTTP/1.0"_CRLFCRLF_, pid);
 	
     ret=GetBufTCP (sock, bsize, SO_RCVBUF);
     dprintf("Requested Buffer:%lu, granted Buffer:%lu",bsize,ret);
@@ -267,7 +277,7 @@ int openPS(const char * name, unsigned short port, int vpid, int apid, int bsize
 	    }
 	
 	char buffer[264];		
-	wsprintf(buffer, "GET /%x %x HTTP/1.0\r\n\r\n", apid,vpid);
+	wsprintf(buffer, "GET /%x %x HTTP/1.0"_CRLFCRLF_, apid,vpid);
 	
     ret=GetBufTCP (sock, bsize, SO_RCVBUF);
     dprintf("Requested Buffer:%lu, granted Buffer:%lu",bsize,ret);
@@ -405,14 +415,17 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
 	char wbuffer[1024];		
 	char wbody[1024];		
 
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
     //!!BS attention data is delivered in SIGNED format !! (who the hack brought up this idea ...)
     //!!BS internally we stay with unsigned format (of course)
-    wsprintf(wbuffer, "GET /control/zapto?%ld HTTP/1.0\r\n", channel);
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    wsprintf(wbuffer, "GET /control/zapto?%ld HTTP/1.0"_CRLF_, channel);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -480,12 +493,15 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
 	char wbuffer[1024];		
 	char wbody[1024];		
 
-    wsprintf(wbuffer, "GET /control/zapto HTTP/1.0\r\n");
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+    wsprintf(wbuffer, "GET /control/zapto HTTP/1.0"_CRLF_);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -562,12 +578,15 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
 	char wbuffer[1024];		
 	char wbody[1024];		
 
-    wsprintf(wbuffer, "GET /control/epg?%lu HTTP/1.0\r\n", channel);
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+    wsprintf(wbuffer, "GET /control/epg?%lu HTTP/1.0"_CRLF_, channel);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -663,12 +682,15 @@ HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *i
 	char wbuffer[1024];		
 	char wbody[1024];		
 
-    wsprintf(wbuffer, "GET /control/epg?eventid=%s HTTP/1.0\r\n", eventid);
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+    wsprintf(wbuffer, "GET /control/epg?eventid=%s HTTP/1.0"_CRLF_, eventid);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -735,24 +757,26 @@ HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
 	char wbuffer[1024];		
 	char wbody[1024];		
 
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
 
     if (active==0)
         {
 	    //wsprintf(wbuffer, "GET /control/zapto?startsectionsd HTTP/1.0\r\n");
-	    wsprintf(wbuffer, "GET /control/zapto?startplayback HTTP/1.0\r\n");
+	    wsprintf(wbuffer, "GET /control/zapto?startplayback HTTP/1.0"_CRLF_);
         }
     else
     if (active==1)
-	    wsprintf(wbuffer, "GET /control/zapto?stopsectionsd HTTP/1.0\r\n");
+	    wsprintf(wbuffer, "GET /control/zapto?stopsectionsd HTTP/1.0"_CRLF_);
     else
-	    wsprintf(wbuffer, "GET /control/zapto?stopplayback HTTP/1.0\r\n");
+	    wsprintf(wbuffer, "GET /control/zapto?stopplayback HTTP/1.0"_CRLF_);
 
 
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -789,13 +813,17 @@ HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port
 	
 	char wbuffer[1024];		
 	char wbody[1024];		
-	wsprintf(wbuffer, "GET /control/zapto?getpids HTTP/1.0\r\n");
 
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+	wsprintf(wbuffer, "GET /control/zapto?getpids HTTP/1.0"_CRLF_);
+
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -943,13 +971,17 @@ HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, c
 
 	char wbuffer[1024];		
 	char wbody[1024];		
-	wsprintf(wbuffer, "GET /control/info?streaminfo HTTP/1.0\r\n");
 
-    wsprintf(wbody,   "User-Agent: BS\r\n"
-                      "Host: %s\r\n"
-                      "Pragma: no-cache\r\n"
-                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                      "\r\n", name);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+	wsprintf(wbuffer, "GET /control/info?streaminfo HTTP/1.0"_CRLF_);
+
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
 	
 
     lstrcat(wbuffer,wbody);
@@ -1056,13 +1088,17 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
 
 	    char wbuffer[1024];		
 	    char wbody[1024];		
-	    wsprintf(wbuffer, "GET /control/channellist HTTP/1.0\r\n");
 
-        wsprintf(wbody,   "User-Agent: BS\r\n"
-                          "Host: %s\r\n"
-                          "Pragma: no-cache\r\n"
-                          "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*\r\n"
-                          "\r\n", name);
+        ZeroMemory(wbuffer, sizeof(wbuffer));
+        ZeroMemory(wbody, sizeof(wbody));
+
+	    wsprintf(wbuffer, "GET /control/channellist HTTP/1.0"_CRLF_);
+
+        wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                          "Host: %s"_CRLF_
+                          "Pragma: no-cache"_CRLF_
+                          "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                           name);
 	    
 
         lstrcat(wbuffer,wbody);
@@ -1322,21 +1358,23 @@ void __cdecl AVReadThread(void *thread_arg)
         //if (!wait)
         if (firstAudio && firstVideo)
             {
+            int result=0;
             if ((gSocketVideoPES>0)&&(gSocketAudioPES>0))
                 {
                 if (gIsPSPinConnected)
-	                CRemuxer->write_mpg(NULL);
+	                result=CRemuxer->write_mpg(NULL);
                 }
             else
             if (gSocketVideoPES>0)
                 {
-	                CRemuxer->write_mpv(NULL);
+	                result=CRemuxer->write_mpv(NULL);
                 }
             else
             if (gSocketAudioPES>0)
                 {
-	                CRemuxer->write_mpp(NULL);
+	                result=CRemuxer->write_mpp(NULL);
                 }
+            //dprintf("result:%ld",result);
             }
         #endif
         

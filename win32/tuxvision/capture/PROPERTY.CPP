@@ -78,6 +78,9 @@ BOOL CProperties::OnReceiveMessage
 			m_pIDBOXIICapture->getParameter(CMD_STOPPLAYBACK, &val, NULL);
 			SendMessage( GetDlgItem(hwnd,IDC_STOPPLAYBACK), BM_SETCHECK, (unsigned int)val, 0 );
 
+			m_pIDBOXIICapture->getParameter(CMD_SKIPPREPARATION, &val, NULL);
+			SendMessage( GetDlgItem(hwnd,IDC_SKIPPREPARATION), BM_SETCHECK, (unsigned int)val, 0 );
+
             m_pIDBOXIICapture->getParameter(CMD_IPADDRESS, (__int64 *)szStr, NULL);
             SetWindowText(GetDlgItem(hwnd,IDC_IPADDRESS), szStr);
 
@@ -100,6 +103,9 @@ BOOL CProperties::OnReceiveMessage
             char szStr[264];
             int val=SendMessage( GetDlgItem(hwnd,IDC_STOPPLAYBACK), BM_GETCHECK, 0, 0 );
             m_pIDBOXIICapture->setParameter(CMD_STOPPLAYBACK, (__int64)val);
+
+            val=SendMessage( GetDlgItem(hwnd,IDC_SKIPPREPARATION), BM_GETCHECK, 0, 0 );
+            m_pIDBOXIICapture->setParameter(CMD_SKIPPREPARATION, (__int64)val);
 
             GetWindowText(GetDlgItem(hwnd,IDC_IPADDRESS), szStr, 264);
             m_pIDBOXIICapture->setParameter(CMD_IPADDRESS, (__int64)szStr);
