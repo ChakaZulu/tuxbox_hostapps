@@ -1,5 +1,5 @@
 /*
- * $Id: Remuxer.h,v 1.1 2001/12/22 17:14:52 obi Exp $
+ * $Id: Remuxer.h,v 1.2 2002/08/31 01:06:19 obi Exp $
  *
  * MPEG2 remuxer
  *
@@ -21,6 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  * $Log: Remuxer.h,v $
+ * Revision 1.2  2002/08/31 01:06:19  obi
+ * sync with grab v1.40
+ *
  * Revision 1.1  2001/12/22 17:14:52  obi
  * - added hostapps
  * - added grab to hostapps
@@ -57,6 +60,39 @@
 #define STREAM_REST_VIDEO	0xE0
 
 // #######################################################
+
+// returns a PTS difference (l-r)
+inline double pts_diff(double l, double r) {
+	
+	if (l < 0.0 || r < 0.0) return -1.0;
+	
+	double res = l - r;
+	
+	if (fabs(res) >= (double)(0x80000000UL)) {
+		if (l > r) {
+			if (l > 0x180000000ULL) {
+				// assume that l wrapped around the 33-bit border
+				l -= 0x200000000ULL;
+			} else if (l > 0x80000000UL) {
+				// assume that l wrapped around the 32-bit border
+				l -= 0x100000000ULL;
+			}
+		} else {
+			if (r > 0x180000000ULL) {
+				// assume that r wrapped around the 33-bit border
+				r -= 0x200000000ULL;
+			} else if (r > 0x80000000UL) {
+				// assume that r wrapped around the 32-bit border
+				r -= 0x100000000ULL;
+			}
+		}
+		res = l - r;
+	}
+	
+	return res;	
+}
+
+// ########################################################
 
 class Remuxer {
 public:
@@ -133,7 +169,8 @@ public:
 	unsigned long long scr_play_offset;
 	double             video_forerun;
 	double allowed_frame_pts_skew;	
-	
+
+	bool mpp_started; // for ::write_mpp, set once the first sync mark was found
 	
 	// ====================================================
 	
@@ -182,6 +219,8 @@ public:
 		video_forerun   = 19000.0;
 		scr_play_offset = 8000 + (unsigned long long)video_forerun;
 		allowed_frame_pts_skew = 0.1 * 90000.0;
+
+		mpp_started = false;
 	}
 	
 	~Remuxer(void) {
@@ -198,7 +237,7 @@ public:
 	double get_playtime(void) const {
 		double r = playtime_offset;
 		if (system_clock_ref >= 0.0) {
-			r += system_clock_ref - system_clock_ref_start;
+			r += pts_diff(system_clock_ref, system_clock_ref_start);
 		}
 		return r;
 	}
@@ -289,6 +328,14 @@ public:
 	int flush_pp(FILE * mpgfile);
 	
 	// ----------------------------
+
+
+	int write_mpp(FILE * mppfile);
+
+	int write_mpv(FILE * mpvfile);
+
+	// ----------------------------
+
 };
 
 
@@ -397,39 +444,4 @@ inline const char * pts_to_hms(double pts) {
 }
 
 // #######################################################
-
-// returns a PTS difference (l-r)
-inline double pts_diff(double l, double r) {
-	
-	if (l < 0.0 || r < 0.0) return -1.0;
-	
-	double res = l - r;
-	
-	if (fabs(res) >= (double)(0x80000000UL)) {
-		if (l > r) {
-			if (l > 0x180000000ULL) {
-				// assume that l wrapped around the 33-bit border
-				l -= 0x200000000ULL;
-			} else if (l > 0x80000000UL) {
-				// assume that l wrapped around the 32-bit border
-				l -= 0x100000000ULL;
-			}
-		} else {
-			if (r > 0x180000000ULL) {
-				// assume that r wrapped around the 33-bit border
-				r -= 0x200000000ULL;
-			} else if (r > 0x80000000UL) {
-				// assume that r wrapped around the 32-bit border
-				r -= 0x100000000ULL;
-			}
-		}
-		res = l - r;
-	}
-	
-	return res;	
-}
-
-// ########################################################
-
-
 #endif /* Remuxer_h */

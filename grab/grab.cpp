@@ -1,5 +1,5 @@
 /*
- * $Id: grab.cpp,v 1.1 2001/12/22 17:14:52 obi Exp $
+ * $Id: grab.cpp,v 1.2 2002/08/31 01:06:19 obi Exp $
  *
  * Audio and video stream recorder for use with streampes
  *
@@ -20,12 +20,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * $Log: grab.cpp,v $
- * Revision 1.1  2001/12/22 17:14:52  obi
- * - added hostapps
- * - added grab to hostapps
- *
  *
  */
  
@@ -389,9 +383,39 @@ void * AVReadThreadDBox2(void * thread_arg) {
 
 // ####################################################################
 
-int main( int argc, char *argv[] ) {
+void usage (char * filename) {
 
-	fprintf(stderr, "$Id: grab.cpp,v 1.1 2001/12/22 17:14:52 obi Exp $\n");
+	fprintf(stderr, "grab by Peter Niemayer and the dbox2 on linux team - see README for details\n\n"
+		"usage: %s <options>\n\n" 
+		"------- mandatory options: ---------\n"
+		"-p <vpid> <apid> video and audio pids to receive [none]\n"
+		"\n"
+		"------- basic options: -------------\n"
+		"-host <host>   hostname or ip address [dbox]\n"
+		"-port <port>   port number [31338]\n"
+		"-o <filename>  basename of output files [vts_01_]\n"
+		"-m <minutes>   number of minutes to record [infinite]\n"
+		"-s <megabyte>  maximum size per recorded file [1000]\n"
+		"-q             be quiet\n"
+		"\n"
+		"------- advanced options: ----------\n"
+		"-b <megabyte>  size of AV buffer memory [8]\n"
+		"-nort          do not try to enable realtime-scheduling for the AV reader thread\n"
+		"-n <niceinc>   relative nice-level of AV reader thread if -nort (default: -10)\n"
+		"-nonfos        do not open a new file for writing on resync\n"
+		"-nomux         do not multiplex, write 2 seperate files with a/v ES\n"
+		"-raw           do not multiplex, write 3 seperate files with a/v/pts\n"
+		"-loop          record forever (two files named *1.* *2.*, starting at PTS 0)\n"
+		"-1ptspergop    expect only 1 PTS per GOP (needed for some channels)\n"
+		"\n"
+		"------- handled signals: -----------\n"
+		"SIGUSR1        force immediate resync\n"
+		"SIGUSR2        force write to next file\n"
+		"\n"
+		"values in square brackets indicate default settings if available\n", filename);
+}
+
+int main( int argc, char *argv[] ) {
 
 	// set various default-values
 
@@ -408,6 +432,8 @@ int main( int argc, char *argv[] ) {
 	bool quiet = false;
 
 	bool nomux = false;
+
+	bool raw_data = false;
 
 	long checkpoint = 10*60;
 	
@@ -429,7 +455,12 @@ int main( int argc, char *argv[] ) {
 	bool start_new_files_with_pts_0 = false;
 	
 	bool record_loop = false;
-	
+
+	if (argc == 1) {
+		usage(argv[0]);
+		return -1;
+	}
+
 	for (int i = 1; i < argc; i++) {
 		
 		if (!strcmp("-o", argv[i])) {
@@ -474,7 +505,10 @@ int main( int argc, char *argv[] ) {
 		
 		} else if (!strcmp("-nomux", argv[i])) {
 			nomux = true;
-		
+
+		} else if (!strcmp("-raw", argv[i])) {
+			raw_data = true;
+
 		} else if (!strcmp("-loop", argv[i])) {
 			record_loop = true;
 			start_new_files_with_pts_0 = true;
@@ -492,49 +526,15 @@ int main( int argc, char *argv[] ) {
 		} else if (!strcmp("-nort", argv[i])) {
 			no_rt_prio = true;
 		
-		} else if (!strcmp("-h", argv[i])) {
-
-			fprintf(stderr, "grab by Peter Niemayer and the dbox2 on linux team - see README for details\n\n"
-					"------- mandatory options: ---------\n"
-					"-p <vpid> <apid> video and audio pids to receive [none]\n"
-					"\n"
-					"------- basic options: -------------\n"
-					"-host <host>   hostname or ip address [dbox]\n"
-					"-port <port>   port number [31338]\n"
-					"-o <filename>  basename of output files [vts_01_]\n"
-					"-m <minutes>   number of minutes to record [infinite]\n"
-					"-s <megabyte>  maximum size per recorded file [1000]\n"
-					"-q             be quiet\n"
-					"\n"
-					"------- advanced options: ----------\n"
-					"-b <megabyte>  size of AV buffer memory [8]\n"
-					"-nort          do not try to enable realtime-scheduling for the AV reader thread\n"
-					"-n <niceinc>   relative nice-level of AV reader thread if -nort (default: -10)\n"
-					"-nonfos        do not open a new file for writing on resync\n"
-					"-nomux         do not multiplex, write 3 seperate files with a/v/pts\n"
-					"-loop          record forever (two files named *1.* *2.*, starting at PTS 0)\n"
-					"-1ptspergop    expect only 1 PTS per GOP (needed for some channels)\n"
-					"\n"
-					"------- handled signals: -----------\n"
-					"SIGUSR1        force immediate resync\n"
-					"SIGUSR2        force write to next file\n"
-					"\n"
-					"values in square brackets indicate default settings if available\n"
-					);
-			return -1;
-
 		} else {
-
-			fprintf(stderr, "unknown option '%s'\n", argv[i]);
-			fprintf(stderr, "run 'grab -h' for usage information\n");
+			usage(argv[0]);
 			return -1;
 		}
 	}
 	
 	/* we need at leat an audio and video pid to continue */
 	if ((vpid <= 0) || (apid <= 0)) {
-		fprintf(stderr, "invalid or no apid/vpid specified\n");
-		fprintf(stderr, "run 'grab -h' for usage information\n");
+		usage(argv[0]);
 		return -1;
 	}
 
@@ -573,7 +573,7 @@ int main( int argc, char *argv[] ) {
 	FILE * file_mpv = 0;
 	FILE * file_aux = 0;
 	
-	if (nomux) {
+	if (nomux || raw_data) {
 		if ( (file_mpp = fopen(fname_mpp,"w")) == NULL ) {
 			fprintf(stderr,"unable to open %s\n",fname_mpp);
 			return -1;
@@ -584,11 +584,11 @@ int main( int argc, char *argv[] ) {
 			return -1;
 		}
 
-		if ( (file_aux = fopen(fname_aux,"w")) == NULL ) {
+		if ((!nomux) && ( (file_aux = fopen(fname_aux,"w")) == NULL )) {
 			fprintf(stderr,"unable to open %s\n",fname_aux);
 			return -1;
 		}
-		
+
 	} else {
 		if (!strcmp(fname_output, "-")) {
 		
@@ -776,11 +776,12 @@ int main( int argc, char *argv[] ) {
 					*/
 					
 					
-					if (nomux) {
+					if (raw_data) {
 						if (1 != fwrite(avbuf.aux, avbuf.aux_valid, 1, file_aux)) {
 							fprintf(stderr, "\nerror while writing to %s\n", fname_aux);
 							break;
 						}
+						
 					} else {
 						remuxer.supply_aux_data(avbuf.aux, avbuf.aux_valid);
 					}
@@ -790,11 +791,22 @@ int main( int argc, char *argv[] ) {
 				if (avbuf.video_valid) {
 					received_video += avbuf.video_valid;
 					
-					if (nomux) {
+					if (raw_data) {
 						if (1 != fwrite(avbuf.video, avbuf.video_valid, 1, file_mpv)) {
 							fprintf(stderr, "\nerror while writing to %s\n", fname_mpv);
 							break;
 						}
+
+					} else if (nomux) {
+
+						remuxer.supply_video_data(avbuf.video, avbuf.video_valid);
+
+						if (remuxer.write_mpv(file_mpv)) {
+							fprintf(stderr, "\nfailed to write .mpv file\n");
+							break;
+						}
+						remuxer.remove_video_packets(remuxer.video_packets_avail);
+
 					} else {
 												
 						remuxer.supply_video_data(avbuf.video, avbuf.video_valid);
@@ -805,23 +817,32 @@ int main( int argc, char *argv[] ) {
 				if (avbuf.audio_valid) {
 					received_audio += avbuf.audio_valid;
 					
-					if (nomux) {
+					if (raw_data) {
 						if (1 != fwrite(avbuf.audio, avbuf.audio_valid, 1, file_mpp)) {
 							fprintf(stderr, "\nerror while writing to %s\n", fname_mpp);
 							break;
 						}
+
+					} else if (nomux) {
+
+						remuxer.supply_audio_data(avbuf.audio, avbuf.audio_valid);
+						if (remuxer.write_mpp(file_mpp)) {
+							fprintf(stderr, "\nfailed to write .mpp file\n");
+							break;
+						}
+						remuxer.remove_audio_packets(remuxer.audio_packets_avail);
+						
 					} else {
 						
 						remuxer.supply_audio_data(avbuf.audio, avbuf.audio_valid);					
-						
-						// need this awful trick to make both MPEG and AC3 sound work... how ugly... :-(
-						if (remuxer.wanted_audio_stream == STREAM_PRIVATE_1) {
-							new_read_size_audio = AUDIO_BUF_SIZE;
-						} else {
-							new_read_size_audio = AUDIO_BUF_SIZE / 2;							
-						}
 					}
-					
+						
+					// need this awful trick to make both MPEG and AC3 sound work... how ugly... :-(
+					if (remuxer.wanted_audio_stream == STREAM_PRIVATE_1) {
+						new_read_size_audio = AUDIO_BUF_SIZE;
+					} else {
+						new_read_size_audio = AUDIO_BUF_SIZE / 2;							
+					}
 				}
 
 				

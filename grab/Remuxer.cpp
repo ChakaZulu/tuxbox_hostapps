@@ -1,5 +1,5 @@
 /*
- * $Id: Remuxer.cpp,v 1.1 2001/12/22 17:14:52 obi Exp $
+ * $Id: Remuxer.cpp,v 1.2 2002/08/31 01:06:19 obi Exp $
  *
  * MPEG2 remuxer
  *
@@ -21,6 +21,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  * $Log: Remuxer.cpp,v $
+ * Revision 1.2  2002/08/31 01:06:19  obi
+ * sync with grab v1.40
+ *
  * Revision 1.1  2001/12/22 17:14:52  obi
  * - added hostapps
  * - added grab to hostapps
@@ -42,8 +45,8 @@
 // ##################################################################################
 
 const unsigned long known_audio_frame_sizes[] = {
-//  MPG/192  AC3/5+1
-		576,   896*2    
+//	MPG/192	AC3/5+1	MPG/64
+	576,	896*2,	167
 };
 
 
@@ -303,6 +306,7 @@ bool Remuxer::audio_packet_wanted(unsigned char * pes) {
 		if (   pes[3] == STREAM_PRIVATE_1
 		    || pes[3] == STREAM_AUDIO
 		    || pes[3] == STREAM_REST_AUDIO
+		    || pes[3] == 0xc1
 		   )
 		{
 			wanted_audio_stream = pes[3];
@@ -1254,13 +1258,6 @@ if (DEBUG_RESYNC_DROPS) fprintf(stderr,"drop - no video pts\n");
 				continue;
 			}
 			
-			if (0 == (vp[6] & 0x01)) {
-				// this is not a video sequence start... cannot use this...
-				remove_video_packets(1);
-if (DEBUG_RESYNC_DROPS) fprintf(stderr,"drop - no video sequence start\n");
-				continue;				
-			}
-			
 			// we need to make sure our first video data comes
 			// before our first audio data...
 			
@@ -1269,10 +1266,18 @@ if (DEBUG_RESYNC_DROPS) fprintf(stderr,"drop - no video sequence start\n");
 if (DEBUG_RESYNC_DROPS) fprintf(stderr,"drop - audio before video\n");
 				continue;
 			}
+
+			if (0 == (vp[6] & 0x01)) {
+				// this is not a video sequence start... cannot use this...
+				remove_video_packets(1);
+if (DEBUG_RESYNC_DROPS) fprintf(stderr,"drop - no video sequence start\n");
+				continue;				
+			}
 			
 			// check for the PTS difference...
+			double av_pts_diff = pts_diff(audio_pts, video_pts);
 			
-			if (fabs(pts_diff(audio_pts, video_pts)) < (90000.0/22)) {
+			if (fabs(av_pts_diff) < (90000.0/22)) {
 				// ha - we found a place...
 				
 				playtime_offset += pts_diff(system_clock_ref, system_clock_ref_start);
@@ -1511,3 +1516,67 @@ fprintf(stderr,"Remuxer detected some a/v desync: ap=%ld, vp=%ld, scr=%.0f, audi
 }
 
 // ##################################################################
+
+int Remuxer::write_mpp(FILE * mppfile) {
+
+	for (unsigned long i = 0; i < audio_packets_avail; i++) {
+
+		unsigned char * orig_pes = audio_packets[i];
+		
+		unsigned long   orig_pes_size = pes_size(orig_pes);
+		unsigned long   orig_opt_header_size = orig_pes[8];
+		unsigned long   orig_es_size = orig_pes_size - 9 - orig_opt_header_size;
+		unsigned char * orig_es_data = orig_pes + 9 + orig_opt_header_size;
+
+		if (!mpp_started) {
+
+			// make sure to start with a magic sync word...
+
+			if (orig_pes[3] == STREAM_PRIVATE_1) {
+				if (orig_es_size < 4 || orig_es_data[0] != 0x0b || orig_es_data[1] != 0x77) {
+					return 0;
+				}
+			} else {
+				// MPEG audio
+				if (orig_es_size < 4 || orig_es_data[0] != 0xff || (orig_es_data[1] & 0xe0) != 0xe0) {
+					return 0;
+				}
+			}
+
+			mpp_started = true;
+		}
+
+
+		if (1 != fwrite(orig_es_data, orig_es_size, 1, mppfile)) {
+			fprintf(stderr, "\nerror while writing to .mpp output file\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+// ##################################################################
+
+int Remuxer::write_mpv(FILE * mpvfile) {
+
+	for (unsigned long i = 0; i < video_packets_avail; i++) {
+
+		unsigned char * orig_pes = video_packets[i];
+
+		unsigned long   orig_pes_size = pes_size(orig_pes);
+		unsigned long   orig_opt_header_size = orig_pes[8];
+		unsigned long   orig_es_size = orig_pes_size - 9 - orig_opt_header_size;
+		unsigned char * orig_es_data = orig_pes + 9 + orig_opt_header_size;
+
+		if (1 != fwrite(orig_es_data, orig_es_size, 1, mpvfile)) {
+			fprintf(stderr, "\nerror while writing to .mpv output file\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+// ##################################################################
+
