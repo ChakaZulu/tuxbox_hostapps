@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.8 2003/04/04 17:32:47 obi Exp $
+ * $Id: ucodex.c,v 1.9 2003/06/28 17:48:40 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -143,7 +143,7 @@ int writebuf(const unsigned char *buf, const unsigned int size, const char *file
 		fprintf(stdout, "\t%s\n", filename);
 
 	if (WRITE) {
-		FILE *file = fopen(filename, "w");
+		FILE *file = fopen(filename, "wb");
 
 		if (file == NULL) {
 			perror(filename);
@@ -173,7 +173,7 @@ int scan_file(const char *filename, off_t file_size) {
 	unsigned char *pdest = NULL;
 
 	/* open file */
-	file = fopen(filename, "r");
+	file = fopen(filename, "rb");
 
 	if (file == NULL) {
 		perror(filename);
@@ -279,13 +279,13 @@ int process_path(const char *directory, const char *filename) {
 		return EXIT_FAILURE;
 	}
 
-	if (S_ISREG(filestat.st_mode)) {
+	if (filestat.st_mode & S_IFREG) {
 		int ret = scan_file(path, filestat.st_size);
 		free(path);
 		return ret;
 	}
 
-	if (S_ISDIR(filestat.st_mode)) {
+	if (filestat.st_mode & S_IFDIR) {
 		struct dirent *entry;
 		DIR *dir = opendir(path);
 
