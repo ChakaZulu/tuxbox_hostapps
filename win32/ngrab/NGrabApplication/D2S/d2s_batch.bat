@@ -1,0 +1,2 @@
+@ECHO OFF
+@REM DVD2SVCD Batch Control

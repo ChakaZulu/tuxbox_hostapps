@@ -1,0 +1,26 @@
+offeryn pvas job v000102 # DO NOT DELETE THIS LINE
+# Job Description
+$JOB
+# demux <infile> <videofile> <audiofile>
+demux "D:\video1\Duell  Enemy At The Gates (PREMIERE 4) (13Nov2002 1725)[01].m2p" "D:\video1\Video.vob" "D:\video1\Audio.mpa"                                                                                                                                                                                                                                                                                                                                                                    
+# Streams to demux
+audio 1
+video 1
+# Job Parameters
+$PARMS
+# program options
+loglevel 1
+fixstart 1
+sync 1
+dropgop 1
+dropwronggop 1
+strongaudio 1
+shortscan 0
+setbr 1
+setvbr 1
+setavg 1
+adjusttc 1
+packsize 2324
+splitsize 0
+overlap 1
+spliteven 0
