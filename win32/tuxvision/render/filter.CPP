@@ -29,6 +29,10 @@
 #include <ks.h>
 #include <ksmedia.h>
 
+#include <stdio.h>
+#include <io.h>
+#include <stdlib.h>
+
 #include "interface.h"
 #include "filter.h"
 #include "..\\capture\\ccircularbuffer.h"
@@ -73,10 +77,10 @@ const AMOVIESETUP_PIN sudPins[] =
 const AMOVIESETUP_FILTER sudFilter =
 {
     &CLSID_DBOXIIRender,       // Filter CLSID
-    L"DBOXII Render",        // String name
-    MERIT_DO_NOT_USE,   // Filter merit
-    NUMELMS(sudPins),   // Number pins
-    sudPins             // Pin details
+    L"DBOXII Render",          // String name
+    MERIT_DO_NOT_USE,          // Filter merit
+    NUMELMS(sudPins),          // Number pins
+    sudPins                    // Pin details
 };
 
 
@@ -102,15 +106,35 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 int g_Instance=0;
 
 
-// register as video capture filter
+// register as video render filter
 STDAPI DllRegisterServer( void )
 {
+    HRESULT hr=NOERROR;
+    CDBOXIIRender *pTempFilter=new CDBOXIIRender(NULL, &hr);
+
+    if (pTempFilter!=NULL)
+        {
+        lstrcpy(pTempFilter->m_DBOXAddress,"192.168.0.13");
+        lstrcpy(pTempFilter->m_DBOXLogin,"root");
+        lstrcpy(pTempFilter->m_DBOXPassword,"dbox2");
+        pTempFilter->m_DBOXStopPlayback=0;
+        pTempFilter->m_IsENX=0;
+        pTempFilter->LoadInternalData();
+        }
+
     // register the server
-    HRESULT hr = AMovieDllRegisterServer2( TRUE );
+    hr = AMovieDllRegisterServer2( TRUE );
+
+    if (pTempFilter!=NULL)
+        {
+        pTempFilter->SaveInternalData();
+        delete pTempFilter;
+        }
+
     return hr;
 }
 
-// unregister as video capture filter
+// unregister as video render filter
 STDAPI DllUnregisterServer( void )
 {
     HRESULT hr = AMovieDllRegisterServer2( FALSE );
@@ -233,6 +257,26 @@ CDBOXIIRender::CDBOXIIRender(LPUNKNOWN lpunk,  HRESULT *phr) :
     gpFilter=this;
 
     LoadInternalData();
+/*
+{
+FILE *fp=fopen("e:\\audio.mpg","rb");
+int i=0, j=0;
+for(j=0;j<4;j++)
+    {
+    for (i=0;i<16;i++)
+        {
+        char dtxt[264];
+        char c=0;
+        fread(&c, 1, 1, fp);
+        sprintf(dtxt,"0x%8.8X, ", c);
+        OutputDebugString(dtxt);
+        }
+    OutputDebugString("\r\n");
+    }
+}
+    dprintf("...");
+*/
+
 
 } // (Constructor)
 
@@ -314,6 +358,11 @@ STDMETHODIMP CDBOXIIRender::getParameter(__int64 command, __int64 *data1, __int6
         case CMD_DECODERTYPE:
             *data1=(__int64)m_IsENX;
             hr=NOERROR;
+            break;
+        case CMD_DELIVEREDDATA:
+            *data1=gDeliveredAudioData;
+            if (data2!=NULL)
+                *data2=gDeliveredVideoData;
             break;
         }
 	return(hr);

@@ -50,3 +50,5 @@ STDMETHOD(getParameter) (THIS_ __int64 command, __int64 *data1, __int64 *data2) 
 #define CMD_PASSWORD        3   // set/get char* in data1, usually default "dbox2" should be fine
 #define CMD_STOPPLAYBACK    4   // set/get val in data1 (0: playback is NOT stopped during capture, 1: playback IS stopped
 #define CMD_DECODERTYPE     5   // set/get int in data1 (0:GTX, 1:ENX)
+#define CMD_DELIVEREDDATA   6   //     get val in data1, amount of delivered data
+//#define CMD_VOLUME          7   // set/get val in data1, range 0(mute) .. 100
