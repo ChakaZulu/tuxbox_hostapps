@@ -75,6 +75,10 @@ long          gRecNoPreview=FALSE;
 __int64       gFilteredVideoBitrate=0;
 __int64       gFilteredAudioBitrate=0;
 __int64       gDSoundVoume=100;
+long          gApplicationPriority=NORMAL_PRIORITY_CLASS;
+long          gAlwaysOnTop=FALSE;
+long          gAutomaticAspectRatio=FALSE;
+long          gLastPropertyPage=0;
 
 // ------------------------------------------------------------------------
 // Basic Defines
@@ -91,7 +95,7 @@ BOOL	DoesInstanceExist(void);
 int		UpdateWindowState(HWND hWnd);
 int     CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 void    CreateChannelList(HWND hwnd);
-HRESULT SetTVChannel(unsigned long channel);
+HRESULT SetTVChannel(HWND hwnd, unsigned long channel);
 HRESULT UpdateChannelInfo(IDBOXIICapture *pIDBOXIICapture, __int64 currentChannel);
 void    ComposeCaptureFileName(LPSTR szFileName);
 void    LoadParameter(void);
@@ -232,6 +236,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
 		SendMessage(GetDlgItem(hwnd,IDC_VOLUME), TBM_SETRANGE, TRUE, MAKELONG(0, 100) );
         SendMessage(GetDlgItem(hwnd,IDC_VOLUME), TBM_SETPOS, TRUE, (long)gDSoundVoume);
+
+        SetPriorityClass(GetCurrentProcess(),gApplicationPriority);
+
+        if (gAlwaysOnTop)
+            SetWindowPos(ghWndApp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+        else
+            SetWindowPos(ghWndApp, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
 
         SetTimer(ghWndApp,1,1000,NULL);
     
@@ -600,7 +611,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
             break;
 
 		case IDC_OPTIONS:
-			CreatePropertySheet(ghWndApp, ghInstApp, 0);
+			CreatePropertySheet(ghWndApp, ghInstApp, gLastPropertyPage);
             CreateChannelList(ghWndApp);
 			UpdateWindowState(hwnd);
 			break;
@@ -636,7 +647,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 				int sel=0;
 				sel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETCURSEL, 0, 0 );
 				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
-				SetTVChannel(channel);
+				SetTVChannel(hwnd, channel);
 				gCurrentChannel=sel;
 				}
 			break;
@@ -726,6 +737,27 @@ void CreateChannelList(HWND hwnd)
                 RELEASE(pIDBOXIICapture);
                 return;
                 }
+
+            if (gAutomaticAspectRatio)
+                {
+                __int64 val=0;
+                hr=pIDBOXIICapture->getParameter(CMD_GETASPECTRATIO, (__int64*)&val,NULL);
+                if (SUCCEEDED(hr))
+                    {
+                    if (val)
+                        gIs16By9=0;
+                    else
+                        gIs16By9=1;
+                    }
+                EnableWindow(GetDlgItem(hwnd,IDC_16BY9), FALSE);
+                SendMessage( GetDlgItem(hwnd,IDC_16BY9), BM_SETCHECK, gIs16By9, 0 );
+                }
+            else
+                {
+                EnableWindow(GetDlgItem(hwnd,IDC_16BY9), TRUE);
+                SendMessage( GetDlgItem(hwnd,IDC_16BY9), BM_SETCHECK, gIs16By9, 0 );
+                }
+
             if (SUCCEEDED(hr)&&(count>=0))
                 {
                 //!!BS moved inside loop to avoid stall on subchannel
@@ -753,7 +785,7 @@ void CreateChannelList(HWND hwnd)
         }
 }
 
-HRESULT SetTVChannel(unsigned long channel)
+HRESULT SetTVChannel(HWND hwnd, unsigned long channel)
 {
     HRESULT hr=NOERROR;
     if (gpVCap!=NULL)
@@ -767,6 +799,26 @@ HRESULT SetTVChannel(unsigned long channel)
             hr=UpdateChannelInfo(pIDBOXIICapture, channel);
         else
             SetDlgItemText(ghWndApp,IDC_CHANNELINFO, "");
+
+        if (gAutomaticAspectRatio)
+            {
+            __int64 val=0;
+            hr=pIDBOXIICapture->getParameter(CMD_GETASPECTRATIO, (__int64*)&val,NULL);
+            if (SUCCEEDED(hr))
+                {
+                if (val)
+                    gIs16By9=0;
+                else
+                    gIs16By9=1;
+                }
+            EnableWindow(GetDlgItem(hwnd,IDC_16BY9), FALSE);
+            SendMessage( GetDlgItem(hwnd,IDC_16BY9), BM_SETCHECK, gIs16By9, 0 );
+            }
+        else
+            {
+            EnableWindow(GetDlgItem(hwnd,IDC_16BY9), TRUE);
+            SendMessage( GetDlgItem(hwnd,IDC_16BY9), BM_SETCHECK, gIs16By9, 0 );
+            }
 
         RELEASE(pIDBOXIICapture);
         }
@@ -831,14 +883,27 @@ void LoadParameter(void)
 
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DestinationPath", (unsigned char *)regval, sizeof(regval)))
         lstrcpy(gszDestinationFolder,regval);
+    
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DeInterlace", (unsigned char *)regval, sizeof(regval)))
         gUseDeInterlacer=atoi(regval);
+    
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "16By9", (unsigned char *)regval, sizeof(regval)))
         gIs16By9=atoi(regval);
+    
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "RecNoPreview", (unsigned char *)regval, sizeof(regval)))
         gRecNoPreview=atoi(regval);
+    
     if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DSoundVolume", (unsigned char *)regval, sizeof(regval)))
         gDSoundVoume=atoi(regval);
+    
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "ApplicationPriority", (unsigned char *)regval, sizeof(regval)))
+        gApplicationPriority=atoi(regval);
+    
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AlwaysOnTop", (unsigned char *)regval, sizeof(regval)))
+        gAlwaysOnTop=atoi(regval);
+    
+    if (GetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AutomaticAspectRatio", (unsigned char *)regval, sizeof(regval)))
+        gAutomaticAspectRatio=atoi(regval);
 }
 
 void SaveParameter(void)
@@ -862,6 +927,16 @@ void SaveParameter(void)
 
 	wsprintf((char *)regval,"%ld",gDSoundVoume);
     SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "DSoundVolume", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gApplicationPriority);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "ApplicationPriority", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gAlwaysOnTop);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AlwaysOnTop", (unsigned char *)regval, lstrlen(regval));
+
+	wsprintf((char *)regval,"%ld",gAutomaticAspectRatio);
+    SetRegStringValue (HKEY_LOCAL_MACHINE, REGISTRY_SUBKEY, "", "AutomaticAspectRatio", (unsigned char *)regval, lstrlen(regval));
 }
+
 
 

@@ -204,25 +204,24 @@ MISC DIALOG DISCARDABLE  0, 0, 248, 142
 STYLE DS_MODALFRAME | WS_POPUP
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Misc",IDC_STATIC,4,2,240,138
-    CONTROL         "Fullscreen",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED | WS_GROUP,26,30,58,10
-    CONTROL         "Allways on top",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,130,30,92,10
-    CONTROL         "Window",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON | 
+    GROUPBOX        "Misc",IDC_STATIC,1,2,240,138
+    CONTROL         "Fullscreen",IDC_FULLSCREEN,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,26,30,58,10
+    CONTROL         "Allways on top",IDC_ALLWAYSONTOP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,130,30,92,10
+    CONTROL         "Window",IDC_WINDOW,"Button",BS_AUTORADIOBUTTON | 
                     WS_DISABLED,26,48,58,10
-    GROUPBOX        "On Maximize Video",IDC_STATIC,14,16,94,52,WS_DISABLED | 
-                    WS_GROUP
+    GROUPBOX        "On Maximize Video",IDC_STATIC,14,16,94,52,WS_GROUP
     CONTROL         "Automatic AspectRatio",IDC_AUTOASPECTRATIO,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,130,48,92,10
     GROUPBOX        "VideoWindow",IDC_STATIC,116,16,118,52
     GROUPBOX        "Priority",IDC_STATIC,14,76,94,54,WS_GROUP
-    CONTROL         "RealTime",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP,26,89,58,10
-    CONTROL         "High",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,26,103,58,
-                    10
-    CONTROL         "Normal",IDC_RADIO5,"Button",BS_AUTORADIOBUTTON,26,116,
-                    58,10
+    CONTROL         "RealTime",IDC_PRIORITY_REALTIME,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,26,89,58,10
+    CONTROL         "High",IDC_PRIORITY_HIGH,"Button",BS_AUTORADIOBUTTON,26,
+                    103,58,10
+    CONTROL         "Normal",IDC_PRIORITY_NORMAL,"Button",BS_AUTORADIOBUTTON,
+                    26,116,58,10
     GROUPBOX        "HTTPServer",IDC_STATIC,116,76,118,54,WS_DISABLED | 
                     WS_GROUP
     EDITTEXT        IDC_IPADDRESS,162,108,42,15,ES_AUTOHSCROLL | WS_DISABLED | 
@@ -275,8 +274,11 @@ BEGIN
 
     MISC, DIALOG
     BEGIN
-        LEFTMARGIN, 7
+        LEFTMARGIN, 1
         RIGHTMARGIN, 241
+        VERTGUIDE, 22
+        VERTGUIDE, 26
+        VERTGUIDE, 30
         TOPMARGIN, 7
         BOTTOMMARGIN, 135
     END

@@ -39,12 +39,18 @@
 #define IDC_SLIDER1                     1078
 #define IDC_VOLUME                      1078
 #define IDC_RADIO1                      1079
+#define IDC_FULLSCREEN                  1079
 #define IDC_CHECK1                      1080
+#define IDC_ALLWAYSONTOP                1080
 #define IDC_RADIO2                      1081
+#define IDC_WINDOW                      1081
 #define IDC_AUTOASPECTRATIO             1082
 #define IDC_RADIO3                      1083
+#define IDC_PRIORITY_REALTIME           1083
 #define IDC_RADIO4                      1084
+#define IDC_PRIORITY_HIGH               1084
 #define IDC_RADIO5                      1085
+#define IDC_PRIORITY_NORMAL             1085
 #define IDC_CHECK2                      1086
 
 // Next default values for new objects

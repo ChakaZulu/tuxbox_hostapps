@@ -27,7 +27,7 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.3"
+#define REVISION            "Rev.0.0.0.4"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 
 extern HINSTANCE		ghInstApp;
@@ -38,9 +38,15 @@ extern TCHAR            gszDestinationFile[264];
 extern long             gUseDeInterlacer;
 extern long             gIs16By9;
 extern long             gRecNoPreview;
+extern long             gApplicationPriority;
+extern long             gAlwaysOnTop;
+extern long             gAutomaticAspectRatio;
+extern long             gLastPropertyPage;
 
-#define Width(x)   (x.right-x.left)
-#define Height(x)  (x.bottom-x.top)
+
+
+#define Width(x)    (x.right-x.left)
+#define Height(x)   (x.bottom-x.top)
 #define pWidth(x)   (x->right-x->left)
 #define pHeight(x)  (x->bottom-x->top)
 

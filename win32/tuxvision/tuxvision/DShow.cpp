@@ -358,7 +358,6 @@ HRESULT ConnectVideoWindow(IGraphBuilder *pFg, HWND hwnd, RECT *pRect, BOOL is16
                     t=t+(h-hh)/2;
                 h=hh;
                 }
-//            hr=pVideoWindow->SetWindowPosition(pRect->left,pRect->top, pWidth(pRect),pHeight(pRect));
             hr=pVideoWindow->SetWindowPosition(l,t,w,h);
             }
         
@@ -695,8 +694,6 @@ HRESULT SetDSoundVolume(__int64 val)
     IBaseFilter*  pFilter=NULL;
     long          value=0;
 
-    if (val==NULL)
-        return(E_POINTER);
     if (gpIGraphBuilder==NULL)
         return(E_FAIL);
 
@@ -716,5 +713,11 @@ HRESULT SetDSoundVolume(__int64 val)
             }
         RELEASE(pFilter);
         }
+
+    if (FAILED(hr))
+        {
+        dprintf("Setting volume: %ld",value);
+        }
+
     return hr;
 }

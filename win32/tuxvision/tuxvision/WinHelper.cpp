@@ -180,7 +180,7 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
 {
     RECT rc;
     HRESULT hr;
-
+    HWND style=HWND_TOP;
     if (flag)
         { 
         rc.left=0;
@@ -188,7 +188,11 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
         rc.right =GetSystemMetrics(SM_CXSCREEN);
         rc.bottom=GetSystemMetrics(SM_CYSCREEN);
     	SetParent(hWnd,hWndParent);
-    	SetWindowPos(hWnd,HWND_TOPMOST,
+
+        if (gAlwaysOnTop)
+            style=HWND_TOPMOST;
+
+    	SetWindowPos(hWnd,style,
                      rc.left,
                      rc.top,
                      Width(rc),
@@ -201,7 +205,12 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
     if (gFullscreen)
         {
         RECT rc;
+
+        if (gAlwaysOnTop)
+            style=HWND_TOPMOST;
+
         SetParent(hWnd,hWndParent);
+        SetWindowPos(hWndParent, style, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
         SetWindowPos(hWnd,HWND_TOP,
                     restore->left, 
                     restore->top , 

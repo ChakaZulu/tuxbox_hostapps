@@ -141,9 +141,11 @@ BOOL CALLBACK DlgProc_DBOX(
                         }
                     RELEASE(pIDBOXIICapture);
                     }
+				PropSheet_UnChanged(GetParent(hdlg),hdlg);
 			    break;
 
 			case PSN_SETACTIVE:
+                gLastPropertyPage=0;
 				break;
 
 			case PSN_KILLACTIVE:
@@ -163,9 +165,44 @@ BOOL CALLBACK DlgProc_MISC(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 switch (msg)
     {
 	case WM_INITDIALOG:
+        switch(gApplicationPriority)
+            {
+            case REALTIME_PRIORITY_CLASS:
+                SendMessage(GetDlgItem(hDlg,IDC_PRIORITY_REALTIME),BM_SETCHECK, 1, 0);
+                break;
+            case HIGH_PRIORITY_CLASS:
+                SendMessage(GetDlgItem(hDlg,IDC_PRIORITY_HIGH),BM_SETCHECK, 1, 0);
+                break;
+            case NORMAL_PRIORITY_CLASS:
+                SendMessage(GetDlgItem(hDlg,IDC_PRIORITY_NORMAL),BM_SETCHECK, 1, 0);
+                break;
+            }
+        if (gAlwaysOnTop)
+            SendMessage(GetDlgItem(hDlg,IDC_ALLWAYSONTOP),BM_SETCHECK, 1, 0);
+        if (gAutomaticAspectRatio)
+            SendMessage(GetDlgItem(hDlg,IDC_AUTOASPECTRATIO),BM_SETCHECK, 1, 0);
+
+        SendMessage(GetDlgItem(hDlg,IDC_FULLSCREEN),BM_SETCHECK, 1, 0);
 		return TRUE;
+
     case WM_COMMAND:
-        return TRUE;
+			switch (GET_WM_COMMAND_ID (wParam, lParam))
+				{
+				case IDC_PRIORITY_REALTIME:
+                    gApplicationPriority=REALTIME_PRIORITY_CLASS;
+                    SetPriorityClass(GetCurrentProcess(),gApplicationPriority);
+					break;
+				case IDC_PRIORITY_HIGH:
+                    gApplicationPriority=HIGH_PRIORITY_CLASS;
+                    SetPriorityClass(GetCurrentProcess(),gApplicationPriority);
+					break;
+				case IDC_PRIORITY_NORMAL:
+                    gApplicationPriority=NORMAL_PRIORITY_CLASS;
+                    SetPriorityClass(GetCurrentProcess(),gApplicationPriority);
+					break;
+				}
+			return TRUE;
+
 	case WM_NOTIFY:
 		{
 		LPNMHDR pnmh=(LPNMHDR)lParam;
@@ -174,9 +211,18 @@ switch (msg)
             case PSN_HELP:
                 break;
 			case PSN_APPLY:
+                gAlwaysOnTop=SendMessage( GetDlgItem(hDlg,IDC_ALLWAYSONTOP), BM_GETCHECK, 0, 0 );
+                gAutomaticAspectRatio=SendMessage( GetDlgItem(hDlg,IDC_AUTOASPECTRATIO), BM_GETCHECK, 0, 0 );
+
+                if (gAlwaysOnTop)
+                    SetWindowPos(ghWndApp, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+                else
+                    SetWindowPos(ghWndApp, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+
 				PropSheet_UnChanged(GetParent(hDlg),hDlg);
 			    break;
 			case PSN_SETACTIVE:
+                gLastPropertyPage=1;
 				break;
 			case PSN_KILLACTIVE:
 				PropSheet_UnChanged(GetParent(hDlg),hDlg);
@@ -200,7 +246,7 @@ BOOL CALLBACK DlgProc_ABOUT(
 switch (msg)
     {
 	case WM_INITDIALOG:
-	  		  return TRUE;
+		return TRUE;
 
     case WM_COMMAND:
         return TRUE;
@@ -218,6 +264,7 @@ switch (msg)
 			    break;
 
 			case PSN_SETACTIVE:
+                gLastPropertyPage=2;
 				break;
 
 			case PSN_KILLACTIVE:
