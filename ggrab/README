@@ -1,0 +1,71 @@
+Einleitung
+==========
+
+
+ggrab ist ein neues Streaming Tool unter Linux für die dbox2 mit Neutrino
+
+es ist parameterkompatibel zum bisherigen "grab". Hier habe ich auch einiges abgeschaut...
+Somit kann es auch z.B. mit qbobsd benutzt werden. Einfach ggrab nach /usr/bin/grab kopieren...
+
+
+Das neue hieran ist eine neue Speicherverwaltung und
+eine andere Behandlung von Fehlern im zu grabbenden Stream.
+Ich veruche hier die Philosophie, möglichst wenig wegzuwerfen,
+und die Korrektur möglichst dem Player zu überlassen.
+
+Dadurch treten hier auch nicht die gefürchteten Resyncs auf,
+ich weiß allerdings nicht, wie die Player auf die Fehler reagieren.
+Ich habe hier nur Power-DVD, und das verdaut die gestremten Files sehr gut.
+
+Dieses ist ein Versuch, und ich benötige das Feedback, was nicht funktioniert.
+Wenn bestimmte Ferhnsehprogramme gar nicht funktionieren, bitte Rückmeldung.
+Bitte auch Rückmeldung bzgl. Kompatibilität zu Authoring Tools, Player und Mux-Programmen.
+(Ich kann leider nur Astra testen). In der nächsten Zeit gebe ich noch ein kleines
+Tool heraus, um Muster vom Stream aufzuzeichnen. Bitte sendet mir
+keine megabytegroßen Mails mit Videosequenzen....
+
+
+Btw.
+wenn mir jemand ein paar Tips für den "korrekten" Aufbau von MPEG files geben kann,
+wäre ich sehr dankbar.
+
+Zusätzlich ist ein einfacher Streamingserver (sserver) enthalten.
+Der Streamingserver muß im gleichen Verzeichnis wie ggrab liegen.
+Nach starten des Streamingserves kann mit der Fernbedienung aufgenommen werden.
+Optionen von ggrab werden von sserver an ggrab weitergereicht.
+
+
+
+
+Lauffähig bisher unter:
+Linux
+Mac OS X
+Cygwin
+
+Installation:
+=============
+
+In das Verzeichnis gehen, welches beim Entpacken angelegt wurde.
+Dann mit "make" übersetzen. Bei Mac OS X muß im Makefile das
+Define __MACOSX__ gesetzt werden
+
+
+Aufruf:
+=======
+
+ggrab -h zeigt selbterkärend alle Optionen
+oder mit Streamingserver:
+./sserver
+
+Beenden des Programms mit 'q'<cr> oder ^C
+Neue Datei beginnen mit 'n'<cr> oder SIGUSR2
+
+noch nicht realisiert:
+
+Option: -nomux 
+
+
+Kontakt:
+Forum "wingrab" bei tuxbox.berlios.dei (mein Nick ist Gandalfx)
+Mail: Peter Menzebach <pm-ggrab at menzebach.de>
+Download: kommt noch

@@ -1,0 +1,19 @@
+ggrab---------------------------------------------
+
+03.11.2002	Version	0.01	First try 
+03.11.2002	Version 0.02	Fixed integer overflow at 2 G
+04.11.2002	Version 0.03	Fixed some compiler errors with g++ 2.95, 
+				fixed coredump at start with wrong
+				dbox address, added cygwin support (not tested), 
+				added large file support
+04.11.2002	Version 0.04	Fixed Segmentation fault
+04.11.2002	Version 0.05	Adaptions for cygwin, only signal handling doesnt work
+08.11.2002	Version 0.06	adapted to Mac OS X, cancel program with q<cr> now possible
+09.11.2002	Version 0.07  	Audio Part rewritten. Some more FTAs are working now
+				Added Options vlog und alog für logging stream directly
+10.11.2002	Version 0.08	Correction Audiostream (slow playback, streamingserver added, 
+				stopping of sectionsd during recording
+
+TODO:
+- Implementierung der -nomux Option
+- Verbesserung des MPEG-Files
