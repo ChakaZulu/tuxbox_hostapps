@@ -215,6 +215,16 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
     hr=AnalyzeXMLRequest(STREAM_TEST_DATA, &rdata);
     return(0);
 */
+
+    char szChannel[264];
+    char szMCEChannel[264];
+
+    ZeroMemory(szChannel, sizeof(szChannel));
+    ZeroMemory(szMCEChannel, sizeof(szMCEChannel));
+    
+    lstrcpy(szChannel,"LOVE SONGS");
+    MapMCEChannel(szChannel, szMCEChannel);
+
 // !!BS:TESTING only 
 // ------------------------------------------------------------------------
 	if (DoesInstanceExist())
@@ -346,7 +356,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
         SetTimer(ghWndApp,1,1000,NULL);
 
+		EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+		EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
+
         CreateChannelList(ghWndApp);
+
+		EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+		EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
    
         ghPopUpMenu=CreatePopupMenu();
         AppendMenu(ghPopUpMenu,	 MF_STRING, ID_ALWAYSONTOP, "Allways on top");
@@ -877,7 +893,11 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 	switch(GET_WM_COMMAND_ID (wParam, lParam))
 		{
         case IDC_GETCHANNELLIST:
+			EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+			EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
             CreateChannelList(hwnd);
+			EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+			EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
             break;
 
         case IDC_RESET_NHTTPD:
@@ -888,7 +908,11 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
                 if (SUCCEEDED(hr))
                     pIDBOXIICapture->setParameter(CMD_RESTARTNHTTPD, NULL);
                 RELEASE(pIDBOXIICapture);
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
                 CreateChannelList(hwnd);
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
                 }
             break;
 
@@ -947,7 +971,8 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
                 LogPrintf("RECORD");
                 LogFlush(hwnd);
                 SetEvent(songevents[2]);
-                SetEvent(songevents[0]);
+                //!!BS: this looks like a potential race condition, so let the thread fire event_0 !
+                //SetEvent(songevents[0]);
                 }
             else
                 {
@@ -970,6 +995,7 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			UpdateWindowState(hwnd);
             LogPrintf("STOP");
             LogFlush(hwnd);
+            SendMessage(GetDlgItem(hwnd,IDC_INFO), LB_RESETCONTENT, 0, 0);
 			break;
 
 		case IDC_PLAY:
@@ -995,7 +1021,8 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
                 LogPrintf("PREVIEW");
                 LogFlush(hwnd);
                 SetEvent(songevents[2]);
-                SetEvent(songevents[0]);
+                //!!BS: this looks like a potential race condition, so let the thread fire event_0 !
+                //SetEvent(songevents[0]);
                 }
             else
                 {
@@ -1033,9 +1060,13 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			break;
 
         case IDC_RADIO:
-            if (gRadioTVMode!=0)
+            //if (gRadioTVMode!=0)
                 {
                 dprintf("Switch Mode to Radio");
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
+
                 SetRadioTVMode(0);
                 CreateChannelList(ghWndApp);
 
@@ -1045,13 +1076,21 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
 				SetTVChannel(hwnd, channel, 0, 0);
 				gCurrentChannel=sel;
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
+
                 }
             break;
 
         case IDC_TV:
-            if (gRadioTVMode!=1)
+            //if (gRadioTVMode!=1)
                 {
                 dprintf("Switch Mode to TV");
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
+
                 SetRadioTVMode(1);
                 CreateChannelList(ghWndApp);
 
@@ -1061,6 +1100,9 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
 				SetTVChannel(hwnd, channel, 0, 0);
 				gCurrentChannel=sel;
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
                 }
             break;
 
@@ -1089,15 +1131,28 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 			break;
 // --------------------------------------------------------------------------
 		case IDC_CHANNEL:
-			if (GET_WM_COMMAND_CMD (wParam, lParam)==CBN_SELCHANGE)
+            if (GET_WM_COMMAND_CMD (wParam, lParam)==CBN_SELCHANGE)
 				{
 				unsigned long channel=0;
 				int sel=0;
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),FALSE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),FALSE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_CHANNEL),FALSE);
+
+                SendMessage(GetDlgItem(hwnd,IDC_INFO), LB_RESETCONTENT, 0, 0);
+
 				sel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETCURSEL, 0, 0 );
 				channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, sel, 0 );
 				SetTVChannel(hwnd, channel, 0, 0);
 				gCurrentChannel=sel;
+
+			    EnableWindow(GetDlgItem(hwnd,IDC_CHANNEL),TRUE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_PREVIEW),TRUE);
+			    EnableWindow(GetDlgItem(hwnd,IDC_RECORD),TRUE);
 				}
+
+
 			break;
 // --------------------------------------------------------------------------
 		}
@@ -1168,6 +1223,9 @@ void CreateChannelList(HWND hwnd)
     long index=0;
     HRESULT hr=E_FAIL;
     SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_RESETCONTENT , 0, 0 );
+
+    SendMessage(GetDlgItem(hwnd,IDC_INFO), LB_RESETCONTENT, 0, 0);
+
     if (gpVCap!=NULL)
         {
         IDBOXIICapture *pIDBOXIICapture=NULL;
@@ -1610,8 +1668,11 @@ void __cdecl SongInfoThread(void *rs)
                     {
                     //!!BS: if we recover from a broken connection, wait for a while to
                     //!!BS: run into the next track before grabbing track information
-                    if (gMCEInternetConnection && (!gotMCEInfo))
-                        Sleep(5000);
+                    //if (gMCEInternetConnection && (!gotMCEInfo))
+                    //    Sleep(5000);
+                    //!!BS: ohhh, looks like musicchoice changed timing a lot ...
+                    if (gMCEInternetConnection)
+                        Sleep(10000);
 
                     gotMCEInfo=FALSE;
 
@@ -1708,29 +1769,12 @@ void __cdecl SongInfoThread(void *rs)
             case WAIT_OBJECT_0+2:
                 dprintf("Clear data event");
                 bClearData=TRUE;
+                SetEvent(songevents[0]);
                 break;
             }
         }
 
     return;
-}
-
-
-void MapMCEChannel(char *szChannel, char *szMCEChannel)
-{
-    int i=0;
-    if (szMCEChannel==NULL)
-        return;
-    lstrcpy(szMCEChannel,"");
-    do
-        {
-        if (!lstrcmpi(szChannel,MCEChannels[i][0]))
-            {
-            lstrcpy(szMCEChannel, MCEChannels[i][1]);
-            break;
-            }
-        i++;
-        }while(lstrlen(MCEChannels[i][0])>0);
 }
 
 int GetRadioTVMode(void)
@@ -1778,4 +1822,57 @@ HRESULT SetRadioTVMode(int mode)
         gCaptureAudioOnly=FALSE;
 
     return(hr);
+}
+
+void MapMCEChannel(char *szChannel, char *szMCEChannel)
+{
+/*
+    int i=0;
+    if (szMCEChannel==NULL)
+        return;
+    lstrcpy(szMCEChannel,"");
+    do
+        {
+        if (!lstrcmpi(szChannel,MCEChannels[i][0]))
+            {
+            lstrcpy(szMCEChannel, MCEChannels[i][1]);
+            break;
+            }
+        i++;
+        }while(lstrlen(MCEChannels[i][0])>0);
+*/
+
+    FILE *fp=fopen("mce.ini","rt");
+    if (fp!=NULL)
+        {
+        char lstr[1024];
+        ZeroMemory(lstr, sizeof(lstr));
+
+        while (NULL!=fgets(lstr, 1024, fp))
+            {
+            char str[1024];
+            char *p1=NULL;
+            char *p2=NULL;
+            char *p3=NULL;
+
+            ZeroMemory(str, sizeof(str));
+            lstrcpy(str, lstr);
+
+            p1=strtok(str,"\"");
+            if (p1!=NULL)
+                p2=strtok(NULL,"\"");
+            if (p2!=NULL)
+                p3=strtok(NULL,"\"");
+            if (p3!=NULL)
+                {
+                if (!lstrcmpi(szChannel,p1))
+                    {
+                    lstrcpy(szMCEChannel, p3);
+                    break;
+                    }
+                }
+            }
+        fclose(fp);
+        }
+
 }

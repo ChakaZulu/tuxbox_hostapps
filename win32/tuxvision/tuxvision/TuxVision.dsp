@@ -201,6 +201,10 @@ SOURCE=.\Wsasimpl.h
 # End Group
 # Begin Source File
 
+SOURCE=.\mce.ini
+# End Source File
+# Begin Source File
+
 SOURCE=.\splash.bmp
 # End Source File
 # Begin Source File

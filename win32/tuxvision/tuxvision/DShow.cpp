@@ -1127,12 +1127,10 @@ HRESULT SetDSoundVolume(__int64 val)
         hr = pFilter->QueryInterface (IID_IBasicAudio, (LPVOID*) &pBA);
         if (SUCCEEDED(hr))
             {
+            //!!BS: With my old SB system utilisation goes up to 40% when using (real) mute ...
+            //!!BS: maybe I should really watch out for some more actual drivers ...
             value = (val ? (long)(val-100)*100/4 : -10000L);
             hr = pBA->put_Volume (value);
-            if (FAILED(hr))
-                {
-                dprintf("Error setting volume: %ld",value);
-                }
             RELEASE(pBA);
             }
         RELEASE(pFilter);
@@ -1140,7 +1138,7 @@ HRESULT SetDSoundVolume(__int64 val)
 
     if (FAILED(hr))
         {
-        dprintf("Setting volume: %ld",value);
+        dprintf("Error setting volume: %ld",value);
         }
 
     return hr;
@@ -1243,11 +1241,6 @@ HRESULT SendSplitEventToAudioFileRenderer(void)
 
     if (gpIGraphBuilder==NULL)
         return(E_FAIL);
-
-//!!BS: we have to wait a little bit here to compensate bufferlatency ...
-//    if (gTranscodeAudio)
-//        Sleep(2000);
-//!!BS: we have to wait a little bit here to compensate bufferlatency ...
 
     hr = gpIGraphBuilder->FindFilterByName (L"FileWriter", &pFilter);
     if ( SUCCEEDED(hr) )
