@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: flashsign.cpp,v 1.1 2002/03/10 18:10:25 waldi Exp $
+ * $Id: flashsign.cpp,v 1.2 2002/03/10 18:18:42 waldi Exp $
  */
 
 #ifndef _GNU_SOURCE
@@ -76,7 +76,7 @@ void usage ( int status )
       << "The status file looks like the follow:\n"
       << "  Format: 1.0                                         (required)\n"
       << "  Date: <RFC822 compliant date>                       (optional)\n"
-      << "  Maintainer: <RFC822 compilant name and email>       (required)\n"
+      << "  Maintainer: <RFC822 compliant name and email>       (required)\n"
       << "  Version: <version of flash>                         (required)\n";
 
   exit ( status );
