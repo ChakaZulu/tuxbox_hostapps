@@ -11,6 +11,7 @@
 #define IDB_BITMAP_SPLASH               114
 #define MISC                            114
 #define IDC_IPADDRESS                   1001
+#define IDC_IPADDRESS2                  1002
 #define IDC_STOPPLAYBACK                1003
 #define IDC_LOGIN                       1004
 #define IDC_PASSWORD                    1005
@@ -43,6 +44,7 @@
 #define IDC_PRIORITY_HIGH               1084
 #define IDC_PRIORITY_NORMAL             1085
 #define IDC_CHECK2                      1086
+#define IDC_CHECK3                      1087
 
 // Next default values for new objects
 // 

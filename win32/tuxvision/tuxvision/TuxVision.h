@@ -27,7 +27,7 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.11"
+#define REVISION            "Rev.0.0.0.12"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 
 extern HINSTANCE		ghInstApp;

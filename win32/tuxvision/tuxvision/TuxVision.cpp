@@ -54,6 +54,7 @@
 #include "Registry.h"
 #include "..\\capture\\interface.h"
 #include "..\\render\\interface.h"
+#include "TCPServer.h"
 #include "debug.h"
 
 // ------------------------------------------------------------------------
@@ -274,6 +275,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
         AppendMenu(ghPopUpMenu,	 MF_STRING, ID_EXIT, "Exit");
 
+        HTTPInit();
+        HTTPRun();
 
     	while(GetMessage(&msg,NULL,0,0))
 			{
@@ -285,6 +288,9 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         {
         MessageBox(NULL,"Unable to open capture driver, program will exit !","TuxVision has a severe problem ...",MB_OK|MB_ICONSTOP);
         }
+
+    HTTPStop();
+    HTTPDeInit();
 // ------------------------------------------------------------------------
 	CloseInterface(ghWndVideo);
 // ------------------------------------------------------------------------

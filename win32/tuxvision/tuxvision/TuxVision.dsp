@@ -2,7 +2,7 @@
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
-# TARGTYPE "Win32 (x86) Application" 0x0101     
+# TARGTYPE "Win32 (x86) Application" 0x0101
 
 CFG=TuxVision - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib winmm.lib msacm32.lib strmbase.lib /nologo /subsystem:windows /machine:I386 /out:"TuxVision.exe"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib winmm.lib msacm32.lib strmbase.lib ws2_32.lib /nologo /subsystem:windows /machine:I386 /out:"TuxVision.exe"
 
 !ELSEIF  "$(CFG)" == "TuxVision - Win32 Debug"
 
@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib winmm.lib msacm32.lib strmbase.lib /nologo /subsystem:windows /debug /machine:I386 /out:"TuxVision.exe" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib winmm.lib msacm32.lib strmbase.lib ws2_32.lib /nologo /subsystem:windows /debug /machine:I386 /out:"TuxVision.exe" /pdbtype:sept
 
 !ENDIF 
 
@@ -136,6 +136,14 @@ SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\TCPServer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TCPServer.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\TuxVision.cpp
 # End Source File
 # Begin Source File
@@ -158,6 +166,10 @@ SOURCE=.\WinHelper.cpp
 
 SOURCE=.\WinHelper.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Wsasimpl.h
+# End Source File
 # End Group
 # Begin Source File
 
@@ -170,6 +182,10 @@ SOURCE=.\tux.bmp
 # Begin Source File
 
 SOURCE=.\AXHelper.lib
+# End Source File
+# Begin Source File
+
+SOURCE=.\wsasimpl.lib
 # End Source File
 # End Target
 # End Project

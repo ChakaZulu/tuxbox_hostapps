@@ -297,12 +297,10 @@ HRESULT SetFullscreen(HWND hWndParent, HWND hWnd, RECT *restore, BOOL flag)
 HRESULT MoveVideoWindow()
 { 
     RECT rc={0,0,0,0};
-//    DWORD val=0;
 
     if (!gFullscreen)
         return(NOERROR);
 
-//    val=GetWindowLong(ghWndApp, GWL_STYLE);
     GetClientRect(ghWndApp, &rc);
     SetWindowPos(ghWndVideo, NULL ,0 ,0, Width(rc), Height(rc), SWP_NOZORDER);
     HRESULT hr=ConnectVideoWindow(gpIGraphBuilder, ghWndVideo, &rc, gIs16By9);
