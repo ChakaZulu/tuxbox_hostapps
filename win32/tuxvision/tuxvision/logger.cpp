@@ -59,7 +59,7 @@ HRESULT cdecl LogFlush(HWND hwnd)
 HRESULT cdecl LogPrintf(LPSTR szFormat, ...)
 {
     int i=0,c=0;
-    char ach[264];
+    char ach[4096];
     static BOOL fDebug = -1;
     lstrcpy(ach, "TuxVision: ");
     wvsprintf(ach+lstrlen(ach),szFormat,(char *)(&szFormat+1));

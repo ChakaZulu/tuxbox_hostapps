@@ -25,8 +25,8 @@
 
 void cdecl dprintf(LPSTR szFormat, ...)
 {
-    char ach[264];
-    char achl[264];
+    char ach[4096];
+    char achl[4096];
     static BOOL fDebug = -1;
     lstrcpy(ach, "TuxVision: ");
     wvsprintf(ach+lstrlen(ach),szFormat,(char *)(&szFormat+1));

@@ -27,11 +27,13 @@
 #define ALPHA_STRING        "TuxVision"
 #define SPLASHTIME          3000
 #define REGISTRY_SUBKEY		"Software\\TuxVision"
-#define REVISION            "Rev.0.0.0.16"
+#define REVISION            "Rev.0.0.0.17"
 typedef enum{StateStopped, StatePreview, StateRecord, StatePlayback, StateUninitialized} RecorderState;
 #define AUDIO_PCM       0
 #define AUDIO_MPEG1L2   1
 #define AUDIO_MPEG1L3   2
+
+#define WM_STREAMNOTIFY	(WM_USER+4000)
 
 extern HINSTANCE	ghInstApp;
 extern HWND			ghWndApp;

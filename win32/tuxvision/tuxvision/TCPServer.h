@@ -25,11 +25,12 @@
 
 typedef enum CVCRStates 
 {
-    CMD_VCR_UNKNOWN = 0,
-    CMD_VCR_RECORD  = 1,
-    CMD_VCR_STOP    = 2,
-    CMD_VCR_PAUSE   = 3,
-    CMD_VCR_RESUME  = 4
+    CMD_VCR_UNKNOWN     = 0,
+    CMD_VCR_RECORD      = 1,
+    CMD_VCR_STOP        = 2,
+    CMD_VCR_PAUSE       = 3,
+    CMD_VCR_RESUME      = 4,
+    CMD_VCR_AVAILABLE   = 5
 }CVCRCommand;
 
 enum CVCRDevices
@@ -38,20 +39,11 @@ enum CVCRDevices
     DEVICE_SERVER
 };
 
-struct externalCommand                        // command wird an externen server gesendet
-{
-    unsigned char      messageType;           // egal
-    unsigned char      version;               // momentan 1
-    unsigned int       command;               // siehe externalcommands
-    unsigned __int64   epgID;                 // may be zero
-    unsigned int       onidsid;               // may be zero
-};
-
-
 HRESULT HTTPInit(void);
 HRESULT HTTPDeInit(void);
 HRESULT HTTPRun(void);
 HRESULT HTTPStop(void);
 
+HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID);
 
 #endif

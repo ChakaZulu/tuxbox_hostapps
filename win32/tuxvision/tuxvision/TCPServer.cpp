@@ -145,6 +145,9 @@ void __cdecl CreateSTREAMResponse(void *rs)
     SOCKET rSock;
     int nData;
     int keepSocketOpen=0;
+    __int64 cmd=0;
+    __int64 onidsid=0;
+    HRESULT hr=NOERROR;
     
     BYTE InBuffer[MAX_MSG_LENGTH];    // packet buffer
 
@@ -157,7 +160,9 @@ void __cdecl CreateSTREAMResponse(void *rs)
     //dprintf("Exit Receive");
 
     dprintf("STREAM received %ld byte.",nData);
-    dprintf("--------------------------\r\n%s",(char *)InBuffer);
+    dprintf("--------------------------\r\n",(char *)InBuffer);
+    dprintf("%s", InBuffer);
+    dprintf("--------------------------\r\n",(char *)InBuffer);
 
 	if (nData==-1)
 		  {
@@ -166,6 +171,14 @@ void __cdecl CreateSTREAMResponse(void *rs)
 		  gOpenSocketCount=CountConnections();
 		  return;
 		  }
+
+    hr=AnalyzeXMLRequest((char *)InBuffer, &cmd, &onidsid);
+    if (SUCCEEDED(hr))
+        {
+        dprintf("Parsing succeeded: CMD:%ld, ONIDSID:%ld", (DWORD)cmd, (DWORD)onidsid);
+        PostMessage(ghWndApp, WM_STREAMNOTIFY, (WPARAM)cmd, (LPARAM)onidsid);
+        }
+
 /*
     do
 		{
@@ -844,5 +857,105 @@ LRESULT CALLBACK WndProcTCP (HWND hwnd, UINT message , WPARAM wParam, LPARAM lPa
 }
 
 
+char* ParseForString(char *szStr, char *szSearch, int ptrToEnd)
+{
+    char *p=NULL;
+    p=strstr(szStr, szSearch);
+    if (p==NULL)
+        return(NULL);
+    if (!ptrToEnd)
+        return(p);
+    else
+        return(p+strlen(szSearch));
+    
+}
+
+char* ExtractQuotedString(char *szStr, char *szResult, int ptrToEnd)
+{
+    int i=0;
+    int len=lstrlen(szStr);
+    lstrcpy(szResult,"");
+    for(i=0;i<len;i++)
+        {
+        if (szStr[i]=='\"')
+            {
+            char *pe=NULL;
+            char *ps=szStr+i+1;      
+            pe=ParseForString(ps, "\"", 1);
+            if (pe==NULL)
+                return(NULL);
+
+            memcpy(szResult,ps, pe-ps-1);
+            szResult[pe-ps-1]=0;                       
+            if (ptrToEnd)
+                return(pe);
+            else
+                return(ps);
+            }
+        }
+    return(NULL);
+}
+
+HRESULT AnalyzeXMLRequest(char *szXML, __int64 *iCMD, __int64 *iONIDSID)
+{
+    char *p1=NULL;
+    char *p2=NULL;
+    char *p3=NULL;
+    char command[264]="";
+    char onidsid[264]="";
+    HRESULT hr=E_FAIL;
+
+    if ( (szXML==NULL) || (iCMD==NULL) || (iONIDSID==NULL) )
+        return(E_POINTER);
+
+    p1=ParseForString(szXML,"<record ", 1);
+    if (p1!=NULL)
+        {
+        p2=ParseForString(p1,"command=", 1);
+        p1=NULL;
+        if (p2!=NULL)
+            p3=ExtractQuotedString(p2, command, 1);
+        if (p3!=NULL)
+            p1=ParseForString(p3,">", 1);
+        }
+
+    if (p1!=NULL)
+        {
+        p2=ParseForString(p1,"<onidsid>", 1);
+        p3=p2;
+        p1=NULL;
+        if (p2!=NULL)
+            {
+            p1=ParseForString(p2,"</onidsid>", 0);
+            if (p1!=NULL)
+                {
+                memcpy(onidsid,p3,p1-p3);
+                onidsid[p1-p3]=0;
+                hr=NOERROR;
+                }
+            }
+        }
+
+    if (FAILED(hr))
+        return(hr);
+
+    *iCMD     = CMD_VCR_UNKNOWN;
+    *iONIDSID = 0;
+
+    if (!lstrcmp(command,"record"))
+        *iCMD=CMD_VCR_RECORD;
+    if (!lstrcmp(command,"stop"))
+        *iCMD=CMD_VCR_STOP;
+    if (!lstrcmp(command,"pause"))
+        *iCMD=CMD_VCR_PAUSE;
+    if (!lstrcmp(command,"resume"))
+        *iCMD=CMD_VCR_RESUME;
+    if (!lstrcmp(command,"available"))
+        *iCMD=CMD_VCR_AVAILABLE;
+
+    *iONIDSID=atol(onidsid);
+
+    return(hr);
+}
 
 

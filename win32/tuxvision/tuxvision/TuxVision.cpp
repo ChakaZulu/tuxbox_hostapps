@@ -58,6 +58,24 @@
 #include "logger.h"
 #include "debug.h"
 
+
+char STREAM_TEST_DATA[]="<?xml version=\"1.0\" encoding=\"iso-8859-1\"?> \
+                                            \
+<neutrino commandversion=\"1\">               \
+    <record command=\"record\">               \
+        <channelname>PREMIERE 1</channelname>   \
+        <epgtitle>Live Golf: British Open</epgtitle>    \
+        <onidsid>8716305</onidsid>  \
+        <epgid>571231782548</epgid> \
+        <videopid>255</videopid>    \
+        <audiopids selected=\"256\">  \
+            <audio pid=\"256\" name=\"deutsch\"/>   \
+            <audio pid=\"258\" name=\"englisch\"/>  \
+        </audiopids>    \
+    </record>   \
+</neutrino> \
+";
+
 // ------------------------------------------------------------------------
 // Global Stuff
 // ------------------------------------------------------------------------
@@ -383,6 +401,37 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
 		case WM_USER:
 			//OnWM_User(hwnd,message,wParam,lParam);
 			break;
+
+        case WM_STREAMNOTIFY:
+            dprintf("WM_STREAMNOTIFY: CMD:%ld, ONIDSID:%ld", (DWORD)wParam, (DWORD)lParam);
+            {
+            int i=0;
+            if (wParam==CMD_VCR_RECORD)
+                {
+                for(;;)
+                    {
+				    int channel=SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_GETITEMDATA, i, 0 );
+                    if (channel==CB_ERR)
+                        break;
+                    if (channel==lParam)
+                        {
+    				    SendMessage( GetDlgItem(hwnd,IDC_CHANNEL), CB_SETCURSEL, i, 0 );
+                        SetTVChannel(hwnd, channel);
+				        gCurrentChannel=i;
+						PostMessage(ghWndApp,WM_COMMAND,IDC_RECORD,0);
+                        break;
+                        }
+                    i++;
+                    }
+                }
+            else
+            if (wParam==CMD_VCR_STOP)
+                {
+				PostMessage(ghWndApp,WM_COMMAND,IDC_STOP,0);
+                }
+            }
+
+            break;
 
         case WM_NCLBUTTONDBLCLK:
             //dprintf("WM_NCLBUTTONDBLCLK: %ld",wParam);
