@@ -4,7 +4,7 @@
 
  Erstellt: 16.11.2003 von Michael Sommer (TGLynx)
 
- Geändert:
+ Geändert: 29.11.2003 von Reinhard Eidelsburger (Flagg)
 -----------------------------------------------------------------------------------------------------------------------------
 
 Schritt 1:
