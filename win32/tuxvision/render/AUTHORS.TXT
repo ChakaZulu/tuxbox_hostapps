@@ -1,3 +1,0 @@
-
-DBOXII Render Filter was written by Bernd Scharping, bernd@transputer.escape.de
-- Telnet path was adopted from ???
