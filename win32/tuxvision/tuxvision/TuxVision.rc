@@ -54,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,0,3
- PRODUCTVERSION 0,0,0,3
+ FILEVERSION 0,0,0,13
+ PRODUCTVERSION 0,0,0,13
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x29L
@@ -72,15 +72,15 @@ BEGIN
         BEGIN
             VALUE "Comments", "VisionApp for the TuxBox\0"
             VALUE "CompanyName", "BS\0"
-            VALUE "FileDescription", "TVViewing App\0"
-            VALUE "FileVersion", "0, 0, 0, 3\0"
+            VALUE "FileDescription", "TV-Viewing App for the DBOXII\0"
+            VALUE "FileVersion", "0, 0, 0, 13\0"
             VALUE "InternalName", "TuxVision\0"
             VALUE "LegalCopyright", "Copyright © 2002 BS\0"
             VALUE "LegalTrademarks", "BS PRIVATE\0"
             VALUE "OriginalFilename", "TuxVision.exe\0"
             VALUE "PrivateBuild", "YES\0"
             VALUE "ProductName", "NN\0"
-            VALUE "ProductVersion", "0, 0, 0, 3\0"
+            VALUE "ProductVersion", "0, 0, 0, 13\0"
             VALUE "SpecialBuild", "PreAlpha\0"
         END
     END

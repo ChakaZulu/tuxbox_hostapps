@@ -282,8 +282,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
         AppendMenu(ghPopUpMenu,	 MF_SEPARATOR, 0,         NULL);
         AppendMenu(ghPopUpMenu,	 MF_STRING, ID_EXIT, "Exit");
 
-        HTTPInit();
-        HTTPRun();
+        //HTTPInit();
+        //HTTPRun();
 
     	while(GetMessage(&msg,NULL,0,0))
 			{
@@ -435,7 +435,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam
                     HRESULT hr=GetResyncCount(&val);
                     if (SUCCEEDED(hr))
                         {
-                        val=val/(1024*1024);
                         ltoa((long)val, szString, 10);
                         }
                     }
