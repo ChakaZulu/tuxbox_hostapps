@@ -116,7 +116,7 @@ int main( int argc, char *argv[] ) {
 	int		a,v;
 	time_t		now;
 	int		msec;
-	int		port;
+	int		port = 31338;
 	FILE *  	fp;
 	time_t		last 		= 0;
 	int 		vpid 		= 0;
