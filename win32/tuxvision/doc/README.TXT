@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------------------------
 
-This is version 0.0.0.16 of TuxVision/Capture/Render 
-Date: 08.07 2002
+This is version 0.0.1.1 of TuxVision/Capture/Render 
+Date: 10.10 2002
 
 This text describes usage of application and direct show filters running on a win32 OS
 which are written to give you preview, capture and playback capabilities for a lan
@@ -21,7 +21,7 @@ You may ignore this step if you simply want to use the filter and application bi
 Currently I´m using M$ VC6 compiler and the DirectX8.1 SDK
 running on a P4, 1.8GHz, 512MB RDRAM, MX2, Win2k
 DBOX Nokia Cable, AVIA500, GTX, 2xIntel, connected through 10MBit HUB
-running neutrino based on various images (current: 07.04.2002)
+running neutrino based on various images (current: alexW1.6, 20.07.2002)
 
 *** IMPORTANT ***
 
@@ -33,6 +33,8 @@ Before fiddling around with the filters or even trying to start the TuxVision ap
 recommanded that you load and install the latest version of TRex 
 (Generic DShow Based MediaConverter) ! This gives you a core set of absolutely needed
 filter components.
+That latest and greatest version is usually here:
+http://transputer.dyndns.org/download/TRexSetup.exe
 
 *** IMPORTANT ***
 
@@ -52,9 +54,12 @@ Usually it doesn´t matter where you install the components.
 
 *** TUXVISION ***
 
+Rev.0.0.1.1
+- added button for HTTP reset
+- fixed correct repositioning of the app after falling back from fullscreen to normal view
+
 TODO:
 - get HTTP and CTRL (streaming) Port alive
-- create graphbuilding for Audio-Only mode
 - implement basic playback graph building
 
 -------------------------------------------------------------------------------------------------
@@ -76,6 +81,9 @@ hit configure to setup your user specific parameters (like IP-Address).
 
 *** CAPTURE ***
 
+Rev.0.0.1.1
+- use more relaxed A/V sync
+
 TODO:
 - write a better multiplexer or wait for a PES-Mux ?
 - get raw video/audio alive (internal graph building)
@@ -93,7 +101,7 @@ Of cause you are free to use the existing M$ Demultiplexer but due to lack of ap
 bufferhandling this beast is not very smart. If you want to go with the shown filters
 go an download the latest TRex installation, which will give you (beneath a nice conversion
 utility) the MPEG2Demultiplexer.
-3.) Open grpahedit and add the source filter first. Once loaded you should open
+3.) Open graphedit and add the source filter first. Once loaded you should open
 the properties of the capture filter (right click) and modify parameters like
 IPAddress. (Login and Password should be ok in most cases)
 4.) Load the Demultiplexer and connect it to the PS Output pin.
@@ -115,14 +123,23 @@ So I think you wanna use the PinnaleDemuxII that has a nice switch for 48kHz Aud
 
 TODO: 
 - path for binaries are fixed to /var/tuxbox, maybe I´ll find a smarter way ...
+(from Rev.1.6 of the DBoxII image no additional binaries are needed anymore !)
 - Basic Video and Audio works, BUT it looks like streaming on both pins parallel confuses my GTX + dvrv/dvra !
 - avoid annoying "queeek" at the very beginning when streaming audio
+(this is fixed for audio only rendering)
 - AC3 support
 - bottom field first order support
 - setup more reasonable Types/Subtypes for the pins
 - implement all the needed interfaces that a REAL Render filter should expose
 - pray for a nice guy to improve GTX playback performance (resyncing ...)
+(hmm, this is still a big issue)
 - prevent using PS and V_ES/A_ES pins at the same time
+
+Rev.0.0.1.0:
+Actual AlexW Image 1.6 might not require fbclear anymore. 
+and no manual copy of XXX_DVR.o is required.
+ClipMode drivers were changed as well, but the current DBOXIIRenderer 
+should work on both, the old 1.4 and the actual image.
 
 Rev.0.0.0.16: 
 - Support for WinAmp Audiorendering implemented
@@ -171,6 +188,15 @@ As an input filter I used for all tests the FileSource(Async).
 
 -------------------------------------------------------------------------------------------------
 
+If you find this software usefull, it was written by
+
 Bernd Scharping (BSE) bernd@transputer.escape.de
 
+If not, I don´t know who the autor was :)
+
 -------------------------------------------------------------------------------------------------
+
+Have fun, and enjoy your DBoxII running Linux !
+
+-------------------------------------------------------------------------------------------------
+
