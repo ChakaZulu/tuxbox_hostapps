@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-program: sserver version 0.02 by Axel Buehning <mail at diemade.de>
+program: sserver version 0.03 by Axel Buehning <mail at diemade.de>
 */
 
 #include <stdlib.h>
@@ -23,9 +23,10 @@ program: sserver version 0.02 by Axel Buehning <mail at diemade.de>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <signal.h>
 #ifdef __CYGWIN__
 #include <cygwin/in.h>
@@ -166,7 +167,7 @@ int main(int argc, char * argv[])
 							break;
 						}
 						if (pid == 0) {
-							execv (a_arg[0], a_arg);
+							execvp(a_arg[0], a_arg);
 							fprintf(stderr,"execv failed");
 							perror("");
 							exit(1);
@@ -177,7 +178,7 @@ int main(int argc, char * argv[])
 							if(kill(pid,SIGINT)) {
 								printf ("ggrab process not killed\n");
 							}
-							sleep(2);
+							waitpid(pid,0,0);
 							fprintf(stderr,"\nStop recording\n");
 						}
 						break;
