@@ -14,14 +14,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-$Id: streamvideo.c,v 1.3 2002/02/06 21:15:35 Toerli Exp $
+$Id: streamvideo.c,v 1.4 2002/02/06 21:22:24 Toerli Exp $
 $Log: streamvideo.c,v $
+Revision 1.4  2002/02/06 21:22:24  Toerli
+*** empty log message ***
+
 Revision 1.3  2002/02/06 21:15:35  Toerli
 updates..
 
-
-
-//#include <iostream.h> /* wofür? */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
