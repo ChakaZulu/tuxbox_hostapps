@@ -5,3 +5,6 @@ picserver: picserver.o
 
 picserver.o: picserver.c picv_client_server.h
 	$(CC) $(CFLAGS) -c picserver.c
+
+clean:
+	rm -f picserver picserver.o
