@@ -78,8 +78,7 @@ int main(int argc, char * argv[])
 #ifdef __CYGWIN__
 	strcat(a_grabname,".exe");
 #endif
-	n = sizeof(a_arg)/sizeof(char*);
-
+	n = 9; 
 	for (i = 1; i < argc; i++) {
 		if (!strcmp("-o",argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need path for -o\n"); return -1; }
@@ -89,8 +88,8 @@ int main(int argc, char * argv[])
 			a_arg[n++]=argv[i];
 		}
 	}
-	a_arg[i+8] = 0;
-	
+	a_arg[n] = 0;
+
 	//network-setup
 	ListenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	memset(&servaddr, 0, sizeof(servaddr));
