@@ -137,6 +137,8 @@ public:
 
     int     m_VideoWidth;
     int     m_VideoHeight;
+    int     m_VideoBitrate;
+    int     m_IsAspectRatio4By3;
 
 private:
     // It is only allowed to to create these objects with CreateInstance

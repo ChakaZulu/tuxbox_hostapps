@@ -366,15 +366,21 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 //    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long *)&val);
 
 //    hr=SetChannel(m_DBOXAddress, m_DBOXHTTPPort, 8716309);
-//    hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight, m_DBOXAddress, m_DBOXHTTPPort);
+//    hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
 //    hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
 
 //    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long *)&val);
 //    hr=GetChannelInfo(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long)val, szData);
 //    dprintf("ChannelInfo: %s",szData);
 
-    m_VideoWidth=352;
-    m_VideoHeight=288;
+//    m_VideoWidth=352;
+//    m_VideoHeight=288;
+
+    m_VideoWidth=0;
+    m_VideoHeight=0;
+    m_VideoBitrate=0;
+    m_IsAspectRatio4By3=1;
+
 
 } // (Constructor)
 
@@ -452,7 +458,13 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             hr=NOERROR;
             break;
         case CMD_SETCHANNEL:
+            m_VideoWidth=0;
+            m_VideoHeight=0;
+            m_VideoBitrate=0;
+            m_IsAspectRatio4By3=1;
             hr=SetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long)data1);
+            if (SUCCEEDED(hr))
+                hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
             break;
         }
 	return(hr);
@@ -589,8 +601,30 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             break;
 
         case CMD_GETASPECTRATIO: 
+            if (data1==NULL)
+                return(E_POINTER);
+            hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
+            if (SUCCEEDED(hr))
+                *data1=m_IsAspectRatio4By3;
+            else
+                *data1=-1;
             break;
 
+        case CMD_GETWIDTHEIGHT:
+            if ((data1==NULL)||(data2==NULL))
+                return(E_POINTER);
+            hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
+            if (SUCCEEDED(hr))
+                {
+                *data1=m_VideoWidth;
+                *data2=m_VideoHeight;
+                }
+            else
+                {
+                *data1=0;
+                *data2=0;
+                }
+            break;
         }
 	return(hr);
 }

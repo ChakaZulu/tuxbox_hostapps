@@ -56,5 +56,6 @@ STDMETHOD(getParameter) (THIS_ __int64 command, __int64 *data1, __int64 *data2) 
 #define CMD_GETTIME         10
 #define CMD_GETDATE         11
 #define CMD_GETSYNCCOUNT    12  //     get *__int64 in data1 contains current resyc counter
-#define CMD_GETASPECTRATIO  13  //     get *__int64 in data1 contains current aspect ratio
+#define CMD_GETASPECTRATIO  13  //     get *__int64 in data1 contains current aspect ratio, 1: for 4/3, 0: otherwise
 #define CMD_GETBITRATE      14  //     get *__int64 in data1, data2 contains current audio,video bitrate in bit per second
+#define CMD_GETWIDTHEIGHT   15  //     get *__int64 in data1 width and in data2 height

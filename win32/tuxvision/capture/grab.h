@@ -56,7 +56,7 @@ extern HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned lo
 
 extern HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active);
 extern HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigned short port, int doReset, int isENX);
-extern HRESULT RetrieveStreamInfo(int *width, int *height, const char *name, unsigned short port);
+extern HRESULT RetrieveStreamInfo(int *width, int *height,  int *bitrate, int *is4By3,const char *name, unsigned short port);
 extern HRESULT CheckBoxStatus(const char *name, unsigned short port);
 
 

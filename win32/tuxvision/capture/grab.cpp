@@ -723,7 +723,7 @@ HRESULT CheckBoxStatus(const char *name, unsigned short port)
 #pragma warning (default : 4018)
 }
 
-HRESULT RetrieveStreamInfo(int *width, int *height, const char *name, unsigned short port)
+HRESULT RetrieveStreamInfo(int *width, int *height, int *bitrate, int *is4By3, const char *name, unsigned short port)
 {
     HRESULT hr=NOERROR;
     int ret=0;
@@ -731,6 +731,8 @@ HRESULT RetrieveStreamInfo(int *width, int *height, const char *name, unsigned s
 	
     *width=0;
     *height=0;
+    *bitrate=0;
+    *is4By3=1;
     
     dprintf("RetrieveStreamInfo from %s:%d ", name, (int)port);
 
@@ -770,6 +772,8 @@ HRESULT RetrieveStreamInfo(int *width, int *height, const char *name, unsigned s
             unsigned int i;
             char *p1=NULL;
             char *p2=NULL;
+            char *p3=NULL;
+            char *p4=NULL;
             char rbuffer[1024];
             ZeroMemory(rbuffer, sizeof(rbuffer));
             ret=recv(sock,rbuffer,sizeof(rbuffer),0);
@@ -785,10 +789,27 @@ HRESULT RetrieveStreamInfo(int *width, int *height, const char *name, unsigned s
                 *width=atoi(p1);
                 }
             if (p2!=NULL)
+                p3=MYstrstr(p2,"\n");
+            if (p2!=NULL)
                 {
                 for(i=0;i<strlen(p2);i++)
                     if (p2[i]=='\n') {p2[i]=0;break;}
                 *height=atoi(p2);
+                }
+            if (p3!=NULL)
+                p4=MYstrstr(p3,"\n");
+            if (p3!=NULL)
+                {
+                for(i=0;i<strlen(p3);i++)
+                    if (p3[i]=='\n') {p3[i]=0;break;}
+                *bitrate=atoi(p3);
+                }
+            if (p4!=NULL)
+                {
+                for(i=0;i<strlen(p4);i++)
+                    if (p4[i]=='\n') {p4[i]=0;break;}
+                if (lstrcmp(p4,"4:3"))
+                    *is4By3=0;
                 }
             //dprintf("------");
             }
