@@ -1,4 +1,6 @@
- /*
+/*
+ * $Id: streamvideo.c,v 1.6 2002/02/09 01:46:09 obi Exp $
+ * 
  * TCP Video/Audio - PES Streamer
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,20 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-$Id: streamvideo.c,v 1.5 2002/02/06 21:39:12 Toerli Exp $
-
-$Log: streamvideo.c,v $
-Revision 1.5  2002/02/06 21:39:12  Toerli
-fixes
-
-Revision 1.4  2002/02/06 21:22:24  Toerli
-*** empty log message ***
-
-Revision 1.3  2002/02/06 21:15:35  Toerli
-updates..
-*/
-
+ *
+ * $Log: streamvideo.c,v $
+ * Revision 1.6  2002/02/09 01:46:09  obi
+ * header redesign ;)
+ *
+ * Revision 1.5  2002/02/06 21:39:12  Toerli
+ * fixes
+ * 
+ * Revision 1.4  2002/02/06 21:22:24  Toerli
+ * *** empty log message ***
+ * 
+ * Revision 1.3  2002/02/06 21:15:35  Toerli
+ * updates..
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
