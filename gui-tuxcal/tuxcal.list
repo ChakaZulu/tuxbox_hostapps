@@ -1,0 +1,17 @@
+#Beispiel fuer Zeitraeume
+
+z;10.02.-21.02.;Winterferien;
+z;18.04.-25.04.;Osterferien;
+z;12.07.-27.08.;Sommerferien;
+z;20.10.-30.10.;Herbstferien;
+z;22.12.-03.01.;Winterferien;
+
+#Beispiel fuer Termine
+
+g;29.05.;test;
+t;23.05.;Blumen schenken!!!;
+t;12.05.2003;fgewfgjs;
+g;13.05.;Geburtstag test;
+t;20.04.;Ostereier suchen;
+g;12.04.1964;Gans Heizer;
+t;13.05.;Abtauchen;
