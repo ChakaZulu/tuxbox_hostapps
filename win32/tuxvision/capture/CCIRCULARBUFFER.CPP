@@ -47,6 +47,7 @@ CCircularBuffer::~CCircularBuffer()
 void CCircularBuffer::Interrupt()
 {
     m_Interrupt=TRUE;
+    Sleep(WAIT_DELAY*10);
 }
 
 

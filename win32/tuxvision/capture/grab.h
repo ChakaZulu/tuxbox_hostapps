@@ -75,5 +75,5 @@ extern void DeInitStreaming(void);
 
 extern BOOL  gIsVideoConnected;
 extern BOOL  gIsAudioConnected;
-extern BOOL  gIsMultiplexerConnected;
+extern BOOL  gIsPSPinConnected;
 extern BOOL  gfThreadAborted;

@@ -140,6 +140,8 @@ public:
     int     m_VideoBitrate;
     int     m_IsAspectRatio4By3;
 
+    int     m_AudioSampleFrequency;
+
     // It should (is) only allowed to to create these objects with CreateInstance
     CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr);
 	~CDBOXIICapture();

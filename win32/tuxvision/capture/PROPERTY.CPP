@@ -23,12 +23,12 @@
 #include <streams.h>
 #include <olectl.h>
 
+#include "debug.h"
 #include "interface.h"
 #include "fsource.h"
 #include "ccircularbuffer.h"
 #include "Remuxer.h"
 #include "grab.h"
-#include "debug.h"
 #include "resource.h"
 #include "resrc1.h"
 

@@ -25,14 +25,15 @@
 #include <initguid.h>
 #include <ks.h>
 #include <ksmedia.h>
+#include <mmreg.h>
 
+#include "debug.h"
 #include "interface.h"
 #include "source.h"
 #include "fsource.h"
 #include "ccircularbuffer.h"
 #include "Remuxer.h"
 #include "grab.h"
-#include "debug.h"
 
 #define USE_DBOX    1
 
@@ -335,14 +336,14 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
 	    return;
         }
 
-    m_paStreams[3] = new CPushStream(phr, this, L"VPES", SAMPLE_TYPE_VPES);
+    m_paStreams[3] = new CPushStream(phr, this, L"V_ES", SAMPLE_TYPE_VPES);
     if (m_paStreams[3] == NULL) 
         {
         *phr = E_OUTOFMEMORY;
 	    return;
         }
 
-    m_paStreams[4] = new CPushStream(phr, this, L"APES", SAMPLE_TYPE_APES);
+    m_paStreams[4] = new CPushStream(phr, this, L"A_ES", SAMPLE_TYPE_APES);
     if (m_paStreams[4] == NULL) 
         {
         *phr = E_OUTOFMEMORY;
@@ -576,6 +577,20 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                 return(NOERROR);
                 }
 
+            if (data2!=NULL)
+                {
+                if (CRemuxer->resync)
+                    {
+                    *data2=1;
+                    if (!CRemuxer->gotVideo)
+                        *data2|=0x80;
+                    if (!CRemuxer->gotAudio)
+                        *data2|=0x40;
+                    }
+                else
+                    *data2=0;
+                }
+
             if (m_State!=State_Running)
                 {
                 *data1=0;
@@ -628,7 +643,6 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                     hr=NOERROR;
                     }
                 }
-
             hr=NOERROR;
             break;
 
@@ -640,6 +654,7 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                 *data1=m_IsAspectRatio4By3;
             else
                 *data1=-1;
+            hr=NOERROR;
             break;
 
         case CMD_GETWIDTHEIGHT:
@@ -656,6 +671,24 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                 *data1=0;
                 *data2=0;
                 }
+            hr=NOERROR;
+            break;
+
+        case CMD_GETAUDIOFREQ:  
+            if (data1==NULL)
+                return(E_POINTER);
+            if (CRemuxer==NULL)
+                {
+                *data1=0;
+                return(NOERROR);
+                }
+            if (m_State!=State_Running)
+                {
+                *data1=0;
+                return(NOERROR);
+                }
+            *data1=CRemuxer->audio_frequency;
+            hr=NOERROR;
             break;
         }
 	return(hr);
@@ -693,9 +726,9 @@ STDMETHODIMP CDBOXIICapture::Pause()
             gIsAudioConnected=FALSE;
 
         if (pPushStreamMultiplex->IsConnected())
-            gIsMultiplexerConnected=TRUE;
+            gIsPSPinConnected=TRUE;
         else
-            gIsMultiplexerConnected=FALSE;
+            gIsPSPinConnected=FALSE;
 
 #if USE_DBOX
         hr=RetrievePIDs( &vpid, &apid, m_DBOXAddress, m_DBOXHTTPPort);
@@ -704,7 +737,7 @@ STDMETHODIMP CDBOXIICapture::Pause()
 
         if (mMode==0)
             {
-            if (!gIsMultiplexerConnected)
+            if (!gIsPSPinConnected)
                 {
                 if (!gIsVideoConnected)
                     vpid=0;
@@ -712,6 +745,7 @@ STDMETHODIMP CDBOXIICapture::Pause()
                     apid=0;
                 }
             }
+
         if (m_DBOXStopPlayback)
             hr=ControlPlaybackOnDBOX(m_DBOXAddress,m_DBOXHTTPPort, 2);
         else
@@ -856,18 +890,45 @@ HRESULT CPushStream::GetMediaType(int iPosition, CMediaType *pmt)
 // ----------------------------------------------
 
 
-    pmt->SetType(&MEDIATYPE_Stream);
 
     if (m_SampleType==SAMPLE_TYPE_PS)
+        {
+        pmt->SetType(&MEDIATYPE_Stream);
         pmt->SetFormatType(&FORMAT_MPEG2_VIDEO);
+        pmt->SetSubtype(&MEDIASUBTYPE_MPEG2_PROGRAM);
+        }
     else
     if (m_SampleType==SAMPLE_TYPE_VPES)
+        {
+        pmt->SetType(&MEDIATYPE_Video);
         pmt->SetFormatType(&FORMAT_MPEG2_VIDEO);
+        pmt->SetSubtype(&MEDIASUBTYPE_MPEG2_VIDEO);
+        }
     else
     if (m_SampleType==SAMPLE_TYPE_APES)
-        pmt->SetFormatType(&FORMAT_MPEG2Audio);
+        {
+        MPEG1WAVEFORMAT *pwf = (MPEG1WAVEFORMAT *)pmt->AllocFormatBuffer(sizeof(MPEG1WAVEFORMAT));
 
-    pmt->SetSubtype(&MEDIASUBTYPE_MPEG2_PROGRAM);
+	    pwf->wfx.wFormatTag=WAVE_FORMAT_MPEG;
+	    pwf->wfx.nChannels=2;
+	    pwf->wfx.nSamplesPerSec =48000;
+	    pwf->wfx.wBitsPerSample=16;
+	    pwf->wfx.nBlockAlign=1;
+	    pwf->wfx.nAvgBytesPerSec=192000/8;
+	    pwf->wfx.cbSize=0;
+
+	    pwf->fwHeadLayer=ACM_MPEG_LAYER2;
+        pwf->dwHeadBitrate=192000;
+        pwf->fwHeadMode=0;
+        pwf->fwHeadModeExt=0;
+        pwf->wHeadEmphasis=0;
+        pwf->fwHeadFlags=0;
+
+        pmt->SetType(&MEDIATYPE_Audio);
+        pmt->SetFormatType(&FORMAT_MPEG2Audio);
+        pmt->SetSubtype(&MEDIASUBTYPE_MPEG2_AUDIO);
+        }
+
     pmt->SetTemporalCompression(FALSE);
     
     return NOERROR;
@@ -926,13 +987,19 @@ BOOL CPushStream::IsValidMediaType(const CMediaType *pMediaType)
             if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_MPEG2_PROGRAM)) 
                 return(TRUE);
             }
-        else
+        }
+    else
+    if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video)) 
+		{
         if (m_SampleType==SAMPLE_TYPE_VPES)
             {
-            if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_MPEG2_PROGRAM)) 
+            if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_MPEG2_VIDEO)) 
                 return(TRUE);
             }
-        else
+        }
+    else
+    if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Audio)) 
+		{
         if (m_SampleType==SAMPLE_TYPE_APES)
             {
             if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_MPEG2_AUDIO)) 
@@ -1118,19 +1185,20 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
         else
         if (m_SampleType==SAMPLE_TYPE_VPES)
             {
-            if (CVideoBuffer!=NULL)
+            if (CMultiplexBuffer!=NULL)
                 {
-                while (!CVideoBuffer->canRead(0, VIDEO_BUFFER_SIZE))
+                while (!CMultiplexBuffer->canRead(0, VIDEO_BUFFER_SIZE))
                     {
                     Sleep(10);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
+                    if (m_Abort)
                         {
                         m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
                         return(NOERROR);
                         }
                     }
-                CVideoBuffer->Read(0, pData, VIDEO_BUFFER_SIZE);
+                CMultiplexBuffer->Read(0, pData, VIDEO_BUFFER_SIZE);
 			    pms->SetActualDataLength(VIDEO_BUFFER_SIZE);
                 pms->SetSyncPoint(TRUE);
                 }
@@ -1138,17 +1206,20 @@ HRESULT CPushStream::FillBuffer(IMediaSample *pms)
         else
         if (m_SampleType==SAMPLE_TYPE_APES)
             {
-            if (CAudioBuffer!=NULL)
+            if (CMultiplexBuffer!=NULL)
                 {
-                while (!CAudioBuffer->canRead(0, AUDIO_BUFFER_SIZE))
+                while (!CMultiplexBuffer->canRead(0, AUDIO_BUFFER_SIZE))
                     {
                     Sleep(10);
                     if ((errorCount--<=0)||gfThreadAborted)
                         m_Abort=TRUE;
                     if (m_Abort)
+                        {
+                        m_pFilter->NotifyEvent(EC_ERRORABORT, E_FAIL, 0);
                         return(NOERROR);
+                        }
                     }
-                CAudioBuffer->Read(0, pData, AUDIO_BUFFER_SIZE);
+                CMultiplexBuffer->Read(0, pData, AUDIO_BUFFER_SIZE);
 			    pms->SetActualDataLength(AUDIO_BUFFER_SIZE);
                 pms->SetSyncPoint(TRUE);
                 }

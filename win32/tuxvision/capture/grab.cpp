@@ -30,11 +30,10 @@
 #include <process.h>
 #include <time.h>
 
+#include "debug.h"
 #include "ccircularbuffer.h"
 #include "Remuxer.h"
 #include "grab.h"
-
-#include "debug.h"
 
 // -------------------------------------------
 char         *gChannelNameList[MAX_LIST_ITEM];
@@ -49,14 +48,12 @@ void  __cdecl AVReadThread(void *thread_arg);
 int gSocketVideoPES=0;
 int gSocketAudioPES=0;
 
-CCircularBuffer *CVideoBuffer=NULL;
-CCircularBuffer *CAudioBuffer=NULL;
 CCircularBuffer *CMultiplexBuffer=NULL;
 
 Remuxer         *CRemuxer=NULL;
 BOOL            gIsVideoConnected=FALSE;
 BOOL            gIsAudioConnected=FALSE;
-BOOL            gIsMultiplexerConnected=FALSE;
+BOOL            gIsPSPinConnected=FALSE;
 
 volatile __int64         gTotalVideoDataCount=0;
 volatile __int64         gTotalAudioDataCount=0;
@@ -1192,6 +1189,7 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
 	return(hr);
 }
 
+/*
 int FindStartCode(BYTE *buffer, int size, DWORD code)
 {
     int i=0;
@@ -1230,6 +1228,7 @@ int FindStartCodesAudio(BYTE *buffer, int size)
 
     return(-1);
 }
+*/
 
 void __cdecl AVReadThread(void *thread_arg)
 {	
@@ -1246,7 +1245,6 @@ void __cdecl AVReadThread(void *thread_arg)
     bufferVideo=(unsigned char *)malloc(bufferlenVideo);
     bufferAudio=(unsigned char *)malloc(bufferlenAudio);
 
-
     dprintf("AVReadThread started ...");
 
     for (;;) 
@@ -1259,7 +1257,7 @@ void __cdecl AVReadThread(void *thread_arg)
 
         if (gSocketVideoPES>0)
             {
-            if (CVideoBuffer==NULL)
+            if (CRemuxer==NULL)
                 {
                 dprintf("Thread Video error");
                 break;
@@ -1271,51 +1269,18 @@ void __cdecl AVReadThread(void *thread_arg)
                 if (ret>0)
                     {
                     gTotalVideoDataCount+=ret;
-
-                    #if USE_REMUX
-                    if (gIsMultiplexerConnected)
-                        CRemuxer->supply_video_data(bufferVideo, ret);
-                    #endif
-
-                    if (firstVideo)
-                        {
-                        off=FindStartCodesVideo(bufferVideo, ret);
-                        if (off>=0)
-                            {
-                            if (gIsVideoConnected)
-                                {
-                                CVideoBuffer->Write(bufferVideo+off, ret-off);
-                                }
-                            /*
-                            #if USE_REMUX
-                            if (gIsMultiplexerConnected)
-                                CRemuxer->supply_video_data(bufferVideo+off, ret-off);
-                            #endif
-                            */
-                            firstVideo=FALSE;
-                            }
-                        }
-                    else
-                        {
-                        if (gIsVideoConnected)
-                            {
-                            CVideoBuffer->Write(bufferVideo, ret);
-                            }
-                        /*
-                        #if USE_REMUX
-                        if (gIsMultiplexerConnected)
-                            CRemuxer->supply_video_data(bufferVideo, ret);
-                        #endif
-                        */
-                        }
+                    CRemuxer->supply_video_data(bufferVideo, ret);
                     wait=FALSE;
                     }
                 }
             }
 
+        if (ret<0)
+            break;
+
         if (gSocketAudioPES>0)
             {
-            if (CAudioBuffer==NULL)
+            if (CRemuxer==NULL)
                 {
                 dprintf("Thread Audio error");
                 break;
@@ -1327,43 +1292,7 @@ void __cdecl AVReadThread(void *thread_arg)
                 if (ret>0)
                     {
                     gTotalAudioDataCount+=ret;
-
-                    #if USE_REMUX
-                    if (gIsMultiplexerConnected)
-                        CRemuxer->supply_audio_data(bufferAudio, ret);
-                    #endif
-
-                    if (firstAudio)
-                        {
-                        off=FindStartCodesAudio(bufferAudio, ret);
-                        if (off>=0)
-                            {
-                            if (gIsAudioConnected)
-                                {
-                                CAudioBuffer->Write(bufferAudio+off, ret-off);
-                                }
-                            /*
-                            #if USE_REMUX
-                            if (gIsMultiplexerConnected)
-                                CRemuxer->supply_audio_data(bufferAudio+off, ret-off);
-                            #endif
-                            */
-                            firstAudio=FALSE;
-                            }
-                        }
-                    else
-                        {
-                        if (gIsAudioConnected)
-                            {
-                            CAudioBuffer->Write(bufferAudio, ret);
-                            }
-                        /*
-                        #if USE_REMUX
-                        if (gIsMultiplexerConnected)
-                            CRemuxer->supply_audio_data(bufferAudio, ret);
-                        #endif
-                        */
-                        }
+                    CRemuxer->supply_audio_data(bufferAudio, ret);
                     wait=FALSE;
                     }
                 }
@@ -1375,12 +1304,27 @@ void __cdecl AVReadThread(void *thread_arg)
         
         #if USE_REMUX
         if (!wait)
-            if (gIsMultiplexerConnected)
-	            CRemuxer->write_mpg(NULL);
+            {
+            if ((gSocketVideoPES>0)&&(gSocketAudioPES>0))
+                {
+                if (gIsPSPinConnected)
+	                CRemuxer->write_mpg(NULL);
+                }
+            else
+            if (gSocketVideoPES>0)
+                {
+	                CRemuxer->write_mpv(NULL);
+                }
+            else
+            if (gSocketAudioPES>0)
+                {
+	                CRemuxer->write_mpp(NULL);
+                }
+            }
         #endif
         
         if (wait)
-            Sleep(5);
+            Sleep(2);
         }
 
     gfThreadAborted=TRUE;
@@ -1396,34 +1340,17 @@ void DeInitStreaming()
     
     if (gSocketVideoPES>0)
         {
-        //EmptySocket(gSocketVideoPES);
         closesocket(gSocketVideoPES);
         }
     gSocketVideoPES=0;
 
     if (gSocketAudioPES>0)
         {
-        //EmptySocket(gSocketAudioPES);
         closesocket(gSocketAudioPES);
         }
     gSocketAudioPES=0;
 
-    if (CVideoBuffer)
-        {
-        CVideoBuffer->Interrupt();
-        CVideoBuffer->DeInitialize();
-        delete CVideoBuffer;
-        CVideoBuffer=NULL;
-        }
-
-    if (CAudioBuffer)
-        {
-        CAudioBuffer->Interrupt();
-        CAudioBuffer->DeInitialize();
-        delete CAudioBuffer;
-        CAudioBuffer=NULL;
-        }
-    
+  
     if (CMultiplexBuffer)
         {
         CMultiplexBuffer->Interrupt();
@@ -1444,15 +1371,9 @@ HRESULT InitPSStreaming(int vpid, int apid, char *IPAddress, int Port)
 
     if ((vpid>0)&&(apid>0))
         {
-        CVideoBuffer=new CCircularBuffer();
-        CVideoBuffer->Initialize(VIDEO_BUFFER_SIZE * BUFFER_COUNT, 1);
-        CVideoBuffer->Clear();
-
 	    gSocketVideoPES = openPS(IPAddress, Port, vpid, apid, VIDEO_BUFFER_SIZE);
 	    if (gSocketVideoPES < 0) 
             return(E_FAIL);
-
-        CAudioBuffer=NULL;
         CMultiplexBuffer=NULL;
         }
     else
@@ -1473,33 +1394,23 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
 
     if (vpid>0)
         {
-        CVideoBuffer=new CCircularBuffer();
-        CVideoBuffer->Initialize(VIDEO_BUFFER_SIZE * BUFFER_COUNT, 1);
-        CVideoBuffer->Clear();
-
 	    gSocketVideoPES = openPES(IPAddress, Port, vpid, VIDEO_BUFFER_SIZE);
 	    if (gSocketVideoPES < 0) 
             return(E_FAIL);
         }
     else
         {
-        CVideoBuffer=NULL;
         gSocketVideoPES=0;
         }
 
     if (apid>0)
         {
-        CAudioBuffer=new CCircularBuffer();
-        CAudioBuffer->Initialize(AUDIO_BUFFER_SIZE * BUFFER_COUNT, 1);
-        CAudioBuffer->Clear();
-
 	    gSocketAudioPES = openPES(IPAddress, Port, apid, AUDIO_BUFFER_SIZE);
 	    if (gSocketAudioPES < 0) 
             return(E_FAIL);
         }
     else
         {
-        CAudioBuffer=NULL;
         gSocketAudioPES=0;
         }
 
@@ -1511,10 +1422,23 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
         CMultiplexBuffer->Clear();
         }
     else
+    if (vpid>0)
+        {
+        CMultiplexBuffer=new CCircularBuffer();
+        CMultiplexBuffer->Initialize( (VIDEO_BUFFER_SIZE) * BUFFER_COUNT, 1);
+        CMultiplexBuffer->Clear();
+        }
+    else
+    if (apid>0)
+        {
+        CMultiplexBuffer=new CCircularBuffer();
+        CMultiplexBuffer->Initialize( (AUDIO_BUFFER_SIZE) * BUFFER_COUNT, 1);
+        CMultiplexBuffer->Clear();
+        }
+    else
         {
         CMultiplexBuffer=NULL;
         }
-
 
 #if USE_REMUX
 	CRemuxer= new Remuxer();
@@ -1523,8 +1447,8 @@ HRESULT InitStreaming(int vpid, int apid, char *IPAddress, int Port)
     CRemuxer->system_clock_ref_start = CRemuxer->system_clock_ref;
     CRemuxer->total_bytes_written = 0;
     CRemuxer->m_framePTS=0;
-    CRemuxer->perform_resync();		
-    //gOutputFile=fopen("E:\\TEST_MUX.MPG","wb");
+    if (vpid>0)
+        CRemuxer->perform_resync();		
 #endif
 	
     gLastAVBitrateRequest=timeGetTime();

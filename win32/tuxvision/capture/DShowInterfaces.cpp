@@ -27,13 +27,13 @@
 #include <dvdmedia.h>
 
 
+#include "debug.h"
 #include "interface.h"
 #include "source.h"
 #include "fsource.h"
 #include "ccircularbuffer.h"
 #include "Remuxer.h"
 #include "grab.h"
-#include "debug.h"
 
 // ----------------------------------------------------------------
 //								IAMCrossbar

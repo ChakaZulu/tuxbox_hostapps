@@ -27,10 +27,10 @@
 #include <io.h>
 #include <stdlib.h>
 #include <math.h>
+#include "debug.h"
 #include "Remuxer.h"
 #include "ccircularbuffer.h"
 #include "grab.h" 
-#include "debug.h"
 
 #pragma warning (disable : 4244)
 
@@ -39,10 +39,6 @@
 #define DEBUG_RESYNC_DROPS 0
 
 // #################################################################################
-//
-// everything below takes some C++ knowledge to understand :-)
-//
-// ##################################################################################
 
 const unsigned long known_audio_frame_sizes[] = {
 //  MPG/192  AC3/5+1   MPG/64
@@ -56,6 +52,16 @@ struct ac3_frmsize_s
 	unsigned short bit_rate;
 	unsigned short frm_size[3];
 };
+
+static const int _AudioRateTable[4][16]=
+        {
+        {0, 0, 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,0},
+        {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448,0},
+        {0,32,48,56, 64, 80, 96,112,128,160,192,224,256,320,384,0},
+        {0,32,40,48, 56, 64, 80, 96,112,128,160,192,224,256,320,0}
+        };
+
+static const int    _AudioFreqTable[4]={44100,48000,32000,0};
 
 static const struct ac3_frmsize_s ac3_frmsizecod_tbl[64] = 
 {
@@ -345,6 +351,20 @@ int Remuxer::supply_audio_data(void * data, unsigned long len) {
 		find_next_pes_packet(abuf+offset, abuf_valid-offset,
                            pes_start, pes_len);
 		
+
+        if (oldAudioPts!=-1.0)
+            {
+            if (!resync)
+                {
+                if (fabs(pts_diff(oldAudioPts, pes_start)) > (3600.0 * 3))
+                    {
+                    dprintf("A DO_RESYNC ++");
+                    do_resync=1;
+                    }
+                }
+            }
+		oldAudioPts=pes_start;
+
 		if (!pes_len) {
 			// no packet found...
 			
@@ -354,12 +374,6 @@ int Remuxer::supply_audio_data(void * data, unsigned long len) {
 		
 		
 		unsigned char * pes_packet = abuf + offset + pes_start; // what we just found
-
-//		if (pes_start + pes_len > abuf_valid-offset) 
-//            { 
-//            *((long *)0) = 0; 
-//            }
-
 
 		if (audio_packet_wanted(pes_packet)) {
 
@@ -797,18 +811,22 @@ void Remuxer::adjust_frame_pts(unsigned char * vp_packet, unsigned long vp_len) 
 			}
 		}
 		
-		if (our_aux) avg_diff /= (double)our_aux;
-		
-		if (good_cnt >= bad_cnt) {
-			// ok, we can stay with our frame_pts
+//        dprintf("good:%ld, bad:%ld",good_cnt,bad_cnt);
 
-			if (one_pts_per_gop) {
+		if (our_aux) 
+            avg_diff /= (double)our_aux;
+		
+		if (good_cnt >= bad_cnt) 
+            {
+			// ok, we can stay with our frame_pts
+			if (one_pts_per_gop) 
+                {
 				our_aux = 1;
-			}
+			    }
 			
 			remove_aux_packets(start_aux + our_aux);
 			return;
-		}
+		    }
 		
 		dprintf("frame_pts drifted off from aux data (%ld/%ld, %s), will try to readjust", bad_cnt, good_cnt, pts_to_hms(avg_diff));
 		
@@ -847,6 +865,7 @@ void Remuxer::adjust_frame_pts(unsigned char * vp_packet, unsigned long vp_len) 
 	return;
 }
 
+
 // ##################################################################
 
 int Remuxer::supply_video_data(void * data, unsigned long len) {
@@ -873,15 +892,21 @@ int Remuxer::supply_video_data(void * data, unsigned long len) {
 		
 		find_next_video_packet(vbuf+offset, vbuf_valid-offset,
                              vp_start, vp_len, &frame_pts);
-		
+        if (oldFramePts!=-1.0)
+            {
+            if (!resync)
+                {
+                if (fabs(pts_diff(oldFramePts, frame_pts)) > (3600.0 * 25))
+                    {
+                    dprintf("V DO_RESYNC ++");
+                    do_resync=1;
+                    }
+                }
+            }
+		oldFramePts=frame_pts;
+
 		if (vp_len) {
 			
-//			if (vp_start + vp_len > vbuf_valid-offset) 
-//                { 
-//                *((long *)0) = 0; 
-//                }
-
-
             if (vp_start>0)
                 {
                 dprintf("VP_START:%ld",vp_start);
@@ -889,9 +914,10 @@ int Remuxer::supply_video_data(void * data, unsigned long len) {
 			unsigned char * vp_packet = vbuf + offset + vp_start; // what we just found
 			
 			adjust_frame_pts(vp_packet, vp_len);
-			if (frame_pts >= 0.0) {
+			if (frame_pts >= 0.0) 
+                {
 				create_video_pes(vp_packet, vp_len);
-			}
+			    }
 						
 			offset += vp_start + vp_len; // where to start searching for the next packet
 			
@@ -1224,6 +1250,12 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 		// and the PTS of the next audio frame are "near"...
 
         dprintf("resync - a=%ld, v=%ld", audio_packets_avail, video_packets_avail);
+
+        if (video_packets_avail)
+            gotVideo=TRUE;
+    
+        if (audio_packets_avail)
+            gotAudio=TRUE;
 		
 		while (audio_packets_avail && video_packets_avail) {
 			
@@ -1273,12 +1305,12 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 				continue;				
 			}
 			
-			// check for the PTS difference...
+			// check for the PTS difference... 
 
 			double av_pts_diff = pts_diff(audio_pts, video_pts);
 			
 			//if (fabs(av_pts_diff) < (90000.0/22)) { // /2 ?			
-			if (fabs(av_pts_diff) < (90000.0/20)) { // /2 ?			
+			if (fabs(av_pts_diff) < (3600.0*1.25)) { 		
 				// ha - we found a place...
 				
 				playtime_offset += pts_diff(system_clock_ref, system_clock_ref_start);
@@ -1300,6 +1332,7 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 			// alas, we cannot decide whether audio or video is incorrect -
 			// so we have to throw away both packets...
 			remove_audio_packets(1);
+
 			remove_video_packets(1);
 
 			// ... now try again with the next packets...
@@ -1361,7 +1394,7 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 		ap_mid[0] = ap_pts[0] + 0.5 * ap_dur[0];
 		ap_mid[1] = ap_pts[1] + 0.5 * ap_dur[1];
 		
-		
+
 		// check for an emergency resync
 		if (   fabs(pts_diff(vp_pts[0], ap_pts[0]))        > 0.50*90000.0
 		    || fabs(pts_diff(vp_pts[0], system_clock_ref)) > 0.50*90000.0
@@ -1374,6 +1407,13 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 			perform_resync();
 			return 0;
 		}
+
+        if (do_resync)
+            {
+			dprintf("DO_RESYNC");
+			perform_resync();
+			return 0;
+            }
 		
 		bool f1_is_video = true;
 		bool f2_is_video = true;
@@ -1436,14 +1476,15 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 					return -1;
 				}
 			}
-			
-last_video_pts = vp_pts[0];
+
+		
+            last_video_pts = vp_pts[0];
 			
 
 			double pes_duration = vp_dur[0];
 			
 			double scr_duration = pts_diff(f2_pts, vp_pts[0]);						
-			
+
 			if (write_pes_in_pp(video_packets[0], mpgfile, system_clock_ref, seqstart, false,
 				                 seqstart, pes_duration, scr_duration )) 
                                  {
@@ -1457,7 +1498,8 @@ last_video_pts = vp_pts[0];
 
 			// write audio frame
 
-last_audio_pts = ap_pts[0];
+            
+            last_audio_pts = ap_pts[0];
 
 			bool seqstart = (((audio_packets[0])[6] & 0x01) == 0x01)? true : false;
 			
@@ -1506,29 +1548,52 @@ int Remuxer::write_mpp(FILE * mppfile) {
 		unsigned long   orig_es_size = orig_pes_size - 9 - orig_opt_header_size;
 		unsigned char * orig_es_data = orig_pes + 9 + orig_opt_header_size;
 		
-		if (!mpp_started) {
-			
-			// make sure to start with a magic sync word...
-			
-			if (orig_pes[3] == STREAM_PRIVATE_1) {
-				if (orig_es_size < 4 || orig_es_data[0] != 0x0b || orig_es_data[1] != 0x77) {
-					return 0;
-				}
-			} else {
-				// MPEG audio
-				if (orig_es_size < 4 || orig_es_data[0] != 0xff || (orig_es_data[1] & 0xe0) != 0xe0) {
-					return 0;
-				}
-			}
-			
-			mpp_started = true;
-		}
-		
+
+		if (!mpp_started) 
+            {
+            for(;;)
+                {
+                if (orig_es_size < 4)
+                    break;
+			    // make sure to start with a magic sync word...
+			    if (orig_pes[3] == STREAM_PRIVATE_1) 
+                    {
+				    if ( (orig_es_data[0] == 0x0b) && (orig_es_data[1] == 0x77) ) 
+                        {
+            			mpp_started = true;
+					    break;
+				        }
+			        } 
+                 else 
+                    {
+				    // MPEG audio
+				    //if (orig_es_data[0] == 0xff && ((orig_es_data[1] & 0xe0) != 0xe0)) 
+				    if ( (orig_es_data[0] == 0xFF) && ((orig_es_data[1] & 0xF0) == 0xF0) ) 
+                        {
+                        int _layer=(orig_es_data[1]>>1)&0x03;
+                        int _tmp=((orig_es_data[2])>>4)&0x0F;
+                        int _bitrate=(_AudioRateTable[_layer][_tmp])*1000;
+                        _tmp=((orig_es_data[2])>>2)&0x03;
+                        int _frequency=_AudioFreqTable[_tmp];
+                        audio_frequency=_frequency;
+            			mpp_started = true;
+					    break;
+				        }
+                    orig_es_data++;
+                    orig_es_size--;
+			        }
+			    }
+    		}
 				
-        if (CMultiplexBuffer!=NULL)
-            CMultiplexBuffer->Write(orig_es_data, orig_es_size);
-	}
-	
+		if (mpp_started)
+            {
+            if (CMultiplexBuffer!=NULL)
+                CMultiplexBuffer->Write(orig_es_data, orig_es_size);
+            } 	    
+    }
+
+    remove_audio_packets(audio_packets_avail);
+
 	return 0;
 }
 
@@ -1548,6 +1613,8 @@ int Remuxer::write_mpv(FILE * mpvfile) {
         if (CMultiplexBuffer!=NULL)
             CMultiplexBuffer->Write(orig_es_data, orig_es_size);
 	}
+
+    remove_video_packets(video_packets_avail);
 	
 	return 0;
 }
