@@ -55,9 +55,9 @@ extern HRESULT WaitForSocketData(SOCKET sock, unsigned long *avail, long tim);
 
 extern HRESULT RetrievePIDs(int *vpid, int *apid, const char * name, unsigned short port);
 extern HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName, __int64 *count);
-extern HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel);
-extern HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel);
-extern HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long channel, char *info);
+extern HRESULT SetChannel(const char *name, unsigned short port, unsigned long long channel);
+extern HRESULT GetChannel(const char *name, unsigned short port, unsigned long long * channel);
+extern HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long long channel, char *info);
 extern HRESULT GetEPGInfo(const char *name, unsigned short port, char *eventid, char *info);
 
 extern HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active);

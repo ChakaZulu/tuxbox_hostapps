@@ -407,12 +407,12 @@ int OpenSocket(const char *name, unsigned short port)
     return(sock);
 }
 
-HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
+HRESULT SetChannel(const char *name, unsigned short port, unsigned long long channel)
 {
     HRESULT hr=NOERROR;
     int ret=0;
 
-    dprintf("SetChannel from %s:%d to channel:%lu", name, (int)port, channel);
+    dprintf("SetChannel from %s:%d to channel:%llx", name, (int)port, channel);
     	
 	int sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
@@ -426,7 +426,7 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
 
     //!!BS attention data is delivered in SIGNED format !! (who the hack brought up this idea ...)
     //!!BS internally we stay with unsigned format (of course)
-    wsprintf(wbuffer, "GET /control/zapto?%ld HTTP/1.0"_CRLF_, channel);
+    wsprintf(wbuffer, "GET /control/zapto?%llx HTTP/1.0"_CRLF_, channel);
     wsprintf(wbody,   "User-Agent: BS"_CRLF_
                       "Host: %s"_CRLF_
                       "Pragma: no-cache"_CRLF_
@@ -489,7 +489,7 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
     return(hr);
 }
 
-HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel)
+HRESULT GetChannel(const char *name, unsigned short port, unsigned long long * channel)
 {
     HRESULT hr=NOERROR;
     int ret=0;
@@ -545,7 +545,7 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
                     int pos=strlen(p1)-1;
                     if (pos>0)
                         p1[pos]=0;
-                    sscanf(p1, "%x", channel);
+                    sscanf(p1, "%llx", channel);
                     //dprintf(p1);
                     }
                 }
@@ -565,7 +565,7 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
         return(NOERROR);
 }
 
-HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long channel, char *info)
+HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long long channel, char *info)
 {
     HRESULT hr=NOERROR;
     int ret=0;
@@ -592,7 +592,7 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
     ZeroMemory(wbuffer, sizeof(wbuffer));
     ZeroMemory(wbody, sizeof(wbody));
 
-    wsprintf(wbuffer, "GET /control/epg?%lu HTTP/1.0"_CRLF_, channel);
+    wsprintf(wbuffer, "GET /control/epg?%llx HTTP/1.0"_CRLF_, channel);
     wsprintf(wbody,   "User-Agent: BS"_CRLF_
                       "Host: %s"_CRLF_
                       "Pragma: no-cache"_CRLF_
@@ -1145,7 +1145,7 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                             {
                             int nlfound=0;
                             unsigned int k;
-                            unsigned long lval=0;
+                            unsigned long long lval=0;
                             char *sval=NULL;
                             if (gTotalChannelCount>=(MAX_LIST_ITEM-1))
                                 break;
@@ -1167,7 +1167,7 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
                                 break;
                                 }
                             dprintf(p1);
-                            sscanf(p1, "%x", &lval);
+                            sscanf(p1, "%llx", &lval);
                             sval=p1;
                             for(k=0;k<strlen(p1)-1;k++)   
                                 {

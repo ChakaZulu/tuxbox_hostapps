@@ -407,14 +407,14 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     pHTMLCircularBuffer->Initialize(512*1024, 1);
 
 //    hr=RetrieveChannelList(m_DBOXAddress, m_DBOXHTTPPort, NULL, &val);
-//    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long *)&val);
+//    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long *)&val);
 
 //    hr=SetChannel(m_DBOXAddress, m_DBOXHTTPPort, 8716309);
 //    hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
 //    hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
 
-//    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long *)&val);
-//    hr=GetChannelInfo(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long)val, szData);
+//    hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long *)&val);
+//    hr=GetChannelInfo(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long)val, szData);
 //    dprintf("ChannelInfo: %s",szData);
 
 //    m_VideoWidth=352;
@@ -509,7 +509,7 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             m_VideoHeight=0;
             m_VideoBitrate=0;
             m_IsAspectRatio4By3=1;
-            hr=SetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long)data1);
+            hr=SetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long)data1);
             if (SUCCEEDED(hr))
                 hr=RetrieveStreamInfo(&m_VideoWidth, &m_VideoHeight,&m_VideoBitrate, &m_IsAspectRatio4By3, m_DBOXAddress, m_DBOXHTTPPort);
             break;
@@ -607,13 +607,13 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             hr=RetrieveChannelList(m_DBOXAddress, m_DBOXHTTPPort, (char *)data1, data2);
             break;
         case CMD_GETCHANNEL:
-            hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long*)data1);
+            hr=GetChannel(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long *)data1);
             break;
 
         case CMD_GETCHANNELINFO:
             if (data2==NULL)
                 return(E_POINTER);
-            hr=GetChannelInfo(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long)(*data1), (char*)data2);
+            hr=GetChannelInfo(m_DBOXAddress, m_DBOXHTTPPort, (unsigned long long)(*data1), (char*)data2);
             break;
 
         case CMD_GETTIME:        

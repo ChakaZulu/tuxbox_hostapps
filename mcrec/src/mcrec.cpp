@@ -848,7 +848,7 @@ int switchchannel(const char *dbox2name, int channel)
 		logprintf("trying to switch to %s ... ", channelname);
 		snprintf(switchreq,
 			 sizeof(switchreq),
-			 "GET /control/zapto?0x%llx HTTP/1.0\r\n\r\n",
+			 "GET /control/zapto?%llx HTTP/1.0\r\n\r\n",
 			 chid);
 		helpptr = getURL(dbox2name, switchreq);
 		if (strstr(helpptr, "ok"))
