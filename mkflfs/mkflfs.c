@@ -27,8 +27,13 @@
  *
  *   compile-line "gcc -o mkflfs mkflfs.c minilzo.c"
  *
- *   input file-name "test"
- *   output file-name "flfs.img"
+ *   Usage:
+ *        mkflfs <type> [-o <outputfile> ] [<inputfile>]
+ * 
+ *   where type=1x or 2x. 
+ *
+ *   For compatibility with a previous version, inputfile and outputfile
+ *   default to "test" and "flfs.img" respectivelly.
  *
  */
 
@@ -92,6 +97,9 @@ int mode;
 
 unsigned short blockNR_os = 14;
 
+char inputfilename[255];
+char outputfilename[255];
+
 /*------------------------------------------------------------------*/
 int compress_lzo(int a,u8 *daten)
 {
@@ -132,7 +140,12 @@ return 1;
 /*------------------------------------------------------------------*/
 void write_to_file()
 {
-FILE* pFile=fopen("flfs.img", "w");
+FILE* pFile=fopen(outputfilename, "w");
+if (pFile == 0) {
+   fprintf(stderr, "Fatal error; could not open output file ``%s''\n",
+	   outputfilename);
+   exit(2);
+ }
 int i;
 
 for(i=0; i< 131072; i++) putc(sector_00[i], pFile);
@@ -141,7 +154,12 @@ fclose(pFile);
 /*------------------------------------------------------------------*/
 unsigned int read_from_file()
 {
-FILE* pFile=fopen("test", "r");
+FILE* pFile=fopen(inputfilename, "r");
+if (pFile == 0) {
+   fprintf(stderr, "Fatal error; could not open input file ``%s''\n",
+	   inputfilename);
+   exit(2);
+}
 int i;
 unsigned int size;
 fseek(pFile, 0, SEEK_END);
@@ -416,6 +434,13 @@ for(a=0;a<blockzahl;a++) {
 
 }
 
+void usage()
+{
+  fprintf(stderr, "usage: mkflfs <type> [-o <outputfile> ] [<inputfile>]\n"
+	 "where type=1x or 2x\n");
+  exit(1);
+}
+
 int main(int argc, char **argv)
 { 
 int i,ii,q;
@@ -433,15 +458,29 @@ u8 tmp0[65536];
 u8 tmp1[65536];
 u8 bla2[4];
 
-  if (argc!=2)
-  {
-    printf("usage: mkflfs <type>   wobei type=1x bzw 2x\n");
-    return 0;
+  if (argc < 2)
+    usage();
+
+  if (strcmp("1x",argv[1]) == 0)
+    mode = 0;
+  else if (strcmp("2x",argv[1]) == 0)
+    mode = 1;
+  else usage();
+
+  if ((argc == 2) || strcmp(argv[2], "-o") != 0)
+    strcpy(outputfilename, "flfs.img");
+  else {
+    if (argc < 4)
+      usage();
+    strcpy(outputfilename, argv[3]);
+    argc -= 2;
+    argv += 2;
   }
+	
+  strcpy(inputfilename, argc == 2 ? "test" : argv[2]);
 
-  if (strcmp("1x",argv[1]) == 0) { mode=0; }
-  else { mode=1; } 
-
+  if (argc > 3)
+    usage();
 
 size=read_from_file();
 

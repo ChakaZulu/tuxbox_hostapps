@@ -21,9 +21,9 @@ GetOptions
 
 my %partdef =
 (
-  0 => [ "ppcboot", 0, 0x20000 ],
-  1 => [ "root", 0x20000, 0x6c0000 ],
-  2 => [ "var", 0x6e0000, 0x100000 ],
+  0 => [ "ppcboot", 0,     0x20000 ],
+  1 => [ "root", 0x20000, 0x6e0000 ],
+  2 => [ "var", 0x700000, 0x0e0000 ],
 );
 
 sub part_read
