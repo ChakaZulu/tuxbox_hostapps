@@ -1257,7 +1257,7 @@ int Remuxer::write_mpg(FILE * mpgfile) {
 		// try to find a new point where the PTS of a video sequence start
 		// and the PTS of the next audio frame are "near"...
 
-        Sleep(10);
+        Sleep(5);
         dprintf("resync - a=%ld, v=%ld", audio_packets_avail, video_packets_avail);
 
         if (video_packets_avail)

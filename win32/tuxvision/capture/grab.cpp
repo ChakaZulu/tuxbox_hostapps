@@ -426,16 +426,21 @@ HRESULT SetChannel(const char *name, unsigned short port, unsigned long channel)
             hr=E_FAIL;
             if (!strncmp(rbuffer,"HTTP",4))
                 {
-                p1=MYstrstr(rbuffer,"\n\n");
-                if (p1==NULL)
-                    p1=MYstrstr(rbuffer,"\r\n\r\n");
-                if (p1!=NULL)
-                    {
-                    if (lstrcmpi(p1,"ok")==0)
+                //!!BS: ok, this might can fail ...
+                #if 1
+                    hr=NOERROR;
+                #else
+                    p1=MYstrstr(rbuffer,"\n\n");
+                    if (p1==NULL)
+                        p1=MYstrstr(rbuffer,"\r\n\r\n");
+                    if (p1!=NULL)
                         {
-                        hr=NOERROR;
+                        if (lstrcmpi(p1,"ok")==0)
+                            {
+                            hr=NOERROR;
+                            }
                         }
-                    }
+                #endif
                 }
             // ---------------------------------------------------    
             //
@@ -1193,39 +1198,56 @@ HRESULT SetRadioTVMode(const char *name, unsigned short port, int mode)
 {
     HRESULT hr=NOERROR;
     int ret=0;
+    int sock = 0;
     unsigned long avail=0;
+	char wbuffer[1024];		
+	char wbody[1024];		
 	
     dprintf("SetRadioTVMode from %s:%d ", name, (int)port);
 
-	int sock = OpenSocket(name, port);
+// ----------------------------------------------
+
+	sock = OpenSocket(name, port);
     if (sock==SOCKET_ERROR)
         return(E_FAIL);
-	
-	char wbuffer[1024];		
-	char wbody[1024];		
-
     ZeroMemory(wbuffer, sizeof(wbuffer));
     ZeroMemory(wbody, sizeof(wbody));
-
     if (mode==0)
 	    wsprintf(wbuffer, "GET /control/setmode?radio HTTP/1.0"_CRLF_);
     else
 	    wsprintf(wbuffer, "GET /control/setmode?tv HTTP/1.0"_CRLF_);
-
-
     wsprintf(wbody,   "User-Agent: BS"_CRLF_
                       "Host: %s"_CRLF_
                       "Pragma: no-cache"_CRLF_
                       "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
                        name);
-	
-
     lstrcat(wbuffer,wbody);
     ret=send(sock, wbuffer, strlen(wbuffer),0);
-
     WaitForSocketData(sock, &avail, 5000);
-
     closesocket(sock);
+
+// ----------------------------------------------
+
+	sock = OpenSocket(name, port);
+    if (sock==SOCKET_ERROR)
+        return(E_FAIL);
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+    if (mode==0)
+	    wsprintf(wbuffer, "GET /cgi-bin/controlpanel.cgi?radiomode HTTP/1.0"_CRLF_);
+    else
+	    wsprintf(wbuffer, "GET /cgi-bin/controlpanel.cgi?tvmode HTTP/1.0"_CRLF_);
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
+    lstrcat(wbuffer,wbody);
+    ret=send(sock, wbuffer, strlen(wbuffer),0);
+    WaitForSocketData(sock, &avail, 5000);
+    closesocket(sock);
+
+// ----------------------------------------------
 
     if (ret>0)
         return(NOERROR);
@@ -1410,13 +1432,19 @@ void __cdecl AVReadThread(void *thread_arg)
         if (gSocketVideoPES>0)
             {
             int c=0;
+            int minlen=0;
             if (CRemuxer==NULL)
                 {
                 dprintf("Thread Video error");
                 break;
                 }
+            
+            if (CRemuxer->resync)
+                minlen=bufferlenVideo;
+            else
+                minlen=bufferlenVideo>>3;
 
-            while (isDataAvailable(gSocketVideoPES, bufferlenVideo>>3))
+            while (isDataAvailable(gSocketVideoPES, minlen))
                 {
                 ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
                 if (ret>0)
@@ -1440,13 +1468,19 @@ void __cdecl AVReadThread(void *thread_arg)
         if (gSocketAudioPES>0)
             {
             int c=0;
+            int minlen=0;
             if (CRemuxer==NULL)
                 {
                 dprintf("Thread Audio error");
                 break;
                 }
 
-            while (isDataAvailable(gSocketAudioPES, bufferlenAudio>>3))
+            if (CRemuxer->resync)
+                minlen=bufferlenAudio;
+            else
+                minlen=bufferlenAudio>>3;
+
+            while (isDataAvailable(gSocketAudioPES, minlen))
                 {
                 ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
                 if (ret>0)

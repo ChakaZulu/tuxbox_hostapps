@@ -168,7 +168,7 @@ public:
 	Remuxer(unsigned char _wanted_audio_stream = 0x00) 
         {
         m_framePTS=0;
-		abuf_size = 512*1024; 
+		abuf_size = 1024*1024; 
 		abuf = new unsigned char[abuf_size];
 		abuf_valid = 0;
 		

@@ -517,7 +517,7 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             {
             HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
             if (SUCCEEDED(hr))
-                hr=ExecuteCommand("killall -9 sectionsd;killall -9 thttpd;killall -9 nhttpd;sleep 1;/bin/sectionsd;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+                hr=ExecuteCommand("killall -9 sectionsd;killall -9 thttpd;killall -9 nhttpd;sectionsd;/bin/nhttpd;/bin/thttpd -C /etc/thttpd.conf", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
             break;
             }
 
@@ -1202,7 +1202,7 @@ HRESULT CPushStream::OnThreadCreate()
 #endif
     return NOERROR;
 } // OnThreadCreate
-
+ 
 HRESULT CPushStream::OnThreadDestroy()
 {
     m_Abort=TRUE;
