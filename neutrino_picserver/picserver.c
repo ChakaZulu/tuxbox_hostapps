@@ -148,7 +148,6 @@ unsigned char* jpeg_decode(char* filename, int* width, int* height, int wanted_w
 	jpeg_start_decompress(ciptr);
 
 	px=ciptr->output_width; py=ciptr->output_height;
-	printf("Dim %ux%u (/%d)\n", ciptr->output_width, ciptr->output_height, ciptr->scale_denom);
 	c=ciptr->output_components;
 	if(c==3)
 	{
@@ -311,6 +310,11 @@ void* ServerThread(void* socket)
 	/* decode image via libjpeg */
 	lprintf("Start decoding %s\n", filename);
 	img=jpeg_decode(filename, &width, &height, w_width, w_height);
+	if (img==NULL)
+	{
+		close(s2);
+		pthread_exit(NULL);
+	}
 	lprintf("End decoding %s\n", filename);
 
 	lprintf("Image width: %d , height: %d\n", width, height);
