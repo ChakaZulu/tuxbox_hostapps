@@ -23,9 +23,10 @@ AC_OUTPUT([
 Makefile
 bmp2raw/Makefile
 flash/Makefile
+grab/Makefile
 libcrypto++/Makefile
 libflashimage/Makefile
-grab/Makefile
 stream/Makefile
+ucodex/Makefile
 ])
 
