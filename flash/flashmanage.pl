@@ -13,6 +13,7 @@ my %parts = ();
 GetOptions
 (
   'help' => sub { pod2usage ( 1 ); },
+  'man' => sub { pod2usage ( -exitstatus => 0, -verbose => 2 ); },
   'image|i=s' => \$image,
   'operation|oper|o=s' => \$operation,
   'part|p=s' => \%parts,
@@ -95,8 +96,7 @@ sub part_write_zero
 
 if ( not defined ( $operation ) )
 {
-  pod2usage ( 1 );
-  die "don't know what to do";
+  pod2usage ( -message => "No operation given.", -exitstatus => 0, -verbose => 1 );
 }
 elsif ( $operation eq "build" )
 {
@@ -161,7 +161,7 @@ $name,         $begin,    $end,     $size
 }
 else
 {
-  die "don't know what to do";
+  pod2usage ( -message => "Unknown operation.", -exitstatus => 0, -verbose => 1 );
 }
 
 __END__
@@ -178,7 +178,11 @@ flashmanage [OPTIONS]
   -o, --operation ARG   what to do (build, extract, replace, print)
   -p, --part NAME=FILE  partition files
       --help            brief help message
+      --man             full documentation
 
-example: flashimage -i flashimage.img -o replace -p root=root.img
+=head2 EXAMPLES
+
+  flashmanage.pl -i flashimage.img -o replace -p root=root.img
+  flashmanage.pl -i flashimage.img -o build -p root=root.img -p var=var.img
 
 =cut
