@@ -65,6 +65,7 @@ bool	flag_new_file;
 char    a_basename[256]="vts_01_";
 int	filenum = 1;
 char	a_filename[256]="";
+char	a_extension[20]="vob";
 
 
 // Default parameters
@@ -73,6 +74,7 @@ int 		nice_increment = -10;
 bool		vlog = false;
 bool		alog = false;
 bool		nosectionsd = false;
+bool		gcore = false;
 
 // Reader Threads
 pthread_t hv_thread;	
@@ -126,6 +128,11 @@ int main( int argc, char *argv[] ) {
 			if (strlen(argv[i]) < 230) {
 				strcpy (a_basename, argv[i]);
 			}
+		} else if (!strcmp("-e", argv[i])) {
+			i++; if (i >= argc) { fprintf(stderr, "need extension for -e\n"); return -1; }
+			if (strlen(argv[i]) < 20) {
+				strcpy (a_extension, argv[i]);
+			}
 		
 		} else if (!strcmp("-m", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need number of minutes for -m\n"); return -1; }
@@ -142,6 +149,10 @@ int main( int argc, char *argv[] ) {
 		} else if (!strcmp("-s", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need max size in MB argument for -s\n"); return -1; }
 			max_file_size = 1024LL*1024LL*((long long)atoi(argv[i]));
+			if (max_file_size < (5 * 1024 * 1024)) {
+				fprintf(stderr,"min file size 5 MB ignoring -s\n");
+				max_file_size= 5*1024 * 1024;
+			}
 		
 		} else if (!strcmp("-port", argv[i])) {
 			i++; if (i >= argc) { fprintf(stderr, "need argument for -port\n"); return -1; }
@@ -184,6 +195,9 @@ int main( int argc, char *argv[] ) {
 		} else if (!strcmp("-nos", argv[i])) {
 			nosectionsd = true;
 		
+		} else if (!strcmp("-core", argv[i])) {
+			gcore = true;
+		
 		} else if (!strcmp("-h", argv[i])) {
 
 			fprintf(stderr, "ggrab version 0.08, Copyright (C) 2002 Peter Menzebach\n"
@@ -198,6 +212,7 @@ int main( int argc, char *argv[] ) {
 					"-host <host>   hostname or ip address [dbox]\n"
 					"-port <port>   port number [31338]\n"
 					"-o <filename>  basename of output files [vts_01_]\n"
+					"-e <extension> extension of output files [vob]\n"
 					"-m <minutes>   number of minutes to record [24 h]\n"
 					"-s <megabyte>  maximum size per recorded file [2000]\n"
 					"-q             be quiet\n"
@@ -741,7 +756,7 @@ open_next_output_file (FILE * fp) {
 	}
 
 	while (!found) {
-		sprintf(a_filename,"%s%d.vob",a_basename, filenum);
+		sprintf(a_filename,"%s%d.%s",a_basename, filenum, a_extension);
 		filenum ++;
 		if (!stat(a_filename,&stats)) {
 		 	fprintf(stderr,"file %s exists, trying next\n",a_filename);
