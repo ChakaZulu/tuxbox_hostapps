@@ -1261,7 +1261,7 @@ begin
   try
     with GetHTTP('http://' + edIp.Text + ':80/control/zapto') do try
       if Count = 1 then begin
-        k := StrToInt64(Strings[0]);
+        k := StrToInt64('$' + Strings[0]);
         i := lbxChannelList.Items.IndexOfObject(TObject(LongWord(k)));
         if i >= 0 then
           lbxChannelList.ItemIndex := i;

@@ -545,7 +545,7 @@ HRESULT GetChannel(const char *name, unsigned short port, unsigned long *channel
                     int pos=strlen(p1)-1;
                     if (pos>0)
                         p1[pos]=0;
-                    *channel=atol(p1);
+                    sscanf(p1, "%x", channel);
                     //dprintf(p1);
                     }
                 }
