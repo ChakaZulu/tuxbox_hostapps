@@ -1,0 +1,379 @@
+#!/bin/sh
+#
+# created and written by stikx, version: 0.4, update: 29/05/2003
+# reminder shell for use with tuxbox/dreambox in conjunction 
+# with terrae's tuxcal V 0.4 or standalone
+# Function: Show's a reminder window at tuxbox startup
+# with today and tomorrow birthdays
+# Supported Gui's: Neutrino, Enigma, Enigma on Dreambox
+#
+# note: format of tuxcal.conf(list) changed in minor way since V. 0.3
+#       and db is now /var/tuxbox/config/tuxcal/tuxcal.list
+#
+# Shell V 0.4 expect file format as below:
+# record: g;xx.yy.zzzz;Name .......;
+# g = indicates birthday record xx = day with leading zero yy = month with leading zero
+# zzzz = year of birth /or simple omit 
+# example1: g;14.06.1968;Chris Wagner;
+# example2: g;23.09.;Jesse James;
+# 
+# it is mandatory that records end immediatly after last semicolon without space or any characters behind
+# output is limited to six birthdays at same day 
+#
+# newer versions may change format, see header or readme
+#
+
+# Handshake and validate first
+cd /var/tuxbox/config/tuxcal
+ns="false"
+gui=""
+if [ "$1" != "" ]; then
+ if [ "$3" != "" ]; then
+  echo "use reminder -h for command line options"
+  exit
+ fi
+ while [ "$1" != "" ]
+ do
+  case $1 in
+    "-h") 
+      echo "usage: reminder -n/e -ns [-n/e=force gui] [ns=no sleep]"
+      exit;
+    ;;
+    "-n")
+      gui="neutrino"
+    ;;
+    "-e")
+      gui="enigma"
+    ;;
+    "-ns")
+      ns="true"
+    ;;
+  esac
+  shift
+ done 
+fi
+if [ "$ns" = "false" ]; then 
+  sleep 30
+fi  
+
+# check boxtype if not forced by argument
+if [ "$gui" = "" ]; then
+ wget -q -O /tmp/boxgui http://127.0.0.1/cgi-bin/status
+ if [ ! -f /tmp/boxgui ]; then
+  gui="neutrino"
+ else
+  gui="enigma"
+  rm /tmp/boxgui
+ fi
+fi 
+ 
+# check if db tuxcal.list exist
+if [ ! -f /var/tuxbox/config/tuxcal/tuxcal.list ]; then
+  echo "file /var/tuxbox/config/tuxcal/tuxcal.list missing - please create first"
+  if [ "$gui" = "neutrino" ]; then
+    wget -q -O /tmp/hout http://127.0.0.1/control/message?popup=!!%20E%20R%20R%20O%20R%20:%20Reminder%0aDatei%20/var/tuxbox/config/tuxcal/tuxcal.list%20fehlt%0a%20%20%20%20%20%20%20%20%20%20Bitte%20zuerst%20anlegen!!
+    rm /tmp/hout
+  else
+    wget -q -O /tmp/hout "http://127.0.0.1/cgi-bin/xmessage?timeout=30&caption=%20E%20R%20R%20O%20R%20:%20Reminder&body=Datei%20/var/tuxbox/config/tuxcal/tuxcal.list%20fehlt%0a%20%20%20%20%20%20%20%20!!Bitte%20zuerst%20anlegen!!"
+    rm /tmp/hout
+  fi  
+  exit;
+fi
+
+# read and set actual date variables
+if [ "$gui" = "enigma" ]; then
+  # tuxbox enigma read right date from gui and format
+  wget -q -O /tmp/status http://127.0.0.1/cgi-bin/status
+  cdate=`grep current /tmp/status`
+  cdate=`expr substr "$cdate" 35 54`
+  cmonth=`expr substr "$cdate" 1 3`
+  cday=`expr substr "$cdate" 5 2`
+  #chour=`expr substr "$cdate" 8 2`
+  #cmin=`expr substr "$cdate" 11 2`
+  cyear=`expr substr "$cdate" 17 4`
+ 
+  # validate if cday one digit and convert
+  cday=`expr $cday + 0`
+  if [ `expr length "$cday"` = 1 ]; then
+    case $cday in
+      1|2|3|4|5|6|7|8|9)
+        tag="0$cday"
+      ;;
+    esac
+  else
+    tag="$cday"
+  fi  
+
+  # convert month phrase
+  case $cmonth in
+    "Jan") monat="01";;
+    "Feb") monat="02";;
+    "Mar") monat="03";;
+    "Apr") monat="04";;
+    "May") monat="05";;
+    "Jun") monat="06";;
+    "Jul") monat="07";;
+    "Aug") monat="08";;
+    "Sep") monat="09";;
+    "Oct") monat="10";;
+    "Nov") monat="11";;
+    "Dec") monat="12";;
+  esac
+  jahr="$cyear"
+else  
+# using date command at neutrino
+ monat=`date +%m`
+ tag=`date +%d`
+ jahr=`date +%Y`
+fi
+
+# set month to expr format
+tmonat=`expr $monat + 0`
+
+# set day to expr format and increment
+ttag=`expr $tag + 1`
+
+# is it first day of next month?
+nmonat=1;
+case $tmonat in
+  1|3|5|7|8|10|12) 
+    if [ $ttag -eq 32 ]; then
+      nmonat=0;
+    fi
+  ;;
+  4|6|9|11) 
+    if [ $ttag -eq 31 ]; then
+      nmonat=0;
+    fi
+  ;;
+  2)
+    #Is it a leapyear?
+    sjahr=1;
+    if [ `expr $jahr % 4` -eq 0 ]; then
+      if [ `expr $jahr % 400` -eq 0 ]; then
+        sjahr=0;
+      elif [ `expr $jahr % 100` -eq 0 ]; then
+        sjahr=1;
+      else
+        sjahr=0;
+      fi
+    fi
+    if [ $sjahr -eq 0 ]; then
+      if [ $ttag -eq 30 ]; then
+         nmonat=0;
+      fi
+    else
+      if [ $ttag -eq 29 ]; then
+         nmonat=0;
+      fi
+    fi
+  ;;
+esac
+
+# check for next month and adjust day and month
+if [ $nmonat -eq 0 ]; then
+  ttag=1
+  tmonat=`expr $tmonat + 1`
+
+  # is month 13 assume 1. January of next year
+  if [ $tmonat -eq 13 ]; then
+    tmonat=1
+    tjahr=`expr $jahr + 1`
+  fi
+fi
+
+# add leading zero if one digit
+case $ttag in
+  1|2|3|4|5|6|7|8|9)
+    ttag="0$ttag"
+  ;;
+esac
+case $tmonat in
+  1|2|3|4|5|6|7|8|9)
+    tmonat="0$tmonat"
+  ;; 
+esac  
+
+# Retrieve DB tuxcal.conf
+gheute=`echo "g;$tag.$monat."`
+heute=`grep "$gheute" /var/tuxbox/config/tuxcal/tuxcal.list`
+gmorgen=`echo "g;$ttag.$tmonat."`
+morgen=`grep "$gmorgen" /var/tuxbox/config/tuxcal/tuxcal.list` 
+
+# Parsing String $heute
+if [ "$heute" != "" ]; then
+   hcl=`expr length "$heute"`
+   sc=`expr 1` 
+   temp=$heute 
+   while [ $hcl != 1 ]
+   do
+     gj=""
+     alter=""
+     hcl=`expr $hcl - 2`
+     temp=`expr substr "$temp" 3 $hcl`
+     par=`expr index "$temp" ";"`
+     case $par in
+       7)
+         hcl=`expr $hcl - 7`
+         temp=`expr substr "$temp" 8 $hcl`
+       ;;
+       11)
+         gj=`expr substr "$temp" 7 4`
+         hcl=`expr $hcl - 11`
+         temp=`expr substr "$temp" 12 $hcl`
+         alter=`expr $jahr - $gj`
+       ;;   
+     esac    
+     par=`expr \( index "$temp" ";" \) \- 1`
+     hcl=`expr $hcl - $par`
+     name=`expr substr "$temp" 1 $par`
+     # replace space with %20 for correct http output
+     nct=`expr length "$name"`
+     ntemp="$name"
+     fs=`expr index "$ntemp" " "`
+     zname=""
+     while [ $fs != 0 ]
+     do   
+       name=`expr substr "$ntemp" 1 \( $fs - 1 \)`
+       zname="$zname$name%20" 
+       ntemp=`expr substr "$ntemp" \( $fs + 1 \) $nct`
+       fs=`expr index "$ntemp" " "`
+       if [ $fs = 0 ]; then
+         name="$zname$ntemp"
+       fi
+     done
+     #
+     temp=`expr substr "$temp" \( $par + 1 \) $hcl`   
+     if [ "$gj" != "" ]; then
+       name="$name%20wird%20$alter"
+     fi  
+     case $sc in
+       1)
+         hname="$name"
+       ;;
+       2|4|6) 
+         hname="$hname,%20$name"
+       ;;  
+       3|5)
+         hname="$hname%0a$name"
+       ;;
+     esac
+     sc=`expr $sc + 1`
+     if [ $sc = 7 ]; then
+       hcl=`expr 1`
+     fi
+     if [ $hcl != 1 ]; then
+       hcl=`expr $hcl - 2`
+       temp=`expr substr "$temp" 3 $hcl`
+     fi
+   done
+fi
+  
+# Parsing String $morgen
+if [ "$morgen" != "" ]; then
+   hcl=`expr length "$morgen"`
+   sc=`expr 1`
+   temp=$morgen
+   while [ $hcl != 1 ]
+   do
+     gj=""
+     alter=""
+     hcl=`expr $hcl - 2`
+     temp=`expr substr "$temp" 3 $hcl`
+     par=`expr index "$temp" ";"`
+     case $par in
+       7)
+         hcl=`expr $hcl - 7`
+         temp=`expr substr "$temp" 8 $hcl`
+       ;;
+       11)
+         gj=`expr substr "$temp" 7 4`
+         hcl=`expr $hcl - 11`
+         temp=`expr substr "$temp" 12 $hcl`
+         alter=`expr $jahr - $gj` 
+       ;;
+     esac
+     par=`expr \( index "$temp" ";" \) \- 1`
+     hcl=`expr $hcl - $par`
+     name=`expr substr "$temp" 1 $par`
+     # replace space with %20 for correct http output
+     nct=`expr length "$name"`
+     ntemp="$name"
+     fs=`expr index "$ntemp" " "`
+     zname=""
+     while [ $fs != 0 ]
+     do
+       name=`expr substr "$ntemp" 1 \( $fs - 1 \)`
+       zname="$zname$name%20"
+       ntemp=`expr substr "$ntemp" \( $fs + 1 \) $nct`
+       fs=`expr index "$ntemp" " "`
+       if [ $fs = 0 ]; then
+         name="$zname$ntemp"
+       fi
+     done
+     # 
+     temp=`expr substr "$temp" \( $par + 1 \) $hcl`
+     if [ "$gj" != "" ]; then
+       name="$name%20wird%20$alter"
+     fi
+     case $sc in
+       1)
+         mname="$name"
+       ;;
+       2|4|6)
+         mname="$mname,%20$name"
+       ;;
+       3|5)
+         mname="$mname%0a$name"
+       ;;
+     esac
+     sc=`expr $sc + 1`
+     if [ $sc = 7 ]; then
+       hcl=`expr 1`
+     fi
+     if [ $hcl != 1 ]; then
+       hcl=`expr $hcl - 2`
+       temp=`expr substr "$temp" 3 $hcl`
+     fi
+   done
+fi
+
+# Output at TV if actual Birthdays detected
+hcl=`expr length "$hname"`
+mcl=`expr length "$mname"`
+tvout=""
+if [ $hcl -ne 0 ]; then
+ if [ "$gui" = "neutrino" ]; then
+   tvout="%0a***%20Heute%20am%20$tag.$monat%20hat%20Geburtstag:%0a$hname"
+ else
+   tvout="***%20Heute%20am%20$tag.$monat%20hat%20Geburtstag:%0a$hname"
+ fi
+fi
+if [ $mcl -ne 0 ]; then
+ if [ "$gui" = "neutrino" ]; then
+   if [ $hcl -ne 0 ]; then
+     tvout="$tvout%0a******************************************"
+   fi
+   tvout="$tvout%0a***%20Morgen%20am%20$ttag.$tmonat%20hat%20Geburtstag:%0a$mname"
+ else
+   if [ $hcl -ne 0 ]; then
+     tvout="$tvout%0a***************************%0a"
+   fi
+   tvout="$tvout***%20Morgen%20am%20$ttag.$tmonat%20hat%20Geburtstag:%0a$mname"
+ fi  
+fi
+tvcl=`expr length "$tvout"`
+if [ $tvcl -ne 0 ]; then
+ if [ "$gui" = "neutrino" ]; then
+   tvout="http://127.0.0.1/control/message?nmsg=E%20R%20I%20N%20N%20E%20R%20U%20N%20G%20!%20!%20!$tvout"
+   #Reminder output on tv if Gui equals to <quote alexW>(olles)</quote> neutrino
+   wget -q -O /tmp/hout "$tvout"
+   rm /tmp/hout
+ else  
+   tvout="http://127.0.0.1/cgi-bin/xmessage?timeout=120&caption=%20E%20R%20I%20N%20N%20E%20R%20U%20N%20G%20!%20!%20!&body=$tvout"
+   #Reminder output on tv if Gui equals to enigma or dream
+   wget -q -O /tmp/hout "$tvout"
+   rm /tmp/hout
+ fi  
+fi
+exit;
