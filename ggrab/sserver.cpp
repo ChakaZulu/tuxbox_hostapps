@@ -62,7 +62,7 @@ int main(int argc, char * argv[])
 	a_arg[1] = "-p";
 	a_arg[2] = a_vpid;
 	a_arg[3] = a_apid;
-	a_arg[4] = "-f";
+	a_arg[4] = "-o";
 	a_arg[5] = a_filename;
 	a_arg[6] = "-host";
 	a_arg[7] = a_host;
