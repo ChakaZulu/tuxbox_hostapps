@@ -43,6 +43,7 @@
 #define IDC_VIDEOBITRATE                1076
 #define IDC_RESYNCCOUNT                 1077
 #define IDC_VOLUME                      1078
+#define IDC_RESET_NHTTPD                1079
 #define IDC_ALLWAYSONTOP                1080
 #define IDC_AUTOASPECTRATIO             1082
 #define IDC_PRIORITY_REALTIME           1083

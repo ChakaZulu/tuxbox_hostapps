@@ -302,16 +302,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
         SetTimer(ghWndApp,1,1000,NULL);
 
-#if 0    
-        if (gpVCap!=NULL)
-            {
-            IDBOXIICapture *pIDBOXIICapture=NULL;
-            hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
-            if (SUCCEEDED(hr))
-                pIDBOXIICapture->setParameter(CMD_RESTARTNHTTPD, NULL);
-            RELEASE(pIDBOXIICapture);
-            }
-#endif
 
         CreateChannelList(ghWndApp);
 
@@ -816,6 +806,18 @@ int OnWM_Command(HWND hwnd, UINT message , WPARAM wParam, LPARAM lParam)
 		{
         case IDC_GETCHANNELLIST:
             CreateChannelList(hwnd);
+            break;
+
+        case IDC_RESET_NHTTPD:
+            if (gpVCap!=NULL)
+                {
+                IDBOXIICapture *pIDBOXIICapture=NULL;
+                HRESULT hr=gpVCap->QueryInterface(IID_IDBOXIICapture, (void **)&pIDBOXIICapture);
+                if (SUCCEEDED(hr))
+                    pIDBOXIICapture->setParameter(CMD_RESTARTNHTTPD, NULL);
+                RELEASE(pIDBOXIICapture);
+                CreateChannelList(hwnd);
+                }
             break;
 
         case IDC_DESTINATION:
