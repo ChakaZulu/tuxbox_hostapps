@@ -1,0 +1,83 @@
+<html>
+<body>
+<center><h2><u>DBox II Calender (TuxCal)</u></h2>
+</center>
+
+<?php
+
+// (Post-) Variablen abfangen php >4.1, wenn Globals off:
+// -----------------------------------------------------
+if ($_POST["submit"])  $submit =$_POST["submit"];
+if ($_POST["type"])    $type   =$_POST["type"];
+if ($_POST["date"])    $date   =$_POST["date"];
+if ($_POST["subject"]) $subject=$_POST["subject"];
+
+if ($_SERVER["PHP_SELF"]) $self=$_SERVER["PHP_SELF"];
+// ---------------------------------------------------
+
+include ("tuxcal.conf.php");
+
+// Database Connect here
+
+$db = mysql_pconnect($sql_server, $sql_user, $sql_password);
+mysql_select_db($sql_db,$db);
+$result = mysql_query("SELECT * FROM $sql_table order by datum",$db);
+
+
+// Output:
+
+echo "<table border=1 align=center> \n";
+echo "<tr><td><b>Type</b></td><td><b>Date</b></td><td><b>Subject</b></td></tr>\n";
+
+// (SQL-Tabelle) darstellen:
+while ($myrow = mysql_fetch_row($result))
+{
+  printf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n",$myrow[0], $myrow[1], $myrow[2]);
+}
+
+echo "</table>\n";
+
+
+// Input:
+
+if ($submit)
+{
+  // process form
+  
+  $db = mysql_pconnect($sql_server, $sql_user, $sql_password);
+  if ($db) { mysql_select_db($sql_db,$db); } else { echo "kein Connect zur Datenbank bekommen!<br>\n"; }    
+
+  $sql = "INSERT INTO tuxcal (typ,datum,betreff) VALUES ('$type','$date','$subject')";
+  $result = mysql_query($sql);
+  
+  if ($result) { echo "Thank you! Information entered.\n"; }
+  else 
+  { $err=mysql_error();
+     echo "Der Eintrag konnte nicht gespeichert werden!<br> SQL-Error: $err<br>";
+  }
+}
+
+else
+{
+  //  display form
+  ?>
+		
+  <form method="post" action="<?php echo $self?>">
+  <table border="1">
+  <tr><td><input type="Text" name="type"></td>
+      <td><input type="Text" name="date"></td>
+      <td><input type="Text" name="subject"></td></tr>
+		
+  </table> 
+  <input type="Submit" name="submit" value="Add new entry:">
+  </form>
+			      
+  <?php
+				
+} // end if
+
+?>
+
+
+</body>
+</html>
