@@ -11,14 +11,14 @@ AM_CXXFLAGS = -fno-rtti
 $(top_builddir)/libcrypto++/libcrypto++.la:
 	$(MAKE) -C $(top_builddir)/libcrypto++
 
-INCLUDES = -I$(top_builddir)/../apps -I$(top_builddir)/../apps/libflashimage
+INCLUDES = -I$(top_builddir)/../apps -I$(top_builddir)/../apps/misc/libs/libflashimage
 
 all-local:
-	@ln -fs $(top_builddir)/../apps/libflashimage/*.hpp .
-	@ln -fs $(top_builddir)/../apps/libflashimage/*.ipp .
+	@ln -fs $(top_builddir)/../apps/misc/libs/libflashimage/*.hpp .
+	@ln -fs $(top_builddir)/../apps/misc/libs/libflashimage/*.ipp .
 
 mostlyclean-local:
 	@rm -r *.cpp *.hpp *.ipp
 
 $(libflashimage_la_SOURCES):
-	@ln -s $(top_builddir)/../apps/libflashimage/$@
+	@ln -s $(top_builddir)/../apps/misc/libs/libflashimage/$@
