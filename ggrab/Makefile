@@ -5,13 +5,37 @@
 # _LARGEFILE64SOURCE  --- Large file Linux
 #
 
-all: ggrab sserver
+CPPFLAGS=-DREENTRANT -D_LARGEFILE64_SOURCE 
+LDFLAGS=-static -s 
 
-GCC=g++ -ggdb -DREENTRANT -D_LARGEFILE64_SOURCE 
+INSTALL=/usr/bin/install 
+DESTDIR=/usr/local 
+
+TARGETS=ggrab sserver vlog 
+
+GG_INCS=list.h tools.h cbuffer.h
+GG_OBJS=list.o cbuffer.o tools.o ggrab.o 
+GG_LIBS=-lpthread 
+
+all: $(TARGETS) 
 
 
-ggrab: ggrab.cpp list.cpp list.cpp cbuffer.cpp cbuffer.h tools.cpp tools.h Makefile
-	$(GCC) ggrab.cpp list.cpp cbuffer.cpp tools.cpp -o ggrab -lpthread 
+ggrab: $(GG_OBJS) 
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $(GG_OBJS) $(GG_LIBS) 
 
-sserver: sserver.cpp sserver.h Makefile
-	$(GCC) sserver.cpp -o sserver 
+
+ggrab.o: $(GG_INCS)
+
+list.o: $(GG_INCS)
+
+tools.o: $(GG_INCS)
+
+clean: 
+	rm -f $(TARGETS) *.o *~ 
+
+install: 
+	install -m755 $(TARGETS) $(DESTDIR)/bin 
+
+uninstall: 
+	cd $(DESTDIR)/bin && rm -f $(TARGETS) 
+
