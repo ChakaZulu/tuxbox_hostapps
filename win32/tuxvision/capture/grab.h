@@ -21,15 +21,9 @@
 */
 #define MAX_LIST_ITEM       (16384)
 
-#if 1
-    #define VIDEO_BUFFER_SIZE   (128*1024)
-    #define AUDIO_BUFFER_SIZE   (  8*1024)
-    #define BUFFER_COUNT               32
-#else
-    #define VIDEO_BUFFER_SIZE   (64*1024)
-    #define AUDIO_BUFFER_SIZE   (64*1024)
-    #define BUFFER_COUNT               32
-#endif
+#define VIDEO_BUFFER_SIZE   (128*1024)
+#define AUDIO_BUFFER_SIZE   (  8*1024)
+#define BUFFER_COUNT               32
 
 #define USE_REMUX                   1
 

@@ -294,7 +294,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
 
         SetTimer(ghWndApp,1,1000,NULL);
 
-/*    
+#if 0    
         if (gpVCap!=NULL)
             {
             IDBOXIICapture *pIDBOXIICapture=NULL;
@@ -303,7 +303,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdL
                 pIDBOXIICapture->setParameter(CMD_RESTARTNHTTPD, NULL);
             RELEASE(pIDBOXIICapture);
             }
-*/
+#endif
 
         CreateChannelList(ghWndApp);
 

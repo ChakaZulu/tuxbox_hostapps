@@ -404,7 +404,8 @@ CDBOXIICapture::CDBOXIICapture(LPUNKNOWN lpunk, HRESULT *phr) :
     {
     HRESULT hr=CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort);
     if (SUCCEEDED(hr))
-        hr=ExecuteCommand("killall -9 nhttpd;sleep 1;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+        hr=ExecuteCommand("killall -9 nhttpd;killall -9 inetd;sleep 1;/sbin/inetd/;sleep 3;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
+//        hr=ExecuteCommand("killall -SIGQUIT nhttpd;sleep 1;kill -SIGQUIT `ps | grep inetd | sed 's/[a-zA-Z]//g'`;sleep 2;/bin/nhttpd", m_DBOXLogin, m_DBOXPassword, m_DBOXAddress, m_DBOXTelnetPort, 0, -1);
     }
 #endif
 //!!BS nhttpd is really a bloody bastard ...

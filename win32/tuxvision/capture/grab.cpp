@@ -542,6 +542,12 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
     int ret=0;
     int i=0;
     unsigned long avail=0;
+    time_t tsec=0;
+    char firstInfo[264];
+    
+    lstrcpy(firstInfo,"");
+    _tzset();
+    time(&tsec);
 	
     lstrcpy(info,"");
 
@@ -581,6 +587,7 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
             // ---------------------------------------------------    
             char *p1=NULL;
             char *p2=NULL;
+            int found = 0;
             if (!strncmp(rbuffer,"HTTP",4))
                 {
                 p1=MYstrstr(rbuffer,"\n\n");
@@ -588,15 +595,36 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
                     p1=MYstrstr(rbuffer,"\r\n\r\n");
                 if (p1!=NULL)
                     p2=MYstrstr(p1,"\n");
-                if (p2!=NULL)
+            
+                while(!found)
                     {
-                    if (lstrlen(p2)>1)  //ignore trailing cr or lf
+                    if (p2!=NULL)
                         {
-                        p2--;
-                        *p2=0;
-                        lstrcpyn(info, p1, 264);
-                        //dprintf(p1);
+                        if (lstrlen(p2)>1)  //ignore trailing cr or lf
+                            {
+                            char szEPGID[264]="";
+                            char szEPGDate[264]="";
+                            char szEPGTime[264]="";
+                            char szEPGTitle[264]="";
+                            unsigned long ltim=0;
+                            p2--;
+                            *p2=0;
+                            lstrcpyn(info, p1, 264);
+                            if (lstrlen(firstInfo)==0)
+                                lstrcpy(firstInfo,info);
+                            sscanf(info,"%s %s %s %s",szEPGID, szEPGDate, szEPGTime, szEPGTitle);
+                            //dprintf(p1);
+                            ltim=atol(szEPGDate)+atol(szEPGTime);
+                            if (ltim>=(unsigned long)tsec)
+                                found=1;
+                            else
+                                lstrcpy(info,"");
+                            }
+                        p1=p2+1;
+                        p2=MYstrstr(p1,"\n");
                         }
+                    else
+                        break;
                     }
                 }
             // ---------------------------------------------------    
@@ -608,6 +636,9 @@ HRESULT GetChannelInfo(const char *name, unsigned short port, unsigned long chan
         }
     closesocket(sock);
 
+    if (lstrlen(info)==0)
+        lstrcpy(info, firstInfo);
+    
     if (lstrlen(info)==0)
         return(E_FAIL);
     else
