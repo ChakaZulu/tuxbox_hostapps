@@ -1,5 +1,5 @@
 /*
- * $Id: ucodex.c,v 1.1 2002/08/30 08:56:02 obi Exp $
+ * $Id: ucodex.c,v 1.2 2002/08/30 23:45:38 obi Exp $
  *
  * extract avia firmware from srec and binary files
  *
@@ -28,7 +28,7 @@
 
 struct ucode_s {
 	unsigned char name[13];
-	unsigned char version[21];
+	unsigned char version[17];
 	size_t size;
 	unsigned char md5sum[MD5_DIGEST_LENGTH];
 };
@@ -43,20 +43,20 @@ struct ucode_type_s {
 
 struct ucode_type_s types[] = {
 	{
-		"avia500", "\x43\x33\x55\x58\x02", 832, 20,
+		"avia500", "\x43\x33\x55\x58\x02", 832, 16,
 		{
-			{"avia500v083", "08Feb99/17000D83CUBE",	 92918, "\x96\x5d\x83\x4c\x7b\xb7\x43\xdf\x68\x41\xf4\xfd\xa5\xb4\xe7\x90"},
-			{"avia500v090", "28Apr99/10350D90CUBE",  92894, "\x10\x8f\xa2\xfa\x0e\xe8\x44\x51\xea\x7e\xa2\xdb\x9a\xda\xa4\x4b"},
-			{"avia500v093",	"05Oct99/10300D93CUBE",	101318, "\xfe\xce\x1d\x33\x24\xe0\x91\x7b\x92\x1d\x81\x44\x90\xd8\xa8\x24"},
-			{"avia500v110",	"03Nov00/16121D10CUBE",	101374,	"\x73\x73\xf3\x93\x42\x63\xb3\xc3\xea\x1d\x0f\x50\x0f\x00\x44\xa5"},
+			{"avia500v083", "08Feb99/17000D83",  92918, "\x96\x5d\x83\x4c\x7b\xb7\x43\xdf\x68\x41\xf4\xfd\xa5\xb4\xe7\x90"},
+			{"avia500v090", "28Apr99/10350D90",  92894, "\x10\x8f\xa2\xfa\x0e\xe8\x44\x51\xea\x7e\xa2\xdb\x9a\xda\xa4\x4b"},
+			{"avia500v093", "05Oct99/10300D93", 101318, "\xfe\xce\x1d\x33\x24\xe0\x91\x7b\x92\x1d\x81\x44\x90\xd8\xa8\x24"},
+			{"avia500v110", "03Nov00/16121D10", 101374, "\x73\x73\xf3\x93\x42\x63\xb3\xc3\xea\x1d\x0f\x50\x0f\x00\x44\xa5"},
 			{"", "", 0, ""}
 		}
 	},{
-		"avia600", "\x43\x33\x55\x58\x01", 832, 20,
+		"avia600", "\x43\x33\x55\x58\x01", 832, 16,
 		{
-			{"avia600vb017", "28Jan00/1750b017CUBE", 126846, "\xda\x49\x21\x46\xba\x7e\x17\x78\x83\xfe\xad\xaa\x0c\xf8\x9a\xa5"},
-			{"avia600vb018", "28Apr00/1514b018CUBE", 126878, "\xc3\x1d\xc5\x70\xcf\x94\x1a\xfb\x6f\xc4\x81\x3f\x56\x1a\xa3\x78"},
-			{"avia600vb022", "28Nov00/1412b022CUBE", 128214, "\x6a\x74\x8f\xb2\x80\x00\x73\x8c\xaf\xeb\x9e\x27\x44\x3a\xc6\x23"},
+			{"avia600vb017", "28Jan00/1750b017", 126846, "\xda\x49\x21\x46\xba\x7e\x17\x78\x83\xfe\xad\xaa\x0c\xf8\x9a\xa5"},
+			{"avia600vb018", "28Apr00/1514b018", 126878, "\xc3\x1d\xc5\x70\xcf\x94\x1a\xfb\x6f\xc4\x81\x3f\x56\x1a\xa3\x78"},
+			{"avia600vb022", "28Nov00/1412b022", 128214, "\x6a\x74\x8f\xb2\x80\x00\x73\x8c\xaf\xeb\x9e\x27\x44\x3a\xc6\x23"},
 			{"", "", 0, ""},
 			{"", "", 0, ""}
 		}
@@ -92,11 +92,9 @@ unsigned int char2hex (unsigned char * src, unsigned char * dest, unsigned int s
 
 int writebuf (unsigned char * filename, unsigned char * buf, unsigned int size, unsigned char * md5sum) {
 
-	FILE * file;
-	unsigned char i;
-
 	/* verbose */
 	if (1) {
+		unsigned char i;
 		unsigned char md[MD5_DIGEST_LENGTH];
 
 		MD5(buf, size, md);
@@ -114,7 +112,7 @@ int writebuf (unsigned char * filename, unsigned char * buf, unsigned int size, 
 
 	/* write */
 	if (1) {
-		file = fopen(filename, "w");
+		FILE * file = fopen(filename, "w");
 
 		if (file == NULL) {
 			perror(filename);
@@ -187,6 +185,9 @@ int main (int argc, char ** argv) {
 	}
 
 	buf_size = file_size(file);
+
+	if (buf_size < 0)
+		return EXIT_FAILURE;
 
 	buf = (unsigned char *) malloc(buf_size);
 
