@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "tools.h"
 
+extern bool gcore;
+
 double pes_pts(const unsigned char * p) {
 	if (0 == (p[7] & 0x80)) {
 		return -1.0; // no PTS available
@@ -105,5 +107,8 @@ fill_pp_scr (unsigned char * p_pp, double scr) {
 
 void errexit (char * str) {
 	fprintf (stderr,"%s\n",str);
+	if (gcore) {
+		*((char *)0) = 0;
+	}
 	exit (1);
 }
