@@ -542,6 +542,10 @@ STDMETHODIMP CDBOXIICapture::setParameter(__int64 command, __int64 data1)
             hr=NOERROR;
             break;
 
+        case CMD_TVRADIOMODE:
+            hr=SetRadioTVMode(m_DBOXAddress, m_DBOXHTTPPort, (int)data1);
+            break;
+
         }
 	return(hr);
 }
@@ -583,6 +587,7 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             if (data2==NULL)
                 return(E_POINTER);
             lstrcpy((LPTSTR)data1, "");
+            /*
             if (*data2<0)
                 {
                 if (FAILED(CheckBoxStatus(m_DBOXAddress, m_DBOXTelnetPort)))
@@ -592,6 +597,7 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
                     break;
                     }
                 }
+            */
             hr=RetrieveChannelList(m_DBOXAddress, m_DBOXHTTPPort, (char *)data1, data2);
             break;
         case CMD_GETCHANNEL:
@@ -761,6 +767,14 @@ STDMETHODIMP CDBOXIICapture::getParameter(__int64 command, __int64 *data1, __int
             *data1=m_NewAudioSegmentDetected;
             hr=NOERROR;
             break;
+
+        case CMD_TVRADIOMODE:
+            {
+            int val=-1;
+            hr=GetRadioTVMode(m_DBOXAddress, m_DBOXHTTPPort, &val);
+            *data1=(__int64)val;
+            break;
+            }
 
         }
 	return(hr);

@@ -609,7 +609,6 @@ int Remuxer::create_video_pes(unsigned char * vp_packet, unsigned long vp_len) {
 	
 	unsigned long max_video_per_pes = 0xffff - (9+5); // better not create bigger PES packets
 		
-		
 	unsigned long pics = 0;	
 	unsigned long peses = 0;	
 	

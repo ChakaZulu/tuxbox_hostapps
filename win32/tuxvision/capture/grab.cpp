@@ -91,7 +91,7 @@ void DeInitSockets(void)
 HRESULT ReadCompleteDataFromSocket(SOCKET s)
 {
     HRESULT hr=NOERROR;
-    unsigned long avail=0;
+    unsigned long avail=0; 
     int ret=0;
     int i=0;
 
@@ -752,6 +752,7 @@ HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int active)
 
 }
 
+
 HRESULT RetrievePIDs(int *vpid, int *apid, const char *name, unsigned short port)
 {
     HRESULT hr=NOERROR;
@@ -1168,6 +1169,133 @@ HRESULT RetrieveChannelList(const char *name, unsigned short port, char *szName,
 	return(hr);
 }
 
+
+HRESULT SetRadioTVMode(const char *name, unsigned short port, int mode)
+{
+    HRESULT hr=NOERROR;
+    int ret=0;
+    unsigned long avail=0;
+	
+    dprintf("SetRadioTVMode from %s:%d ", name, (int)port);
+
+	int sock = OpenSocket(name, port);
+    if (sock==SOCKET_ERROR)
+        return(E_FAIL);
+	
+	char wbuffer[1024];		
+	char wbody[1024];		
+
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+    if (mode==0)
+	    wsprintf(wbuffer, "GET /control/setmode?radio HTTP/1.0"_CRLF_);
+    else
+	    wsprintf(wbuffer, "GET /control/setmode?tv HTTP/1.0"_CRLF_);
+
+
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
+	
+
+    lstrcat(wbuffer,wbody);
+    ret=send(sock, wbuffer, strlen(wbuffer),0);
+
+    WaitForSocketData(sock, &avail, 5000);
+
+    closesocket(sock);
+
+    if (ret>0)
+        return(NOERROR);
+    else
+        return(E_FAIL);
+
+}
+
+HRESULT GetRadioTVMode(const char *name, unsigned short port, int *mode)
+{
+    HRESULT hr=NOERROR;
+    int ret=0;
+    unsigned long avail=0;
+	
+    dprintf("GetRadioTVMode from %s:%d ", name, (int)port);
+
+	int sock = OpenSocket(name, port);
+    if (sock==SOCKET_ERROR)
+        return(E_FAIL);
+	
+	char wbuffer[1024];		
+	char wbody[1024];		
+
+    ZeroMemory(wbuffer, sizeof(wbuffer));
+    ZeroMemory(wbody, sizeof(wbody));
+
+    wsprintf(wbuffer, "GET /control/setmode?status HTTP/1.0"_CRLF_);
+
+    wsprintf(wbody,   "User-Agent: BS"_CRLF_
+                      "Host: %s"_CRLF_
+                      "Pragma: no-cache"_CRLF_
+                      "Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, */*"_CRLFCRLF_,
+                       name);
+	
+
+    lstrcat(wbuffer,wbody);
+    ret=send(sock, wbuffer, strlen(wbuffer),0);
+
+    hr=ReadCompleteDataFromSocket(sock);
+
+    if (SUCCEEDED(hr))
+        {
+        long len=0;
+        pHTMLCircularBuffer->Remain(0, &len);
+        if (len>0)
+            {
+            char *rbuffer=(char *)malloc(len+2);
+            ZeroMemory(rbuffer, len+2);
+            pHTMLCircularBuffer->Read(0, (BYTE *)rbuffer, len);
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+            char *p1=NULL;
+            char *p2=NULL;
+            if (!strncmp(rbuffer,"HTTP",4))
+                {
+                p1=MYstrstr(rbuffer,"\n\n");
+                if (p1==NULL)
+                    p1=MYstrstr(rbuffer,"\r\n\r\n");
+
+                if (p1!=NULL)
+                    {
+                    if (lstrlen(p1)>1)
+                        {
+                        char info[1024]="";
+                        lstrcpyn(info, p1, 1024);
+                        // ---------------------------
+
+
+                        // ---------------------------
+                        }
+                    }
+                }
+            // ---------------------------------------------------    
+            //
+            // ---------------------------------------------------    
+            free(rbuffer);
+            }
+        }
+
+    closesocket(sock);
+
+    if (ret>0)
+        return(NOERROR);
+    else
+        return(E_FAIL);
+
+}
+
 /*
 int FindStartCode(BYTE *buffer, int size, DWORD code)
 {
@@ -1262,13 +1390,14 @@ void __cdecl AVReadThread(void *thread_arg)
 
         if (gSocketVideoPES>0)
             {
+            int c=0;
             if (CRemuxer==NULL)
                 {
                 dprintf("Thread Video error");
                 break;
                 }
 
-            while (isDataAvailable(gSocketVideoPES, bufferlenVideo))
+            while (isDataAvailable(gSocketVideoPES, bufferlenVideo>>3))
                 {
                 ret=recv(gSocketVideoPES, (char *)bufferVideo, bufferlenVideo, 0);
                 if (ret>0)
@@ -1278,8 +1407,11 @@ void __cdecl AVReadThread(void *thread_arg)
                     CRemuxer->supply_video_data(bufferVideo, ret);
                     wait=FALSE;
                     firstVideo=TRUE;
+                    c+=ret;
                     }
                 else
+                    break;
+                if (c>(bufferlenVideo))
                     break;
                 }
             }
@@ -1288,13 +1420,14 @@ void __cdecl AVReadThread(void *thread_arg)
 
         if (gSocketAudioPES>0)
             {
+            int c=0;
             if (CRemuxer==NULL)
                 {
                 dprintf("Thread Audio error");
                 break;
                 }
 
-            while (isDataAvailable(gSocketAudioPES, bufferlenAudio))
+            while (isDataAvailable(gSocketAudioPES, bufferlenAudio>>3))
                 {
                 ret=recv(gSocketAudioPES, (char *)bufferAudio, bufferlenAudio, 0);
                 if (ret>0)
@@ -1304,8 +1437,11 @@ void __cdecl AVReadThread(void *thread_arg)
                     CRemuxer->supply_audio_data(bufferAudio, ret);
                     wait=FALSE;
                     firstAudio=TRUE;
+                    c+=ret;
                     }
                 else
+                    break;
+                if (c>(bufferlenAudio))
                     break;
                 }
             }

@@ -24,8 +24,8 @@
 
 #define AUDIO_FRAME_SIZE    1152
 #if 1
-#define VIDEO_BUFFER_SIZE   (6*16*1024)
-#define AUDIO_BUFFER_SIZE   (1*16*1024)
+#define VIDEO_BUFFER_SIZE   (128*1024)
+#define AUDIO_BUFFER_SIZE   ( 16*1024)
 #define BUFFER_COUNT               32
 #else
 #define VIDEO_BUFFER_SIZE   (64*MTU_DBOX) 
@@ -69,6 +69,9 @@ extern HRESULT ControlPlaybackOnDBOX(const char *name, unsigned short port, int 
 extern HRESULT ExecuteCommand(char *cmd, char *login, char *passwd, char *name, unsigned short port, int doReset, int isENX);
 extern HRESULT RetrieveStreamInfo(int *width, int *height,  int *bitrate, int *is4By3,const char *name, unsigned short port);
 extern HRESULT CheckBoxStatus(const char *name, unsigned short port);
+
+extern HRESULT SetRadioTVMode(const char *name, unsigned short port, int  mode);
+extern HRESULT GetRadioTVMode(const char *name, unsigned short port, int *mode);
 
 
 

@@ -178,7 +178,7 @@ public:
 
 		// -------------
 		
-		vbuf_size = 6*1024*1024; //12*1024*1024;
+		vbuf_size = 4*1024*1024; //12*1024*1024;
 		vbuf = new unsigned char[vbuf_size];
 		vbuf_valid = 0;
 		
