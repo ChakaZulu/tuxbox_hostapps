@@ -47,6 +47,7 @@
 
 int debug;
 int replace;
+int prescale;
 char replace_from[PICV_CLIENT_SERVER_PATHLEN];
 char replace_to[PICV_CLIENT_SERVER_PATHLEN];
 int do_simple_resize;
@@ -134,19 +135,26 @@ unsigned char* jpeg_decode(char* filename, int* width, int* height, int wanted_w
 	ciptr->do_fancy_upsampling=FALSE;
 	ciptr->do_block_smoothing=FALSE;*/
 
-	if((int)ciptr->image_width/8 >= wanted_width ||
-		(int)ciptr->image_height/8 >= wanted_height)
-		ciptr->scale_denom=8;
-	else if((int)ciptr->image_width/4 >= wanted_width ||
-			  (int)ciptr->image_height/4 >= wanted_height)
-		ciptr->scale_denom=4;
-	else if((int)ciptr->image_width/2 >= wanted_width ||
-			  (int)ciptr->image_height/2 >= wanted_height)
-		ciptr->scale_denom=2;
+	ciptr->scale_num=1;
+	
+	if(prescale)
+	{
+		if((int)ciptr->image_width/8 >= wanted_width ||
+			(int)ciptr->image_height/8 >= wanted_height)
+			ciptr->scale_denom=8;
+		else if((int)ciptr->image_width/4 >= wanted_width ||
+				  (int)ciptr->image_height/4 >= wanted_height)
+			ciptr->scale_denom=4;
+		else if((int)ciptr->image_width/2 >= wanted_width ||
+				  (int)ciptr->image_height/2 >= wanted_height)
+			ciptr->scale_denom=2;
+		else
+			ciptr->scale_denom=1;
+	}
 	else
 		ciptr->scale_denom=1;
 
-	ciptr->scale_num=1;
+
 //	ciptr->scale_denom=3;
 	
 	jpeg_start_decompress(ciptr);
@@ -523,6 +531,7 @@ void usage(char* name)
 	fprintf(stderr, "-d : enable debug log (stderr)\n");
 	fprintf(stderr, "-r : replace token <replace> with <to> at beginning of path of requested picture\n");
 	fprintf(stderr, "-s : use simple resize algorithm (instead of more complex one)\n\n");
+	fprintf(stderr, "-c : read picture prescaled (faster, but less quality.)\n\n");
 	fprintf(stderr, "e.g.: %s -d -r \"/mnt,/data\" 12345\n\n", name);
 
 }
@@ -535,6 +544,7 @@ int main(int argnr, char** argv)
 	debug=0;
 	replace=0;
 	do_simple_resize=0;
+	prescale = 0;
 
 	/* cmd line parsing */
 	while (1) 
@@ -559,6 +569,8 @@ int main(int argnr, char** argv)
 			}
 			break;
 			case 's': do_simple_resize=1;
+				break;
+			case 'c': prescale=1;
 		}
 	}
 
