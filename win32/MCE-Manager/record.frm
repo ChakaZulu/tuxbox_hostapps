@@ -34,7 +34,7 @@ Public Sub recstart()
         frmMain.senderauswahl.Enabled = "0"
             
         'playlistname wird bestimmt
-        If d2set.db2.value = "1" Then
+        If d2set.db2.Value = "1" Then
             For i = 0 To 20
                 If frmMain.senderauswahl = d2set.SenderID(i).Text Then filen = plbezeichnung.plID(i).Text
             Next i
@@ -66,7 +66,7 @@ Public Sub recstart()
             If LenB(Dir$(App.Path + "\temp\tempsong" + Str$(i) + ".mp", vbDirectory)) <> 0 Then Kill App.Path + "\temp\tempsong" + Str$(i) + ".mp" 'temp-Files löschen
         Next i
         
-        If d2set.db2.value = "1" Then
+        If d2set.db2.Value = "1" Then
             If frmMain.senderauswahl.Text = "Multi-channel 1" Or frmMain.senderauswahl.Text = "Multi-channel 2" Or frmMain.senderauswahl.Text = "Multi-channel 3" Then
                 Call transprec
                 frmMain.aufnahmestop.Enabled = "1"
@@ -77,12 +77,12 @@ Public Sub recstart()
             Rec.init_socks
             Call Rec.daten(d2set.IP.Text, d2set.Port.Text, frmMain.Quelle.Text, frmMain.senderauswahl.Text, filen, d2set.Text45.Text, App.Path, d2set.pw, vbNullString)
             Call Rec.start("0", 1)
-            If Aktivierauswahl.plloggeraktiv.value = "1" Then Call OnAir.loggerstart
+            If Aktivierauswahl.plloggeraktiv.Value = "1" Then Call OnAir.loggerstart
             Call Rec.start("2", 1)
         Else
             Rec.init_socks
             Call Rec.daten(d2set.IP.Text, d2set.Port.Text, frmMain.Quelle.Text, frmMain.senderauswahl.Text, filen, d2set.Text45.Text, App.Path, d2set.pw, Left$(frmMain.senderauswahl.Text, 3))
-            If Aktivierauswahl.plloggeraktiv.value = "1" Then Call OnAir.loggerstart
+            If Aktivierauswahl.plloggeraktiv.Value = "1" Then Call OnAir.loggerstart
             Call Rec.start("0", 1)
         End If
         
@@ -97,7 +97,10 @@ End Sub
 Public Sub recstop()
     Dim i As Integer
     
-    If Aktivierauswahl.plloggeraktiv.value = "1" Then Call OnAir.loggerstop
+    frmMain.aufnahmestop.Enabled = "0"
+    frmMain.aufnahmestop.ForeColor = &H80000015
+    
+    If Aktivierauswahl.plloggeraktiv.Value = "1" Then Call OnAir.loggerstop
     Call Rec.sto
     frmMain.senderauswahl.Enabled = "1"
     If LenB(Dir$(App.Path + "\temp\tempsong.mp", vbDirectory)) <> 0 Then Kill App.Path + "\temp\tempsong.mp" 'temp-Files löschen
@@ -108,8 +111,6 @@ Public Sub recstop()
         bufsize(i) = 0
     Next i
     
-    frmMain.aufnahmestop.Enabled = "0"
-    frmMain.aufnahmestop.ForeColor = &H80000015
     frmMain.aufnahmestart.Enabled = "1"
     frmMain.aufnahmestart.ForeColor = &H80000018
     frmMain.Label29.Caption = deaktlng
@@ -123,20 +124,20 @@ Private Sub transprec()
     Select Case frmMain.senderauswahl.Text
         Case "Multi-channel 1"
             For i = 0 To 20
-                If d2set.T1(i).value = "1" Then z = z + 1
+                If d2set.T1(i).Value = "1" Then z = z + 1
             Next i
         Case "Multi-channel 2"
             For i = 0 To 20
-                If d2set.T2(i).value = "1" Then z = z + 1
+                If d2set.T2(i).Value = "1" Then z = z + 1
             Next i
         Case "Multi-channel 3"
             For i = 0 To 20
-                If d2set.T3(i).value = "1" Then z = z + 1
+                If d2set.T3(i).Value = "1" Then z = z + 1
             Next i
     End Select
     
     For i = 0 To 20
-        If frmMain.senderauswahl.Text = "Multi-channel 1" And d2set.T1(i).value = "1" Or frmMain.senderauswahl.Text = "Multi-channel 2" And d2set.T2(i).value = "1" Or frmMain.senderauswahl.Text = "Multi-channel 3" And d2set.T3(i).value = "1" Then
+        If frmMain.senderauswahl.Text = "Multi-channel 1" And d2set.T1(i).Value = "1" Or frmMain.senderauswahl.Text = "Multi-channel 2" And d2set.T2(i).Value = "1" Or frmMain.senderauswahl.Text = "Multi-channel 3" And d2set.T3(i).Value = "1" Then
             frmMain.Label16(z1).Caption = d2set.SenderID(i) + ":"
             z1 = z1 + 1
             
@@ -144,7 +145,7 @@ Private Sub transprec()
                 Case Is = z - 1
                     Call Rec.daten(d2set.IP.Text, d2set.Port.Text, frmMain.Quelle.Text, d2set.SenderID(i), d2set.d2setPL(i), d2set.Text45.Text, App.Path, d2set.pw, vbNullString)
                     Call Rec.start("2", z)
-                    If Aktivierauswahl.plloggeraktiv.value = "1" Then Call OnAir.loggerstart
+                    If Aktivierauswahl.plloggeraktiv.Value = "1" Then Call OnAir.loggerstart
                 Case Is = 0
                     Call Rec.daten(d2set.IP.Text, d2set.Port.Text, frmMain.Quelle.Text, d2set.SenderID(i), d2set.d2setPL(i), d2set.Text45.Text, App.Path, d2set.pw, vbNullString)
                     Call Rec.start("0", z)
@@ -167,5 +168,5 @@ End Sub
 Private Sub rec_addbuffer(size As Long, i As Integer, news As Boolean)
     If news = "1" Then bufsize(i) = 0
     bufsize(i) = bufsize(i) + size
-    frmMain.Label18(i - 1).Caption = Str$(format$(bufsize(i) / 1024, "0")) + "kb"
+    frmMain.Label18(i - 1).Caption = Str$(Format$(bufsize(i) / 1024, "0")) + "kb"
 End Sub

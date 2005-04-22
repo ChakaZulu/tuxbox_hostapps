@@ -32,7 +32,7 @@ Sub Main() 'Programmstart
     Call Comboladen.comboboxladen 'Comboboxen werden geladen
     Call Einstellungen_laden.laden  'Paramerter laden
     
-    If allgemeine.spshow.Value = "1" Then
+    If allgemeine.spshow.value = "1" Then
         frmSplash.Show
         record.sptimer.Enabled = "1"
     End If
@@ -45,7 +45,7 @@ Sub Main() 'Programmstart
     
     Call Einstellungen_setzen.set_settings 'Übernehmen der Einstellungen
 
-    If allgemeine.autostart.Value = "1" Then
+    If allgemeine.autostart.value = "1" Then
         Call frmMain.minim_Click
     Else
         frmMain.WindowState = 0

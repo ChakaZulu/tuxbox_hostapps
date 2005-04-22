@@ -19,7 +19,6 @@ Private kennungid(0 To 20) As String
 Private tempaddline(0 To 20) As String
 Private ziel_pfad As String
 Private buffer As String
-Private verriegel As Integer
 Public Event Newsongid(Newsongidint As String, Newsongidtit As String, Newsongidalb As String, Newsongidlab As String, Newsongidjah As String, id As Integer)
 Private WithEvents Dataform As Form1
 Attribute Dataform.VB_VarHelpID = -1
@@ -27,7 +26,6 @@ Private ipd As String
 Private portd As String
 Sub plstart(IP As String, Port As String)
     Set Dataform = New Form1
-    verriegel = 0
     ipd = IP
     portd = Port
     Dataform.WS.Connect IP, Port
@@ -38,7 +36,6 @@ Sub plstart(IP As String, Port As String)
     Wend
     
     Dataform.WS.SendData "GET /12 HTTP/1.0" & vbLf & vbLf
-    Dataform.Timer.Enabled = "1"
 End Sub
 Sub plstop()
     Dim i As Integer
@@ -55,28 +52,6 @@ Sub plstop()
     
     Set Dataform = Nothing
 End Sub
-Private Sub Dataform_Timer()
-    If verriegel < 2 Then
-        verriegel = 0
-        Dataform.WS.Close
-        
-        Do While Dataform.WS.State <> sckClosed
-            If Dataform.WS.State = sckError Then Exit Sub
-            DoEvents
-        Loop
-        
-        Dataform.WS.Connect ipd, portd
-    
-        Do While Dataform.WS.State <> sckConnected
-            If Dataform.WS.State = sckError Then Exit Sub
-            DoEvents
-        Loop
-        
-        Dataform.WS.SendData "GET /12 HTTP/1.0" & vbLf & vbLf
-    Else
-        Dataform.Timer.Enabled = "0"
-    End If
-End Sub
 Sub daten(playlistna() As String, playlistkennung() As String, Ziel As String)
     Dim i As Integer
     
@@ -89,8 +64,7 @@ Sub daten(playlistna() As String, playlistkennung() As String, Ziel As String)
 End Sub
 Private Sub Dataform_Loggerdata()
     Dim F As Integer, pos1 As Long, pos2 As Long, Paket As String, Interpret As String, titel As String, album As String, label As String, jahr As String, position As Long, kennung As String, addline As String, backuppos As Integer
-    
-    If verriegel < 4 Then verriegel = verriegel + 1
+
     Dataform.WS.GetData buffer
     pos2 = 1
 nextrun:
@@ -109,7 +83,7 @@ nextrun:
     pos1 = InStrRev(Paket, Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(255) + Chr(0)) + 9
     Paket = Mid(Paket, pos1, pos2 - pos1) 'Ein Paket gefiltert
    
-    If InStr(Paket, "Komponist:") Then
+If InStr(Paket, "Komponist:") Then
         position = InStr(Paket, "Komponist:")
         Interpret = Mid(Paket, position + 11)
         If position < 30 Then Exit Sub
@@ -131,11 +105,24 @@ nextrun:
         End If
         
         position = InStr(Paket, "Label:")
-        label = Mid(Paket, position + 8)
+        label = Mid(Paket, position + 7)
+        label = Trim$(label)
         position = InStr(label, Chr(10)) - 1
         If position > 1 Then label = Mid(label, 1, position)   ' "4E"
         If InStr(1, label, "null", vbTextCompare) Then label = vbNullString
+        
+        'Jahr wird ausgelesen
+        position = InStr(Paket, "Jahr:")
+        jahr = Mid$(Paket, position + 5)
+        jahr = Trim$(jahr)
+        jahr = Mid$(jahr, 1, 4)
+        position = InStr(jahr, Chr(10)) - 1
         If Len(jahr) <> 4 Or Val(jahr) = 0 Then jahr = "0000"
+        
+        If position > 1 Then
+            jahr = Mid(jahr, 1, position)          ' "4E"
+            If InStr(jahr, Chr(13)) Then GoTo nextrun
+        End If
     Else
         position = InStr(1, Paket, "Interpret:")
         Interpret = Mid(Paket, position + 11)
@@ -185,16 +172,17 @@ nextrun:
             GoTo nextrun
         End If
         
+        'Jahr wird ausgelesen
         position = InStr(Paket, "Jahr:")
-        jahr = Mid(Paket, position + 8)
+        jahr = Mid$(Paket, position + 5)
+        jahr = Trim$(jahr)
+        jahr = Mid$(jahr, 1, 4)
         position = InStr(jahr, Chr(10)) - 1
+        If Len(jahr) <> 4 Or Val(jahr) = 0 Then jahr = "0000"
         
         If position > 1 Then
             jahr = Mid(jahr, 1, position)          ' "4E"
-            If Len(jahr) <> 4 Or Val(jahr) = 0 Then jahr = "0000"
             If InStr(jahr, Chr(13)) Then GoTo nextrun
-        Else
-            GoTo nextrun
         End If
     End If
     
@@ -207,8 +195,6 @@ nextrun:
     
     Select Case kennung
         Case Is = kennungid(0)
-            verriegel = "0"
-            
             If addline <> tempaddline(0) Then
                 RaiseEvent Newsongid(Interpret, titel, album, label, jahr, 0)
                 

@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{481E5A07-5ADE-48A7-8879-F6C70AD95B1F}#1.0#0"; "ActSlider.ocx"
 Object = "{4511A08F-EA0D-4257-ADA3-A93195C5A02A}#1.0#0"; "Button.ocx"
+Object = "{835A1DB1-C969-4BDB-B9C9-4D0C83ACDDA4}#1.0#0"; "ActSlider.ocx"
 Begin VB.Form tagging 
    BackColor       =   &H00808080&
-   BorderStyle     =   1  'Fest Einfach
+   BorderStyle     =   1  'Fixed Single
    ClientHeight    =   4950
    ClientLeft      =   5340
    ClientTop       =   3075
@@ -19,6 +19,7 @@ Begin VB.Form tagging
       Index           =   0
       Left            =   240
       TabIndex        =   13
+      TabStop         =   0   'False
       Top             =   1200
       Width           =   4605
       _ExtentX        =   8123
@@ -28,11 +29,13 @@ Begin VB.Form tagging
       ImageLeft       =   "tagging.frx":1AC4
       ImagePointer    =   "tagging.frx":2CBE
       BackStyle       =   0
+      MaskColor       =   8421504
    End
    Begin ActSlider.SliderPic drift 
       Height          =   255
       Left            =   240
       TabIndex        =   12
+      TabStop         =   0   'False
       Top             =   480
       Width           =   4605
       _ExtentX        =   8123
@@ -42,6 +45,7 @@ Begin VB.Form tagging
       ImageLeft       =   "tagging.frx":405E
       ImagePointer    =   "tagging.frx":5258
       BackStyle       =   0
+      MaskColor       =   8421504
    End
    Begin VB.ComboBox zeitauswahl 
       BackColor       =   &H00000000&
@@ -59,8 +63,9 @@ Begin VB.Form tagging
       ItemData        =   "tagging.frx":53FE
       Left            =   240
       List            =   "tagging.frx":5408
-      Style           =   2  'Dropdown-Liste
+      Style           =   2  'Dropdown List
       TabIndex        =   10
+      TabStop         =   0   'False
       Top             =   3480
       Width           =   4605
    End
@@ -80,8 +85,9 @@ Begin VB.Form tagging
       ItemData        =   "tagging.frx":5422
       Left            =   240
       List            =   "tagging.frx":542F
-      Style           =   2  'Dropdown-Liste
+      Style           =   2  'Dropdown List
       TabIndex        =   0
+      TabStop         =   0   'False
       Top             =   2760
       Width           =   4605
    End
@@ -90,6 +96,7 @@ Begin VB.Form tagging
       Index           =   1
       Left            =   240
       TabIndex        =   18
+      TabStop         =   0   'False
       Top             =   1920
       Width           =   4605
       _ExtentX        =   8123
@@ -99,11 +106,13 @@ Begin VB.Form tagging
       ImageLeft       =   "tagging.frx":6661
       ImagePointer    =   "tagging.frx":785B
       BackStyle       =   0
+      MaskColor       =   8421504
    End
    Begin KDCButton107.KDCButton OK 
       Height          =   495
       Left            =   240
       TabIndex        =   25
+      TabStop         =   0   'False
       Top             =   4200
       Width           =   4605
       _ExtentX        =   8123
@@ -126,7 +135,7 @@ Begin VB.Form tagging
       BorderColorBottom=   8421504
    End
    Begin VB.Label value 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackColor       =   &H80000001&
       BackStyle       =   0  'Transparent
       Caption         =   "0"
@@ -148,7 +157,7 @@ Begin VB.Form tagging
       Width           =   735
    End
    Begin VB.Label value 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackColor       =   &H80000001&
       BackStyle       =   0  'Transparent
       Caption         =   "0"
@@ -170,7 +179,7 @@ Begin VB.Form tagging
       Width           =   735
    End
    Begin VB.Label value 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackColor       =   &H80000001&
       BackStyle       =   0  'Transparent
       Caption         =   "0"
@@ -192,7 +201,7 @@ Begin VB.Form tagging
       Width           =   855
    End
    Begin VB.Label Label20 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "20"
       BeginProperty Font 
@@ -212,7 +221,7 @@ Begin VB.Form tagging
       Width           =   615
    End
    Begin VB.Label Label19 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "15"
       BeginProperty Font 
@@ -232,7 +241,7 @@ Begin VB.Form tagging
       Width           =   615
    End
    Begin VB.Label Label18 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "10"
       BeginProperty Font 
@@ -252,7 +261,7 @@ Begin VB.Form tagging
       Width           =   735
    End
    Begin VB.Label Label17 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "5"
       BeginProperty Font 
@@ -310,7 +319,7 @@ Begin VB.Form tagging
       Width           =   3735
    End
    Begin VB.Label Label16 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "1500"
       BeginProperty Font 
@@ -330,7 +339,7 @@ Begin VB.Form tagging
       Width           =   855
    End
    Begin VB.Label Label15 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "500"
       BeginProperty Font 
@@ -350,7 +359,7 @@ Begin VB.Form tagging
       Width           =   735
    End
    Begin VB.Label Label14 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "30"
       BeginProperty Font 
@@ -370,7 +379,7 @@ Begin VB.Form tagging
       Width           =   615
    End
    Begin VB.Label Label13 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "90"
       BeginProperty Font 
@@ -484,7 +493,7 @@ Begin VB.Form tagging
       Width           =   495
    End
    Begin VB.Label Label8 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "1000"
       BeginProperty Font 
@@ -561,7 +570,7 @@ Begin VB.Form tagging
       Width           =   4935
    End
    Begin VB.Label Label4 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "120"
       BeginProperty Font 
@@ -581,7 +590,7 @@ Begin VB.Form tagging
       Width           =   735
    End
    Begin VB.Label Label2 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackStyle       =   0  'Transparent
       Caption         =   "60"
       BeginProperty Font 
@@ -646,13 +655,13 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 Private Sub dauerslider_PositionChanged(Index As Integer, oldPosition As Long, newPosition As Long)
-    tagging.Value(2).Caption = newPosition
+    tagging.value(2).Caption = newPosition
 End Sub
 Private Sub delsize_PositionChanged(Index As Integer, oldPosition As Long, newPosition As Long)
-    tagging.Value(1).Caption = newPosition
+    tagging.value(1).Caption = newPosition
 End Sub
 Private Sub drift_PositionChanged(oldPosition As Long, newPosition As Long)
-    tagging.Value(0).Caption = newPosition
+    tagging.value(0).Caption = newPosition
 End Sub
 Private Sub OK_Click()
     tagging.Hide

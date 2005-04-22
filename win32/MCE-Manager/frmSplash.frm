@@ -1,8 +1,8 @@
 VERSION 5.00
 Begin VB.Form frmSplash 
    BackColor       =   &H00404000&
-   BorderStyle     =   3  'Fester Dialog
-   ClientHeight    =   5895
+   BorderStyle     =   3  'Fixed Dialog
+   ClientHeight    =   6210
    ClientLeft      =   255
    ClientTop       =   1410
    ClientWidth     =   8190
@@ -13,10 +13,10 @@ Begin VB.Form frmSplash
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   5895
+   ScaleHeight     =   6210
    ScaleWidth      =   8190
    ShowInTaskbar   =   0   'False
-   StartUpPosition =   2  'Bildschirmmitte
+   StartUpPosition =   2  'CenterScreen
    Begin VB.PictureBox Picture1 
       Height          =   855
       Left            =   240
@@ -26,6 +26,46 @@ Begin VB.Form frmSplash
       TabIndex        =   0
       Top             =   240
       Width           =   7695
+   End
+   Begin VB.Label Label23 
+      BackStyle       =   0  'Transparent
+      Caption         =   "Alexander:"
+      BeginProperty Font 
+         Name            =   "Tahoma"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000018&
+      Height          =   255
+      Index           =   1
+      Left            =   240
+      TabIndex        =   42
+      Top             =   5520
+      Width           =   1695
+   End
+   Begin VB.Label Label24 
+      BackStyle       =   0  'Transparent
+      Caption         =   "Songtext.dll Modder"
+      BeginProperty Font 
+         Name            =   "Tahoma"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000018&
+      Height          =   255
+      Index           =   1
+      Left            =   1920
+      TabIndex        =   41
+      Top             =   5520
+      Width           =   2415
    End
    Begin VB.Label Label19 
       BackStyle       =   0  'Transparent
@@ -363,6 +403,7 @@ Begin VB.Form frmSplash
       EndProperty
       ForeColor       =   &H80000018&
       Height          =   255
+      Index           =   0
       Left            =   1920
       TabIndex        =   24
       Top             =   5160
@@ -382,6 +423,7 @@ Begin VB.Form frmSplash
       EndProperty
       ForeColor       =   &H80000018&
       Height          =   255
+      Index           =   0
       Left            =   240
       TabIndex        =   23
       Top             =   5160
@@ -675,7 +717,7 @@ Begin VB.Form frmSplash
       Width           =   2355
    End
    Begin VB.Label Label7 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackColor       =   &H80000018&
       BackStyle       =   0  'Transparent
       Caption         =   "RMS-Tuning by Quickmic"
@@ -692,7 +734,7 @@ Begin VB.Form frmSplash
       Height          =   195
       Left            =   6135
       TabIndex        =   7
-      Top             =   5535
+      Top             =   5835
       Width           =   1785
    End
    Begin VB.Label Label6 
@@ -711,7 +753,7 @@ Begin VB.Form frmSplash
       Height          =   255
       Left            =   195
       TabIndex        =   6
-      Top             =   5520
+      Top             =   5820
       Width           =   6255
    End
    Begin VB.Label Label5 
@@ -812,21 +854,21 @@ Begin VB.Form frmSplash
       X1              =   8040
       X2              =   8040
       Y1              =   120
-      Y2              =   5760
+      Y2              =   6060
    End
    Begin VB.Line Line2 
       BorderColor     =   &H80000018&
       X1              =   8040
       X2              =   120
-      Y1              =   5760
-      Y2              =   5760
+      Y1              =   6060
+      Y2              =   6060
    End
    Begin VB.Line Line1 
       BorderColor     =   &H80000018&
       X1              =   120
       X2              =   120
       Y1              =   120
-      Y2              =   5760
+      Y2              =   6060
    End
 End
 Attribute VB_Name = "frmSplash"

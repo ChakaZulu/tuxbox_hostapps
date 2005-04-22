@@ -33,14 +33,20 @@ Public Sub nachtag()
         position = InStr(tempzeichen, "\")
         
         If position = 0 Then
-            MsgBox "Error: Your sourcepath/sourcefile structure is wrong!"
+            MsgBox "Error: Your sourcepath/sourcefile structure is wrong! Debuginfo: " & tempzeichen
+            Set fso = Nothing
+            Call Ausgabe.info_loeschen 'Infofenster löschen
+            Call Verriegelung.verriegelungaus 'Verriegelung
             Exit Sub 'Quellfiles direkt im Quellordner
         End If
         
         verzeichnis = Left$(tempzeichen, position - 1)
         
         If Not Werkzeuge.sourcepathtest(verzeichnis) Then
-            MsgBox "Error: Your workpath/workfile structure is wrong!"
+            MsgBox "Error: Your workpath/workfile structure is wrong! Debuginfo: " & verzeichnis
+            Set fso = Nothing
+            Call Ausgabe.info_loeschen 'Infofenster löschen
+            Call Verriegelung.verriegelungaus 'Verriegelung
             Exit Sub 'Quellfiles direkt im Quellordner
         End If
         

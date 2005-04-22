@@ -6,7 +6,7 @@ Public Sub Konvert()
     If Verriegelung.verriegelungein = "1" Then Exit Sub 'Verriegelung
     frmMain.start.Appearance = 10 'Buttondesign ändern
     frmMain.start.ForeColor = &H0& 'Buttonfarbe ändern
-    If allgemeine.timesync_konv.value = "1" Then Call Timesyncron.Command1_Click
+    If allgemeine.timesync_konv.Value = "1" Then Call Timesyncron.syncnow
     i = 0 'Rücksetzten
     Call Werkzeuge.suche("mp2", frmMain.Quelle.Text, files(), "1") 'Suche, nach mp2-files wird ausgeführt
     
@@ -14,13 +14,13 @@ Public Sub Konvert()
     If UBound(files) = 1 Then Call Ausgabe.textbox("No source-files")
     
     While i < UBound(files) - 1 'Anzahl der gefundenen files
-        If UBound(files) - 1 < Scannen.minfiles.CurPosition And Aktivierauswahl.scan_aktiv.value = "1" Then
+        If UBound(files) - 1 < Scannen.minfiles.CurPosition And Aktivierauswahl.scan_aktiv.Value = "1" Then
             Call Ausgabe.textbox("Too few source-files..." + Str(UBound(files) - 1) + "/" + Str(Scannen.minfiles.CurPosition))
             Call Verriegelung.verriegelungaus
             Exit Sub
         End If
         
-        If frmMain.turbo.value = "0" Then DoEvents
+        If frmMain.turbo.Value = "0" Then DoEvents
         Call Ausgabe.info_loeschen 'Infofenster löschen
         frmMain.infocount.Caption = Trim$(Str$(i + 1)) + "/" + Trim$(Str$(UBound(files) - 1))
         i = i + 1
@@ -34,7 +34,10 @@ Public Sub Konvert()
         position = InStr(tempzeichen, "\") 'Sucht das "\" und gibt Position zurück
         
         If position = 0 Then
-            MsgBox "Error: Your sourcepath/sourcefile structure is wrong!"
+            MsgBox "Error: Your sourcepath/sourcefile structure is wrong! Debuginfo: " & tempzeichen
+            Set fso = Nothing
+            Call Ausgabe.info_loeschen 'Infofenster löschen
+            Call Verriegelung.verriegelungaus 'Verriegelung
             Exit Sub 'Quellfiles direkt im Quellordner
         End If
         
@@ -50,13 +53,16 @@ Public Sub Konvert()
         End If
         
         If Not Werkzeuge.sourcepathtest(verzeichnis) Then
-            MsgBox "Error: Your sourcepath/sourcefile structure is wrong!"
+            MsgBox "Error: Your sourcepath/sourcefile structure is wrong! Debuginfo: " & verzeichnis
+            Set fso = Nothing
+            Call Ausgabe.info_loeschen 'Infofenster löschen
+            Call Verriegelung.verriegelungaus 'Verriegelung
             Exit Sub 'Quellfiles direkt im Quellordner
         End If
         
         'Kontrolle ob file "delsize" byte hat
         If LenB(Dir$(files(i), vbDirectory)) <> 0 Then
-            frmMain.mp2size.Caption = format(FileLen(files(i)) / 1024, "0.0") + "kb"
+            frmMain.mp2size.Caption = Format(FileLen(files(i)) / 1024, "0.0") + "kb"
         Else
             GoTo nextrun
         End If
@@ -93,7 +99,7 @@ Public Sub Konvert()
         eigeneplaylist = Right$(aktdate, 4) + "-" + Mid$(aktdate, 4, 2) + "-" + Left$(aktdate, 2) + "-" + verzeichnis + ".txt"
         
         'Cancel Abfrage
-        If Not frmMain.Abbrechen.Enabled Then
+        If Not frmMain.abbrechen.Enabled Then
             Call Ausgabe.info_loeschen 'Infofenster löschen
             Call Verriegelung.verriegelungaus 'Verriegelung
             Set fso = Nothing
@@ -112,10 +118,10 @@ Public Sub Konvert()
             dbfilename = Tagschreiben(frmMain.work.Text, verzeichnis, akttime, aktdate, frmMain.work.Text + eigeneplaylist, filetagged, artint, mp2zeit)
             
             If filetagged Then  'Wenn TagID Infos vorhanden sind
-                If allgemeine.ueberschreiben.value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
+                If allgemeine.ueberschreiben.Value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
                     Kill (files(i))
                     Call Ausgabe.textbox(frmMain.interprettag.Caption + " - " + frmMain.titeltag.Caption + "......still existing / deleted") 'Wenn File existiert, dann löschen
-                    frmMain.statuscon.value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
+                    frmMain.statuscon.Value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
                     GoTo nextrun
                 End If
                 
@@ -136,10 +142,10 @@ Public Sub Konvert()
             dbfilename = Tagschreiben(frmMain.work.Text, verzeichnis, akttime, aktdate, frmMain.work.Text + eigeneplaylist, filetagged, artint, mp2zeit)
             
             If filetagged Then  'Wenn TagID Infos vorhanden sind
-                If allgemeine.ueberschreiben.value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
+                If allgemeine.ueberschreiben.Value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
                     Kill (files(i))
                     Call Ausgabe.textbox(frmMain.interprettag.Caption + " - " + frmMain.titeltag.Caption + "......still existing / deleted") 'Wenn File existiert, dann löschen
-                    frmMain.statuscon.value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
+                    frmMain.statuscon.Value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
                     GoTo nextrun
                 End If
                 
@@ -171,10 +177,10 @@ Public Sub Konvert()
             dbfilename = Tagschreiben(frmMain.work.Text, verzeichnis, akttime, aktdate, frmMain.work.Text + eigeneplaylist, filetagged, artint, mp2zeit)
                 
             If filetagged Then
-                If allgemeine.ueberschreiben.value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
+                If allgemeine.ueberschreiben.Value And Werkzeuge.data_songexists(dbfilename, akttimedate, akttime, aktdate) Then
                     Kill (files(i))
                     Call Ausgabe.textbox(frmMain.interprettag.Caption + " - " + frmMain.titeltag.Caption + "......still existing / deleted")
-                    frmMain.statuscon.value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
+                    frmMain.statuscon.Value = (100 / (UBound(files) - 1)) * i 'statusbar wird aktualisiert
                     GoTo nextrun
                 End If
                     
@@ -205,9 +211,9 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
         On Error GoTo fehler
         Set DShell = New Dos
         'MP2 Überprüfung
-        If allgemeine.mp2test.value = "1" Then
+        If allgemeine.mp2test.Value = "1" Then
             cmd = """" + App.Path + "\tools\besplit.exe""" + " -core( -input """ + file + """ -output """ + App.Path + "\temp\mp2test.mp2""" + " -type mp2 -logfile """ + App.Path + "\temp\mp2test.log""" + " )" 'Dos-Befehl bilden
-            Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+            Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             If LenB(Dir$(App.Path + "\temp\mp2test.mp2", vbDirectory)) <> 0 Then Kill (App.Path + "\temp\mp2test.mp2")
             
             If LenB(Dir$(App.Path + "\temp\mp2test.log", vbDirectory)) <> 0 Then
@@ -236,19 +242,19 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
         End If
         
         If extension = "mp2" Then
-            If frmMain.noextension.value = "1" Then
+            If frmMain.noextension.Value = "1" Then
                 Set fso = CreateObject("Scripting.FileSystemObject")
                 fso.CopyFile file, frmMain.work.Text + filename + ".mp2"
                 Set fso = Nothing
             Else
                 ' hier startet lame (mp2 in temp.wav)
                 cmd = """" + App.Path + "\tools\lame.exe""" + " --decode --priority " + shell_prio + " """ + file + """ """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 
-                If Aktivierauswahl.mp2normal_aktiv.value = "1" Then
+                If Aktivierauswahl.mp2normal_aktiv.Value = "1" Then
                     frmMain.normset.Caption = " Normalize" 'Infofenster
                     
-                    If normal.prozenable.value = "1" Then
+                    If normal.prozenable.Value = "1" Then
                         frmMain.normset.Caption = frmMain.normset.Caption + " ,auto ," + Str$(normal.peakprozslider.CurPosition) + "%" 'Infofenster
                     Else
                         frmMain.normset.Caption = frmMain.normset.Caption + " ,constant ," + Str$(normal.peakdbslider.CurPosition) + "db" 'Infofenster
@@ -256,18 +262,18 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
                     
                     ' hier startet normalisierung
                     cmd = """" + App.Path + "\tools\" + "normalize.exe """ + normoptions + " """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-                    Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                    Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 End If
                 
                 'Rückkonvertierung
-                If Aktivierauswahl.mp2_cbr_aktiv.value = "1" Then
+                If Aktivierauswahl.mp2_cbr_aktiv.Value = "1" Then
                     frmMain.encoderset.Caption = "CBR " + MP2cbrmenu.cbrbitrate.Text 'Infofenster
                     cmd = """" + App.Path + "\tools\toolame.exe""" + " """ + frmMain.work.Text + "temp.wav"" " + """" + frmMain.work.Text + filename + ".mp2"" " + MP2cbrparameter
-                    Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                    Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 Else
                     frmMain.encoderset.Caption = "VBR " + MP2cbrmenu.cbrbitrate.Text 'Infofenster
                     cmd = """" + App.Path + "\tools\toolame.exe""" + " """ + frmMain.work.Text + "temp.wav"" " + """" + frmMain.work.Text + filename + ".mp2"" " + MP2vbrparameter
-                    Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                    Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 End If
             End If
         End If
@@ -275,12 +281,12 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
         If extension = "ogg" Then
             ' hier startet lame (mp2 in temp.wav)
             cmd = """" + App.Path + "\tools\lame.exe""" + " --decode --priority " + shell_prio + " """ + file + """ """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-            Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+            Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 
-            If Aktivierauswahl.oggnormal_aktiv.value = "1" Then
+            If Aktivierauswahl.oggnormal_aktiv.Value = "1" Then
                 frmMain.normset.Caption = " Normalize" 'Infofenster
                     
-                If normal.prozenable.value = "1" Then
+                If normal.prozenable.Value = "1" Then
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,auto ," + Str$(normal.peakprozslider.CurPosition) + "%" 'Infofenster
                 Else
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,constant ," + Str$(normal.peakdbslider.CurPosition) + "db" 'Infofenster
@@ -288,21 +294,21 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
                     
                 ' hier startet normalisierung
                 cmd = """" + App.Path + "\tools\" + "normalize.exe """ + normoptions + " """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             End If
                 
             'Rückkonvertierung
             cmd = """" + App.Path + "\tools\oggenc.exe""" + " """ + frmMain.work.Text + "temp.wav"" " + OGGparameter
-            Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+            Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             Call Werkzeuge.IsFileOpen(frmMain.work.Text + "temp.ogg")
             Name frmMain.work.Text + "temp.ogg" As frmMain.work.Text + filename + ".ogg"
         End If
         
         If extension = "mp3" Then
-            If Aktivierauswahl.mp3normal_aktiv.value = "1" Then 'wenn normalisierung (normalize) aktiviert
+            If Aktivierauswahl.mp3normal_aktiv.Value = "1" Then 'wenn normalisierung (normalize) aktiviert
                 frmMain.normset.Caption = " Normalize" 'Infofenster
                 
-                If normal.prozenable.value = "1" Then
+                If normal.prozenable.Value = "1" Then
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,auto ," + Str$(normal.peakprozslider.CurPosition) + "%" 'Infofenster
                 Else
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,constant ," + Str$(normal.peakdbslider.CurPosition) + "db" 'Infofenster
@@ -310,51 +316,51 @@ Private Function konvertieren(file As String, filename As String, verzeichnis As
                 
                 ' hier startet lame (mp2 in temp.wav)
                 cmd = """" + App.Path + "\tools\lame.exe""" + " --decode --priority " + shell_prio + " """ + file + """ """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 
                 ' hier startet normalisierung
                 cmd = """" + App.Path + "\tools\" + "normalize.exe """ + normoptions + " """ + frmMain.work.Text + "temp.wav""" 'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
                 temppfad = """" + frmMain.work.Text + "temp.wav"" """ + frmMain.work.Text + filename + "." + extension + """ " 'wenn normalisierung aktiviert
             Else
                 temppfad = """" + file + """ """ + frmMain.work.Text + filename + "." + extension + """ " 'wenn normalisierung (normalize) deaktiviert
             End If
             
             'Hier wird Lame gestartet
-            If Aktivierauswahl.mp3_cbr_aktiv.value = "1" Then 'CBR verwenden
+            If Aktivierauswahl.mp3_cbr_aktiv.Value = "1" Then 'CBR verwenden
                 frmMain.encoderset.Caption = "CBR " + MP3cbrmenu.cbrbitrate.Text 'Infofenster
                 cmd = """" + App.Path + "\tools\lame.exe"" " + temppfad + MP3cbrparameter    'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             End If
             
-            If Aktivierauswahl.mp3_vbr_aktiv.value = "1" Then 'VBR verwenden
+            If Aktivierauswahl.mp3_vbr_aktiv.Value = "1" Then 'VBR verwenden
                 frmMain.encoderset.Caption = "VBR " + MP3vbrmenu.minbit.Text + "/" + MP3vbrmenu.maxbit.Text 'Infofenster
                 cmd = """" + App.Path + "\tools\lame.exe"" " + temppfad + MP3vbrparameter  'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             End If
                 
-            If Aktivierauswahl.mp3_abr_aktiv.value = "1" Then 'ABR verwenden
+            If Aktivierauswahl.mp3_abr_aktiv.Value = "1" Then 'ABR verwenden
                 frmMain.encoderset.Caption = "ABR " + MP3abrmenu.abrbitrate.Text 'Infofenster
                 cmd = """" + App.Path + "\tools\lame.exe"" " + temppfad + MP3abrparameter   'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             End If
             
             'MP3-Gain (mp3 normalisierung)
-            If Aktivierauswahl.mp3gain_aktiv.value = "1" Then
+            If Aktivierauswahl.mp3gain_aktiv.Value = "1" Then
                 frmMain.normset.Caption = " MP3-Gain" 'Infofenster
     
-                If mp3gain.auto.value = "1" Then
+                If mp3gain.auto.Value = "1" Then
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,auto" 'Infofenster
                 Else
                     frmMain.normset.Caption = frmMain.normset.Caption + " ,constant ," + Str$(mp3gain.Slider1.CurPosition) + "db" 'Infofenster
                 End If
                 
                 cmd = """" + App.Path + "\tools\mp3gain.exe""" + mp3gainstring + """" + frmMain.work.Text + filename + "." + extension + """" 'Dos-Befehl bilden
-                Call DShell.shellwait(cmd, allgemeine.showdos.value) 'Dos-Befehle ausführen
+                Call DShell.shellwait(cmd, allgemeine.showdos.Value) 'Dos-Befehle ausführen
             End If
         End If
         
-        frmMain.mp3size.Caption = format(FileLen(frmMain.work.Text + filename + "." + extension) / 1024, "0.0") + "kb"
+        frmMain.mp3size.Caption = Format(FileLen(frmMain.work.Text + filename + "." + extension) / 1024, "0.0") + "kb"
         quellfile = frmMain.work.Text + filename + "." + extension 'Tempquellfile wird bestimmt
         If LenB(Dir$(frmMain.work.Text + eigeneplaylist, vbDirectory)) <> 0 Then Kill (frmMain.work.Text + eigeneplaylist) 'wenn alte "normale" playlist dann löschen
         konvertieren = quellfile
@@ -381,12 +387,12 @@ fehler:
 End Function
 Private Sub untagged(quellfile As String, verzeichnis As String, akttime As Date, aktdate As Date, file As String, anzahl As Integer, upperlimit As Integer)
     Call file_speichern.untaggedspeichern(quellfile, verzeichnis, akttime, aktdate) 'File verschieben
-    If allgemeine.quelldel.value = "1" And LenB(Dir$(file, vbDirectory)) <> 0 Then Kill (file) 'quelldateien werden gelöscht
-    frmMain.statuscon.value = (100 / upperlimit) * anzahl 'statusbar wird aktualisiert
+    If allgemeine.quelldel.Value = "1" And LenB(Dir$(file, vbDirectory)) <> 0 Then Kill (file) 'quelldateien werden gelöscht
+    frmMain.statuscon.Value = (100 / upperlimit) * anzahl 'statusbar wird aktualisiert
 End Sub
 Private Sub tagged(quellfile As String, temppfad As String, file As String, akttime As Date, aktdate As Date, anzahl As Integer, upperlimit As Integer)
     Call file_speichern.taggedspeichern(quellfile, temppfad, akttime, aktdate) 'File verschieben
-    frmMain.statuscon.value = (100 / upperlimit) * anzahl 'statusbar wird aktualisiert
-    If allgemeine.quelldel.value = "1" And LenB(Dir$(file, vbDirectory)) <> 0 Then Kill (file) 'quelldateien werden gelöscht
+    frmMain.statuscon.Value = (100 / upperlimit) * anzahl 'statusbar wird aktualisiert
+    If allgemeine.quelldel.Value = "1" And LenB(Dir$(file, vbDirectory)) <> 0 Then Kill (file) 'quelldateien werden gelöscht
 End Sub
 

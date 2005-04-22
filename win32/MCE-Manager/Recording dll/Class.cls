@@ -35,7 +35,6 @@ Private Port As String
 Private plname(1 To 8) As String
 Private sender(1 To 8) As String
 Private Verriegelung As Boolean
-Private verriegel(1 To 8) As Integer
 Sub start(Optional last As String, Optional sanzahl As Integer)
     Dim i As Integer
     
@@ -69,14 +68,21 @@ Sub start(Optional last As String, Optional sanzahl As Integer)
     Wend
     
     If last = "2" Then
+        Dataform.sectiontimer.Enabled = "1"
+        Dataform.Telnet.SendData "killall sectionsd" & vbCrLf
+        
+        'Hier wird etwas gewartet, sodass die Box Zeit hat, die Befehle zu verarbeiten
+        While Dataform.sectiontimer.Enabled = "1"
+            DoEvents
+        Wend
+        
         Dataform.Telnet.Close 'Telnet beenden
         
         For i = 1 To sanzahl
             F(i) = FreeFile
-            Open Ziel + "\temp\tempsong" + Str(i) + ".mp" For Binary As #F(i) 'Audiopaket in tempsong schreiben
+            Open Ziel + "\temp\tempsong" + Str(i) + ".mp" For Binary As #F(i) 'Audiodatei öffnen
             hilfsmarke(i) = 1 'Für Audioheadersuche die Startposition setzten
             Dataform.Radiosender(i).Connect IP, Port 'Telnetverbindung aufbauen für Streamempfang
-            verriegel(i) = "0"
             
             If apid(i) <> "Error" Then
             
@@ -85,8 +91,8 @@ Sub start(Optional last As String, Optional sanzahl As Integer)
                     DoEvents
                 Loop
                 
+                'Daten Anfordern (Radio aufzeichnung beginnen
                 Dataform.Radiosender(i).SendData "GET /" + apid(i) + " HTTP/1.0" & vbCrLf
-                Dataform.Timer(i).Enabled = "1"
             End If
         Next i
     End If
@@ -110,28 +116,25 @@ Sub sto()
         If Dir(Ziel + "\temp\tempsong" + Str(i) + ".mp", vbDirectory) <> vbNullString Then Kill Ziel + "\temp\tempsong" + Str(i) + ".mp" 'temp-Files löschen
         first(i) = "0"
     Next i
-End Sub
-Private Sub dataform_inittest(i As Integer)
-    If verriegel(i) < 3 Then
-        verriegel(i) = 0
-        Form1.Radiosender(i).Close
-                
-        Do While Form1.Radiosender(i).State <> sckClosed
-            If Form1.Radiosender(i).State = sckError Then Exit Sub
-            DoEvents
-        Loop
-                
-        Form1.Radiosender(i).Connect IP, Port
-            
-        Do While Form1.Radiosender(i).State <> sckConnected
-            If Form1.Radiosender(i).State = sckError Then Exit Sub
-            DoEvents
-        Loop
-                
-        Form1.Radiosender(i).SendData "GET /" + apid(i) + " HTTP/1.0" & vbCrLf
-    Else
-        Form1.Timer(i).Enabled = "0"
-    End If
+    
+    'Sectionsd (D-Box Przess) wieder starten
+    Verriegelung = "0"
+    Dataform.Telnet.Connect (IP), (23)        'Telnet aktivieren
+    
+    While Connect <> "1"
+        DoEvents
+    Wend
+    
+    Dataform.sectiontimer.Enabled = "1"
+    
+    Dataform.Telnet.SendData "sectionsd" & vbCrLf
+        
+    'Hier wird etwas gewartet, sodass die Box Zeit hat, die Befehle zu verarbeiten
+    While Dataform.sectiontimer.Enabled = "1"
+        DoEvents
+    Wend
+        
+    Dataform.Telnet.Close 'Telnet beenden
 End Sub
 Sub Daten(ipd As String, portd As String, Quelled As String, Senderd As String, plnamed As String, logind As String, zield As String, pwd As String, audiopidd As String)
     SNr = SNr + 1
@@ -150,8 +153,7 @@ Sub Daten(ipd As String, portd As String, Quelled As String, Senderd As String, 
 End Sub
 Private Sub dataform_streamdata(i As Integer)
     Dim inBuf As String, filesize As Long, temposition As Long, ascvalue As Integer, headerlen As Long, tempmp2 As String, pos1 As Long, paketlen As Long
-    
-    If verriegel(i) < 6 Then verriegel(i) = verriegel(i) + 1
+
     On Error GoTo fehler
     Dataform.Radiosender(i).GetData inBuf
     buffer(i) = buffer(i) + inBuf

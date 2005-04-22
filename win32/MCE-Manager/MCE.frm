@@ -1,13 +1,13 @@
 VERSION 5.00
 Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "RICHTX32.OCX"
-Object = "{407CC720-A122-450D-A8EF-DF969BF6063E}#1.5#0"; "AudioGenie.ocx"
 Object = "{4511A08F-EA0D-4257-ADA3-A93195C5A02A}#1.0#0"; "Button.ocx"
 Object = "{7A3134F8-8B34-4546-B016-D82D86DFBB3B}#1.0#0"; "ProgressBar.ocx"
 Object = "{4FD60454-1E7E-4AF1-A122-48E51ED3C92E}#1.0#0"; "Downloader.ocx"
+Object = "{407CC720-A122-450D-A8EF-DF969BF6063E}#1.6#0"; "AudioGenie.ocx"
 Begin VB.Form frmMain 
    AutoRedraw      =   -1  'True
    BackColor       =   &H00000000&
-   BorderStyle     =   1  'Fest Einfach
+   BorderStyle     =   1  'Fixed Single
    ClientHeight    =   8430
    ClientLeft      =   660
    ClientTop       =   1665
@@ -16,7 +16,7 @@ Begin VB.Form frmMain
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    ScaleHeight     =   517.757
-   ScaleMode       =   0  'Benutzerdefiniert
+   ScaleMode       =   0  'User
    ScaleWidth      =   868.72
    Begin Downloader.DownLoad DownL 
       Left            =   14160
@@ -40,6 +40,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   240
       TabIndex        =   102
+      TabStop         =   0   'False
       Top             =   5400
       Width           =   2775
    End
@@ -59,6 +60,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   10800
       TabIndex        =   101
+      TabStop         =   0   'False
       Top             =   5160
       Width           =   1695
    End
@@ -76,8 +78,9 @@ Begin VB.Form frmMain
       ForeColor       =   &H80000018&
       Height          =   315
       Left            =   10800
-      Style           =   2  'Dropdown-Liste
+      Style           =   2  'Dropdown List
       TabIndex        =   94
+      TabStop         =   0   'False
       Top             =   1320
       Width           =   2775
    End
@@ -97,6 +100,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   10800
       TabIndex        =   88
+      TabStop         =   0   'False
       Top             =   4920
       Width           =   1815
    End
@@ -116,6 +120,7 @@ Begin VB.Form frmMain
       IMEMode         =   3  'DISABLE
       Left            =   10800
       TabIndex        =   69
+      TabStop         =   0   'False
       Text            =   "c:\"
       Top             =   6720
       Width           =   2775
@@ -136,6 +141,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   12840
       TabIndex        =   68
+      TabStop         =   0   'False
       Top             =   4920
       Width           =   735
    End
@@ -155,6 +161,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   12840
       TabIndex        =   67
+      TabStop         =   0   'False
       Top             =   5160
       Width           =   735
    End
@@ -174,6 +181,7 @@ Begin VB.Form frmMain
       IMEMode         =   3  'DISABLE
       Left            =   10800
       TabIndex        =   31
+      TabStop         =   0   'False
       Text            =   "c:\"
       Top             =   5805
       Width           =   2775
@@ -193,6 +201,7 @@ Begin VB.Form frmMain
       Height          =   285
       Left            =   10800
       TabIndex        =   30
+      TabStop         =   0   'False
       Text            =   "c:\"
       Top             =   7605
       Width           =   2770
@@ -207,6 +216,7 @@ Begin VB.Form frmMain
       _ExtentY        =   4789
       _Version        =   393217
       BackColor       =   0
+      Enabled         =   -1  'True
       ReadOnly        =   -1  'True
       ScrollBars      =   2
       Appearance      =   0
@@ -231,7 +241,6 @@ Begin VB.Form frmMain
       _ExtentY        =   6429
       _Version        =   393217
       BackColor       =   0
-      Enabled         =   -1  'True
       ReadOnly        =   -1  'True
       ScrollBars      =   2
       Appearance      =   0
@@ -273,6 +282,7 @@ Begin VB.Form frmMain
       Height          =   375
       Left            =   240
       TabIndex        =   23
+      TabStop         =   0   'False
       Top             =   7800
       Width           =   2775
       _ExtentX        =   4895
@@ -298,6 +308,7 @@ Begin VB.Form frmMain
       Height          =   375
       Left            =   240
       TabIndex        =   24
+      TabStop         =   0   'False
       Top             =   7320
       Width           =   2775
       _ExtentX        =   4895
@@ -323,6 +334,7 @@ Begin VB.Form frmMain
       Height          =   375
       Left            =   240
       TabIndex        =   25
+      TabStop         =   0   'False
       Top             =   6360
       Width           =   2775
       _ExtentX        =   4895
@@ -348,6 +360,7 @@ Begin VB.Form frmMain
       Height          =   375
       Left            =   240
       TabIndex        =   26
+      TabStop         =   0   'False
       Top             =   6840
       Width           =   2775
       _ExtentX        =   4895
@@ -373,6 +386,7 @@ Begin VB.Form frmMain
       Height          =   375
       Left            =   240
       TabIndex        =   27
+      TabStop         =   0   'False
       Top             =   5880
       Width           =   2775
       _ExtentX        =   4895
@@ -478,6 +492,7 @@ Begin VB.Form frmMain
       Height          =   225
       Left            =   10800
       TabIndex        =   32
+      TabStop         =   0   'False
       Top             =   7935
       Width           =   2775
       _ExtentX        =   4895
@@ -503,6 +518,7 @@ Begin VB.Form frmMain
       Height          =   225
       Left            =   10800
       TabIndex        =   33
+      TabStop         =   0   'False
       Top             =   6135
       Width           =   2775
       _ExtentX        =   4895
@@ -528,6 +544,7 @@ Begin VB.Form frmMain
       Height          =   225
       Left            =   10800
       TabIndex        =   70
+      TabStop         =   0   'False
       Top             =   7050
       Width           =   2775
       _ExtentX        =   4895
@@ -553,6 +570,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   10800
       TabIndex        =   95
+      TabStop         =   0   'False
       Top             =   2040
       Width           =   2775
       _ExtentX        =   4895
@@ -579,6 +597,7 @@ Begin VB.Form frmMain
       Height          =   255
       Left            =   10800
       TabIndex        =   96
+      TabStop         =   0   'False
       Top             =   1680
       Width           =   2775
       _ExtentX        =   4895
@@ -603,7 +622,7 @@ Begin VB.Form frmMain
    Begin AUDIOGENIELib.AudioGenie AudioGenie 
       Left            =   14040
       Top             =   4200
-      _Version        =   65541
+      _Version        =   65542
       _ExtentX        =   661
       _ExtentY        =   450
       _StockProps     =   0
@@ -628,7 +647,7 @@ Begin VB.Form frmMain
       Width           =   1695
    End
    Begin VB.Label pldatenstream 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -666,7 +685,7 @@ Begin VB.Form frmMain
       Width           =   1695
    End
    Begin VB.Label plloggeraktiv 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -706,7 +725,7 @@ Begin VB.Form frmMain
       Width           =   2655
    End
    Begin VB.Label infoplaylist 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -745,7 +764,7 @@ Begin VB.Form frmMain
       Width           =   1215
    End
    Begin VB.Label infocount 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -804,7 +823,7 @@ Begin VB.Form frmMain
       Width           =   2415
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -824,7 +843,7 @@ Begin VB.Form frmMain
       Width           =   1095
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -844,7 +863,7 @@ Begin VB.Form frmMain
       Width           =   1215
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -864,7 +883,7 @@ Begin VB.Form frmMain
       Width           =   735
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -884,7 +903,7 @@ Begin VB.Form frmMain
       Width           =   1095
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -904,7 +923,7 @@ Begin VB.Form frmMain
       Width           =   975
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -924,7 +943,7 @@ Begin VB.Form frmMain
       Width           =   1095
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1116,7 +1135,7 @@ Begin VB.Form frmMain
       Width           =   2775
    End
    Begin VB.Label mp3size 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1155,7 +1174,7 @@ Begin VB.Form frmMain
       Width           =   1575
    End
    Begin VB.Label normset 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1194,7 +1213,7 @@ Begin VB.Form frmMain
       Width           =   1215
    End
    Begin VB.Label Labeltag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1213,7 +1232,7 @@ Begin VB.Form frmMain
       Width           =   2655
    End
    Begin VB.Label aktdate 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1272,7 +1291,7 @@ Begin VB.Form frmMain
       Width           =   1575
    End
    Begin VB.Label akttime 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1291,7 +1310,7 @@ Begin VB.Form frmMain
       Width           =   2535
    End
    Begin VB.Label encoderset 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1310,7 +1329,7 @@ Begin VB.Form frmMain
       Width           =   1335
    End
    Begin VB.Label mp2size 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1329,7 +1348,7 @@ Begin VB.Form frmMain
       Width           =   2295
    End
    Begin VB.Label mp2zeit 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1348,7 +1367,7 @@ Begin VB.Form frmMain
       Width           =   2535
    End
    Begin VB.Label yeartag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1367,7 +1386,7 @@ Begin VB.Form frmMain
       Width           =   2655
    End
    Begin VB.Label genretag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1386,7 +1405,7 @@ Begin VB.Form frmMain
       Width           =   2895
    End
    Begin VB.Label Albumtag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1405,7 +1424,7 @@ Begin VB.Form frmMain
       Width           =   2895
    End
    Begin VB.Label titeltag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1424,7 +1443,7 @@ Begin VB.Form frmMain
       Width           =   3015
    End
    Begin VB.Label interprettag 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1782,7 +1801,7 @@ Begin VB.Form frmMain
       Width           =   2775
    End
    Begin VB.Label Label18 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "Tahoma"
@@ -1821,7 +1840,7 @@ Begin VB.Form frmMain
       Width           =   2175
    End
    Begin VB.Label Label11 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -1923,7 +1942,7 @@ Begin VB.Form frmMain
    End
    Begin VB.Label Label9 
       BackStyle       =   0  'Transparent
-      Caption         =   "Version 3.44"
+      Caption         =   "Version 3.45"
       BeginProperty Font 
          Name            =   "Small Fonts"
          Size            =   6
@@ -1941,7 +1960,7 @@ Begin VB.Form frmMain
       Width           =   4455
    End
    Begin VB.Label Label1000 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "powered by Quickmic"
       BeginProperty Font 
@@ -1961,7 +1980,7 @@ Begin VB.Form frmMain
       Width           =   1635
    End
    Begin VB.Label Label29 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -2077,7 +2096,7 @@ Begin VB.Form frmMain
       Y2              =   58.962
    End
    Begin VB.Label tage 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "17 days"
       BeginProperty Font 
@@ -2097,7 +2116,7 @@ Begin VB.Form frmMain
       Width           =   735
    End
    Begin VB.Label Label26 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "CBR"
       BeginProperty Font 
@@ -2176,7 +2195,7 @@ Begin VB.Form frmMain
       Width           =   1455
    End
    Begin VB.Label Label23 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -2215,7 +2234,7 @@ Begin VB.Form frmMain
       Width           =   975
    End
    Begin VB.Label Label20 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -2235,7 +2254,7 @@ Begin VB.Form frmMain
       Width           =   1215
    End
    Begin VB.Label Label19 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "deaktiviert"
       BeginProperty Font 
@@ -2312,7 +2331,7 @@ Begin VB.Form frmMain
       Width           =   2775
    End
    Begin VB.Label countdo 
-      Alignment       =   1  'Rechts
+      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "00:00:00"
       BeginProperty Font 
@@ -2512,10 +2531,14 @@ Private Sub allgemein_menu_Click() 'Allgemeine Einstellungen Menü
     allgemeine.Show 'Menü wird angezeigt
 End Sub
 Private Sub aufnahmestart_Click()
+    httpinterface.nhttp.Navigate "http://" & d2set.IP.Text & "/fb/controlpanel.dbox2?radiomode"
     frmMain.Quelle.Enabled = "0" 'Button abschalten
     frmMain.qsuchen.Enabled = "0"
     frmMain.qsuchen.ForeColor = &H80000015 'Buttonfarbe ändern
     Call record.recstart
+    httpinterface.nhttp.Navigate "http://" & d2set.IP.Text & "/control/message?popup=Audio Recording started"
+    d2set.db2.Enabled = "0"
+    d2set.dreamb.Enabled = "0"
 End Sub
 Private Sub aufnahmestop_Click()
     If frmMain.Ziel.Enabled = "1" Then
@@ -2525,6 +2548,9 @@ Private Sub aufnahmestop_Click()
     End If
     
     Call record.recstop
+    httpinterface.nhttp.Navigate "http://" & d2set.IP.Text & "/control/message?popup=Audio Recording stopped"
+    d2set.db2.Enabled = "1"
+    d2set.dreamb.Enabled = "1"
 End Sub
 Private Sub board_menu_Click() 'I-Net-Forum starten
     Call Werkzeuge.Browser("http://3281.rapidforum.com/")
@@ -2533,6 +2559,7 @@ Private Sub cbr_menu_Click() 'CBR-Menü
     MP3cbrmenu.Value.Caption = MP3cbrmenu.Slider1.CurPosition
     MP3cbrmenu.Show 'Menü anzeigen
 End Sub
+
 Private Sub dadab_Click()
     Database.dbrecordsetsneu.Caption = "0"
     Database.dbrecordsetsalt.Caption = "0"
@@ -2563,7 +2590,9 @@ Private Sub editdb_Click()
 ende:
 End Sub
 Private Sub email_menu_Click() 'Email Anzeige
-    MsgBox "quickmic_the_rms_tuner@hotmail.com"
+    Dim ret As String
+    
+    ret = InputBox(vbNullString, "E-Mail:", "quickmic_the_rms_tuner@hotmail.com")
 End Sub
 Private Sub genre_menu_Click()
     Genre.Show
@@ -2641,12 +2670,13 @@ Private Sub Form_unLoad(cancel As Integer) 'Entladen des Formulars (beim schlies
     Set db = Nothing
     Set m_clsCPUUsage = Nothing
     Set cTray = Nothing
-   
+    
     For Each Fo In Forms
         Unload Fo
         Set Fo = Nothing
     Next Fo
     
+    Call Werkzeuge.Browser("http://home.arcor.de/karl/v2/menu.htm")
     End 'Exit Programm
 End Sub
 Private Sub noextension_Click()
@@ -2723,7 +2753,8 @@ Private Sub Timer1_Timer() 'scanfunktion
     Call Werkzeuge.scantimer
 End Sub
 Private Sub timesync_Click()
-    Timesyncron.Timer1 = Enabled
+    If Timesyncron.Winsock1.State = "9" Then Timesyncron.Winsock1.Close
+    If Timesyncron.Winsock1.State <> "6" And Timesyncron.Winsock1.State <> "7" Then Timesyncron.Winsock1.Connect (d2set.IP.Text), (23)     'Telnet aktivieren
     Timesyncron.Show
 End Sub
 Private Sub toolexit_Click()

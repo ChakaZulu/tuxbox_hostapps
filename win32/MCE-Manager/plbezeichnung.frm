@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{4511A08F-EA0D-4257-ADA3-A93195C5A02A}#1.0#0"; "Button.ocx"
 Begin VB.Form plbezeichnung 
    BackColor       =   &H00808080&
-   BorderStyle     =   1  'Fest Einfach
+   BorderStyle     =   1  'Fixed Single
    ClientHeight    =   7560
    ClientLeft      =   6885
    ClientTop       =   2520
@@ -17,6 +17,7 @@ Begin VB.Form plbezeichnung
       Height          =   495
       Left            =   240
       TabIndex        =   21
+      TabStop         =   0   'False
       Top             =   6840
       Width           =   1695
       _ExtentX        =   2990
@@ -39,7 +40,7 @@ Begin VB.Form plbezeichnung
       BorderColorBottom=   8421504
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -54,13 +55,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   0
       Left            =   240
-      TabIndex        =   20
+      TabIndex        =   0
       Text            =   "alternative"
       Top             =   240
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -75,13 +76,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   1
       Left            =   240
-      TabIndex        =   19
+      TabIndex        =   1
       Text            =   "baroque"
       Top             =   540
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -96,13 +97,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   2
       Left            =   240
-      TabIndex        =   18
+      TabIndex        =   2
       Text            =   "chillout"
       Top             =   840
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -117,13 +118,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   3
       Left            =   240
-      TabIndex        =   17
+      TabIndex        =   3
       Text            =   "country"
       Top             =   1140
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -138,13 +139,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   4
       Left            =   240
-      TabIndex        =   16
+      TabIndex        =   4
       Text            =   "dance"
       Top             =   1440
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -159,13 +160,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   5
       Left            =   240
-      TabIndex        =   15
+      TabIndex        =   5
       Text            =   "easy"
       Top             =   1740
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -180,13 +181,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   6
       Left            =   240
-      TabIndex        =   14
+      TabIndex        =   6
       Text            =   "opera"
       Top             =   2040
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -201,13 +202,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   7
       Left            =   240
-      TabIndex        =   13
+      TabIndex        =   7
       Text            =   "filmusic"
       Top             =   2340
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -222,13 +223,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   8
       Left            =   240
-      TabIndex        =   12
+      TabIndex        =   8
       Text            =   "germanhits"
       Top             =   2640
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -243,13 +244,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   9
       Left            =   240
-      TabIndex        =   11
+      TabIndex        =   9
       Text            =   "gold"
       Top             =   2940
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -270,7 +271,7 @@ Begin VB.Form plbezeichnung
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -285,13 +286,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   11
       Left            =   240
-      TabIndex        =   9
+      TabIndex        =   11
       Text            =   "hiphoprb"
       Top             =   3540
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -306,13 +307,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   12
       Left            =   240
-      TabIndex        =   8
+      TabIndex        =   12
       Text            =   "hitlist"
       Top             =   3840
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -327,13 +328,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   13
       Left            =   240
-      TabIndex        =   7
+      TabIndex        =   13
       Text            =   "jazz"
       Top             =   4140
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -348,13 +349,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   14
       Left            =   240
-      TabIndex        =   6
+      TabIndex        =   14
       Text            =   "latin"
       Top             =   4440
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -369,13 +370,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   15
       Left            =   240
-      TabIndex        =   5
+      TabIndex        =   15
       Text            =   "lovesongs"
       Top             =   4740
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -390,13 +391,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   16
       Left            =   240
-      TabIndex        =   4
+      TabIndex        =   16
       Text            =   "newcountry"
       Top             =   5040
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -411,13 +412,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   17
       Left            =   240
-      TabIndex        =   3
+      TabIndex        =   17
       Text            =   "oldgold"
       Top             =   5340
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -432,13 +433,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   18
       Left            =   240
-      TabIndex        =   2
+      TabIndex        =   18
       Text            =   "schlager"
       Top             =   5640
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -453,13 +454,13 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   19
       Left            =   240
-      TabIndex        =   1
+      TabIndex        =   19
       Text            =   "soulclassic"
       Top             =   5940
       Width           =   1695
    End
    Begin VB.TextBox plID 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -474,7 +475,7 @@ Begin VB.Form plbezeichnung
       Height          =   240
       Index           =   20
       Left            =   240
-      TabIndex        =   0
+      TabIndex        =   20
       Text            =   "classic"
       Top             =   6240
       Width           =   1695

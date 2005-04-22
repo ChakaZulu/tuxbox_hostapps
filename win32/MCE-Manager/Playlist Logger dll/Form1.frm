@@ -9,18 +9,13 @@ Begin VB.Form Form1
    LinkTopic       =   "Form1"
    ScaleHeight     =   3195
    ScaleWidth      =   4680
-   StartUpPosition =   3  'Windows-Standard
+   StartUpPosition =   3  'Windows Default
    Begin MSWinsockLib.Winsock WS 
-      Left            =   1440
-      Top             =   2400
+      Left            =   1560
+      Top             =   1680
       _ExtentX        =   741
       _ExtentY        =   741
       _Version        =   393216
-   End
-   Begin VB.Timer Timer 
-      Interval        =   2000
-      Left            =   360
-      Top             =   2640
    End
 End
 Attribute VB_Name = "Form1"
@@ -28,11 +23,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Public Event Timer()
 Public Event Loggerdata()
-Private Sub Timer_Timer()
-    RaiseEvent Timer
-End Sub
 Private Sub WS_DataArrival(ByVal bytesTotal As Long)
     RaiseEvent Loggerdata
 End Sub

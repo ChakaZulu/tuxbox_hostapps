@@ -433,9 +433,9 @@ Public Function SetFileDateTime(ByVal filename As String, ByVal TheDate As Strin
     Dim lFileHnd As Long, lret As Long, typFileTime As FILETIME, typLocalTime As FILETIME, typSystemTime As SystemTime
 
     With typSystemTime
-        .wYear = Year(TheDate)
+        .wYear = year(TheDate)
         .wMonth = Month(TheDate)
-        .wDay = Day(TheDate)
+        .wDay = day(TheDate)
         .wDayOfWeek = Weekday(TheDate) - 1
         .wHour = Hour(TheTime)
         .wMinute = Minute(TheTime)
@@ -460,6 +460,7 @@ Public Function datab(file As String) As Integer
     Dim Interpretdb As String, Albumdb As String, titeldb As String, yeardb As String, genreinfodb As String, commentdb As String, F, dauerdb As String, Encodersettingsdb As String, MPEGChannelModedb As String, it As String, fso As Object, genie As Object
     Dim ccinter As String, ccalbum As String, ccgenre As String, cctitel As String, Songtext As String
     
+    On Error Resume Next
     datab = "0"
     it = Mid$(file, InStrRev(file, "\") + 1)
     If data_songexists(it) Then Exit Function 'Wenn Datensatz exisitiert, ist Song schon vorhanden
@@ -527,7 +528,7 @@ Public Function datab(file As String) As Integer
         RS!Encoder = genie.GetMPEGEncoder
         RS!layer = genie.GetMPEGLayer
         RS!samplerate = genie.GetMPEGSampleRate
-        RS!version = genie.GetMPEGVersion
+        RS!Version = genie.GetMPEGVersion
         RS!Format = extension
         GoTo erkannt
     End If
@@ -548,7 +549,7 @@ Public Function datab(file As String) As Integer
         RS!Encoder = genie.GetMPEGEncoder
         RS!layer = genie.GetMPEGLayer
         RS!samplerate = genie.GetMPEGSampleRate
-        RS!version = genie.GetMPEGVersion
+        RS!Version = genie.GetMPEGVersion
         RS!Format = extension
         GoTo erkannt
     End If
@@ -699,7 +700,7 @@ Public Sub IsFileOpen(ByRef Path As String, Optional xls As Boolean)
         F = FreeFile
 
         Open Path For Append Lock Write As #F
-            ErrorNr = Err.Number
+            ErrorNr = err.number
         Close #F
   
         DoEvents

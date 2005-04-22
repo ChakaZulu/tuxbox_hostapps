@@ -40,7 +40,7 @@ Public Sub sprach()
     normal.OK.Caption = Aktivierauswahl.OK.Caption
     oggmenu.OK.Caption = Aktivierauswahl.OK.Caption
     OnAir.OK.Caption = Aktivierauswahl.OK.Caption
-    Pfadsuchen.command1.Caption = Aktivierauswahl.OK.Caption
+    Pfadsuchen.Command1.Caption = Aktivierauswahl.OK.Caption
     PL_Verwendung.OK.Caption = Aktivierauswahl.OK.Caption
     PlaylistLoggerSettings.OK.Caption = Aktivierauswahl.OK.Caption
     plbezeichnung.OK.Caption = Aktivierauswahl.OK.Caption
@@ -150,7 +150,7 @@ Public Sub sprach()
     frmMain.untaggedtaggen.Caption = iniladen(74)
     frmMain.Nachsortierung.Caption = iniladen(75)
     Zeitsteuerung.Label2.Caption = iniladen(76) + ":"
-    frmMain.command1.Caption = iniladen(77)
+    frmMain.Command1.Caption = iniladen(77)
     frmMain.mnu_dbsuche.Caption = iniladen(78)
     frmMain.minim.Caption = iniladen(79)
     frmMain.save_menu.Caption = iniladen(80)
@@ -183,7 +183,7 @@ Public Sub sprach()
     frmMain.timesync.Caption = Timesyncron.Caption
     Timesyncron.Label4.Caption = iniladen(107)
     Timesyncron.Label5.Caption = iniladen(108)
-    Timesyncron.command1.Caption = iniladen(109)
+    Timesyncron.Command1.Caption = iniladen(109)
     allgemeine.cpuaktiv.Caption = iniladen(110)
     sort.artikel.Caption = iniladen(111)
     Zeitsteuerung.montag.Caption = iniladen(112)
@@ -313,6 +313,8 @@ Public Sub sprach()
     frmMain.help.Caption = iniladen(213)
     allgemeine.igext.Caption = iniladen(214)
     Scannen.labelminfiles.Caption = iniladen(215) + ":"
+    Timesyncron.Label11.Caption = iniladen(216)
+    Timesyncron.Label10.Caption = iniladen(217)
 End Sub
 Private Function iniladen(Menu2 As String) As String
     Dim buffer As String, wertlen As Integer

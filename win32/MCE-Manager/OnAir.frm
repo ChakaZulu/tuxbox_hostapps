@@ -25,13 +25,14 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   315
       Left            =   240
-      Style           =   2  'Dropdown-Liste
+      Style           =   2  'Dropdown List
       TabIndex        =   6
+      TabStop         =   0   'False
       Top             =   480
       Width           =   4575
    End
    Begin VB.TextBox onairint 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -45,12 +46,14 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   240
       Left            =   240
+      Locked          =   -1  'True
       TabIndex        =   4
+      TabStop         =   0   'False
       Top             =   1320
       Width           =   4575
    End
    Begin VB.TextBox onairtit 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -64,12 +67,14 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   240
       Left            =   240
+      Locked          =   -1  'True
       TabIndex        =   3
+      TabStop         =   0   'False
       Top             =   1920
       Width           =   4575
    End
    Begin VB.TextBox onairalb 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -83,12 +88,14 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   240
       Left            =   240
+      Locked          =   -1  'True
       TabIndex        =   2
+      TabStop         =   0   'False
       Top             =   2520
       Width           =   4575
    End
    Begin VB.TextBox onairlab 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -102,12 +109,14 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   240
       Left            =   240
+      Locked          =   -1  'True
       TabIndex        =   1
+      TabStop         =   0   'False
       Top             =   3120
       Width           =   4575
    End
    Begin VB.TextBox onairjah 
-      Alignment       =   2  'Zentriert
+      Alignment       =   2  'Center
       BackColor       =   &H00000000&
       BeginProperty Font 
          Name            =   "Small Fonts"
@@ -121,7 +130,9 @@ Begin VB.Form OnAir
       ForeColor       =   &H80000018&
       Height          =   240
       Left            =   240
+      Locked          =   -1  'True
       TabIndex        =   0
+      TabStop         =   0   'False
       Top             =   3720
       Width           =   4575
    End
@@ -129,6 +140,7 @@ Begin VB.Form OnAir
       Height          =   495
       Left            =   240
       TabIndex        =   5
+      TabStop         =   0   'False
       Top             =   4320
       Width           =   4575
       _ExtentX        =   8070
@@ -355,7 +367,6 @@ Public Sub loggerstart()
     frmMain.pldatenstream.Caption = "initialisiert"
 End Sub
 Public Sub loggerstop()
-    Set logger = New logger
     Call logger.plstop
     frmMain.pldatenstream.Caption = vbNullString
     Set logger = Nothing
@@ -368,7 +379,7 @@ Private Sub senddata()
         kennungplay(i) = PlaylistLoggerSettings.kennung(i).Text
     Next i
     
-    Call logger.Daten(loggerplay(), kennungplay(), App.Path + "\playlists\Logged Playlists\")
+    Call logger.daten(loggerplay(), kennungplay(), App.Path + "\playlists\Logged Playlists\")
 End Sub
 Private Sub logger_Newsongid(Newsongidint As String, Newsongidtit As String, Newsongidalb As String, Newsongidlab As String, Newsongidjah As String, id As Integer)
     IDint(id) = Newsongidint

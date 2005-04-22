@@ -4,7 +4,7 @@ Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{4511A08F-EA0D-4257-ADA3-A93195C5A02A}#1.0#0"; "Button.ocx"
 Begin VB.Form manpl 
    BackColor       =   &H00808080&
-   BorderStyle     =   1  'Fest Einfach
+   BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6960
    ClientLeft      =   5670
    ClientTop       =   2055
@@ -19,6 +19,7 @@ Begin VB.Form manpl
       Height          =   495
       Left            =   240
       TabIndex        =   25
+      TabStop         =   0   'False
       Top             =   6240
       Width           =   4215
       _ExtentX        =   7435
@@ -56,6 +57,7 @@ Begin VB.Form manpl
       Index           =   20
       Left            =   3120
       TabIndex        =   24
+      TabStop         =   0   'False
       Top             =   5040
       Width           =   1400
    End
@@ -76,6 +78,7 @@ Begin VB.Form manpl
       Index           =   19
       Left            =   3120
       TabIndex        =   23
+      TabStop         =   0   'False
       Top             =   4800
       Width           =   1400
    End
@@ -96,6 +99,7 @@ Begin VB.Form manpl
       Index           =   18
       Left            =   3120
       TabIndex        =   22
+      TabStop         =   0   'False
       Top             =   4560
       Width           =   1400
    End
@@ -116,6 +120,7 @@ Begin VB.Form manpl
       Index           =   17
       Left            =   3120
       TabIndex        =   21
+      TabStop         =   0   'False
       Top             =   4320
       Width           =   1400
    End
@@ -136,6 +141,7 @@ Begin VB.Form manpl
       Index           =   16
       Left            =   3120
       TabIndex        =   20
+      TabStop         =   0   'False
       Top             =   4080
       Width           =   1400
    End
@@ -156,6 +162,7 @@ Begin VB.Form manpl
       Index           =   15
       Left            =   3120
       TabIndex        =   19
+      TabStop         =   0   'False
       Top             =   3840
       Width           =   1400
    End
@@ -176,6 +183,7 @@ Begin VB.Form manpl
       Index           =   14
       Left            =   3120
       TabIndex        =   18
+      TabStop         =   0   'False
       Top             =   3600
       Width           =   1400
    End
@@ -196,6 +204,7 @@ Begin VB.Form manpl
       Index           =   13
       Left            =   3120
       TabIndex        =   17
+      TabStop         =   0   'False
       Top             =   3360
       Width           =   1400
    End
@@ -216,6 +225,7 @@ Begin VB.Form manpl
       Index           =   12
       Left            =   3120
       TabIndex        =   16
+      TabStop         =   0   'False
       Top             =   3120
       Width           =   1400
    End
@@ -236,6 +246,7 @@ Begin VB.Form manpl
       Index           =   11
       Left            =   3120
       TabIndex        =   15
+      TabStop         =   0   'False
       Top             =   2880
       Width           =   1400
    End
@@ -256,6 +267,7 @@ Begin VB.Form manpl
       Index           =   10
       Left            =   3120
       TabIndex        =   14
+      TabStop         =   0   'False
       Top             =   2640
       Width           =   1400
    End
@@ -276,6 +288,7 @@ Begin VB.Form manpl
       Index           =   9
       Left            =   3120
       TabIndex        =   13
+      TabStop         =   0   'False
       Top             =   2400
       Width           =   1400
    End
@@ -296,6 +309,7 @@ Begin VB.Form manpl
       Index           =   8
       Left            =   3120
       TabIndex        =   12
+      TabStop         =   0   'False
       Top             =   2160
       Width           =   1400
    End
@@ -316,6 +330,7 @@ Begin VB.Form manpl
       Index           =   7
       Left            =   3120
       TabIndex        =   11
+      TabStop         =   0   'False
       Top             =   1920
       Width           =   1400
    End
@@ -336,6 +351,7 @@ Begin VB.Form manpl
       Index           =   6
       Left            =   3120
       TabIndex        =   10
+      TabStop         =   0   'False
       Top             =   1680
       Width           =   1400
    End
@@ -356,6 +372,7 @@ Begin VB.Form manpl
       Index           =   5
       Left            =   3120
       TabIndex        =   9
+      TabStop         =   0   'False
       Top             =   1440
       Width           =   1400
    End
@@ -376,6 +393,7 @@ Begin VB.Form manpl
       Index           =   4
       Left            =   3120
       TabIndex        =   8
+      TabStop         =   0   'False
       Top             =   1200
       Width           =   1400
    End
@@ -396,6 +414,7 @@ Begin VB.Form manpl
       Index           =   3
       Left            =   3120
       TabIndex        =   7
+      TabStop         =   0   'False
       Top             =   960
       Width           =   1400
    End
@@ -416,6 +435,7 @@ Begin VB.Form manpl
       Index           =   2
       Left            =   3120
       TabIndex        =   6
+      TabStop         =   0   'False
       Top             =   720
       Width           =   1400
    End
@@ -436,6 +456,7 @@ Begin VB.Form manpl
       Index           =   1
       Left            =   3120
       TabIndex        =   5
+      TabStop         =   0   'False
       Top             =   480
       Width           =   1400
    End
@@ -456,6 +477,7 @@ Begin VB.Form manpl
       Index           =   0
       Left            =   3120
       TabIndex        =   4
+      TabStop         =   0   'False
       Top             =   240
       Width           =   1400
    End
@@ -463,6 +485,7 @@ Begin VB.Form manpl
       Height          =   375
       Left            =   2400
       TabIndex        =   3
+      TabStop         =   0   'False
       Top             =   5520
       Width           =   2055
       _ExtentX        =   3625
@@ -487,6 +510,7 @@ Begin VB.Form manpl
       Height          =   2655
       Left            =   240
       TabIndex        =   2
+      TabStop         =   0   'False
       Top             =   2760
       Width           =   2655
       _ExtentX        =   4683
@@ -494,6 +518,7 @@ Begin VB.Form manpl
       _Version        =   393217
       BackColor       =   8421504
       Enabled         =   -1  'True
+      ReadOnly        =   -1  'True
       ScrollBars      =   3
       TextRTF         =   $"manpl.frx":08CA
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -510,6 +535,7 @@ Begin VB.Form manpl
       Height          =   375
       Left            =   240
       TabIndex        =   1
+      TabStop         =   0   'False
       Top             =   5520
       Width           =   2055
       _ExtentX        =   3625
@@ -534,6 +560,7 @@ Begin VB.Form manpl
       Height          =   2370
       Left            =   240
       TabIndex        =   0
+      TabStop         =   0   'False
       Top             =   240
       Width           =   2625
       _ExtentX        =   4630
@@ -554,7 +581,7 @@ Begin VB.Form manpl
       EndProperty
       MonthBackColor  =   8421504
       ShowToday       =   0   'False
-      StartOfWeek     =   52101122
+      StartOfWeek     =   52559874
       TitleBackColor  =   8421504
       TitleForeColor  =   -2147483624
       TrailingForeColor=   0
