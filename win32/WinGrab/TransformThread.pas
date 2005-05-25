@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: TransformThread.pas,v $
+// Revision 1.4  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.3  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -50,10 +53,12 @@ type
     m_hMuxerMutexHandle : Cardinal;
     m_coProcessManager  : TTeProcessManager;
 
+    function  GetTargetFormat: Integer;
     procedure SetToDbRecorded;
 
     procedure TransformPsStream;
     procedure TransformToDivX(sM2pFile: String);
+    procedure TransformToDvdMpeg(sM2pFile: String);
     procedure EditAvi(var sAviFile: String);
     procedure TransformToIso(sAviFile: String);
 
@@ -208,7 +213,7 @@ begin
       GetShortPathName(PChar(sM2pFile), cBuffer, 254);
       sCmdParam:= cBuffer;
 
-      sCmdParam:= sM2pFile;
+      sCmdParam:= '"' + sM2pFile + '" "' + ExtractFilePath(m_RecordingData.sDVDxPath) + 'DivX.pjr"';
       iCmdShow := SW_SHOWNORMAL;
       sCmdLine := m_RecordingData.sDVDxPath;
       sTmp     := ChangeFileExt(sCmdParam, DivXFileExt);
@@ -253,6 +258,83 @@ begin
               sTrace := 'CheckDivXFile [' + ExtractFileName(sM2pFile) + '] failed -> not deleted !';
               DbgMsg(PChar(sTrace));
             end;
+          end;
+        end else
+        begin
+          sTrace := 'rename failed -> exit';
+          DbgMsg(PChar(sTrace));
+          Exit;
+        end;
+      end else
+      begin
+        DbgMsg( '[' + ExtractFileName(sM2pFile) + '] nicht gefunden' );
+      end;
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
+  end;
+end;
+
+procedure TTransformThread.TransformToDvdMpeg(sM2pFile: String);
+var
+  cBuffer   : array[0..255] of Char;
+  sTmp      : String;
+  sCmdLine  : String;
+  sCmdParam : String;
+  sCmdVerb  : String;
+  iCmdShow  : Integer;
+  sTrace    : String;
+begin
+  try
+    if FileExists(sM2pFile) then
+    begin
+      DbgMsg('Transform file:[' + ExtractFileName(sM2pFile) + ']');
+      if FileSizeByName(sM2pFile) = 0 then
+      begin
+        DbgMsg('file:[' + ExtractFileName(sM2pFile) + '] is 0 byte -> cancel');
+        exit;
+      end;
+
+      FillChar(cBuffer, 255, 0);
+      GetShortPathName(PChar(sM2pFile), cBuffer, 254);
+      sCmdParam:= cBuffer;
+
+      sCmdParam:= '"' + sM2pFile + '" "' + ExtractFilePath(m_RecordingData.sDVDxPath) + 'DvdMpeg.pjr"';
+      iCmdShow := SW_SHOWNORMAL;
+      sCmdLine := m_RecordingData.sDVDxPath;
+      sTmp     := ChangeFileExt(sCmdParam, DivXFileExt);
+      sCmdVerb := 'open';
+
+      if ShellExecAndWait(sCmdLine,
+                          sCmdParam,
+                          sCmdVerb,
+                          iCmdShow)
+      then
+      begin
+
+        sTrace := 'transformed zu [' + ExtractFileName(ChangeFileExt(sM2pFile, '.MPG')) + ']';
+        DbgMsg(PChar(sTrace));
+
+        if RenameFile(sTmp, ChangeFileExt(sM2pFile, '.MPG')) then
+        begin
+          sTmp := ChangeFileExt(sM2pFile, '.MPG');
+
+          sTrace := 'size of [' + ExtractFileName(sM2pFile) + '] is ' + IntToStr(FileSizeByName(sM2pFile));
+          DbgMsg(PChar(sTrace));
+          sTrace := 'size of [' + ExtractFileName(sTmp) + '] is ' + IntToStr(FileSizeByName(sTmp));
+          DbgMsg(PChar(sTrace));
+
+          if ( (FileSizeByName(sM2pFile) / 2)  > FileSizeByName(sTmp) ) then
+          begin
+            // AVI nicht komplett ???
+            sTrace := 'size mismatch -> exit';
+            DbgMsg(PChar(sTrace));
+            exit;
+          end else
+          begin
+            sTrace := 'mpeg ok';
+            DbgMsg(PChar(sTrace));
+            Success:= true;
           end;
         end else
         begin
@@ -492,68 +574,87 @@ begin
     DbgMsg('Transform mit [' + ExtractFileName(m_RecordingData.sDVDxPath) + '] gewählt');
 
     try
-      if FileExists(m_RecordingData.sDVDxPath) then
-      begin
-        sM2pFile := ChangeFileExt(m_RecordingData.filename, Mgeg2FileExt);
-        TransformToDivX(sM2pFile);
-      end else
-      begin
-        DbgMsg('[' + ExtractFileName(m_RecordingData.sDVDxPath) + '] nicht gefunden');
-      end;
-
-      sAviFile:= ChangeFileExt(m_RecordingData.filename, DivXFileExt);
-      if not FileExists(sAviFile) then
-      begin
-        if Pos('[',sAviFile) > 0 then
-        begin
-          sAviFile := copy(sAviFile, 1, Pos('[',sAviFile) - 1) + DivXFileExt;
-        end;
-      end;
-      if FileExists(sAviFile) then
-      begin
-
-        EditAvi(sAviFile);
-        if Success then
-        begin
-          SetToDbRecorded;
-        end;
-        
-        if  m_RecordingData.bMoviX
-        AND Success then
-        begin
-
-          TransformToIso(sAviFile);
-
-          sIso    := m_RecordingData.sIsoPath + ChangeFileExt(ExtractFileName(sAviFile), '.ISO');
-          Success := (FileExists(sIso) AND (FileSizeByName(sIso) > 20808796)); //~20 MB (kernel + mplayer)
-
-          if  Success then
+      case GetTargetFormat of
+      0 : // TargetFormat = DivX.
           begin
-            // jetzt könnte man hier noch automatisch BRENNEN ...
-            Success := (FileSizeByName(sIso) <= 734003200); // <= 700 MB
-            if ( m_RecordingData.bCDRwBurn AND Success ) then
+            if FileExists(m_RecordingData.sDVDxPath) then
             begin
-              sCmdLine := m_RecordingData.sMoviXPath + 'cdrecord.exe';
-              sCmdParam:= 'speed=' + m_RecordingData.sCDRwSpeed + ' dev=' + m_RecordingData.sCDRwDevId + ' -ignsize -overburn -eject ' + sIso;
-              sCmdVerb := 'open';
-              iCmdShow := SW_SHOWNORMAL;
-
-              sTrace := 'burn [' + ExtractFileName(sIso) + '] on dev=' + m_RecordingData.sCDRwDevId + ' speed=' + m_RecordingData.sCDRwSpeed;
-              DbgMsg(PChar(sTrace));
-
-              ShellExecAndWait( sCmdLine,
-                                sCmdParam,
-                                sCmdVerb,
-                                iCmdShow);
-
-              Success := true;
+              sM2pFile := ChangeFileExt(m_RecordingData.filename, Mgeg2FileExt);
+              TransformToDivX(sM2pFile);
             end else
             begin
-              sTrace := '[' + ExtractFileName(sIso) + '] is ' + IntToStr(FileSizeByName(sIso)) + ' Bytes !';
-              DbgMsg(PChar(sTrace));
+              DbgMsg('[' + ExtractFileName(m_RecordingData.sDVDxPath) + '] nicht gefunden');
+            end;
+
+            sAviFile:= ChangeFileExt(m_RecordingData.filename, DivXFileExt);
+            if not FileExists(sAviFile) then
+            begin
+              if Pos('[',sAviFile) > 0 then
+              begin
+                sAviFile := copy(sAviFile, 1, Pos('[',sAviFile) - 1) + DivXFileExt;
+              end;
+            end;
+            if FileExists(sAviFile) then
+            begin
+
+              EditAvi(sAviFile);
+              if Success then
+              begin
+                SetToDbRecorded;
+              end;
+
+              if  m_RecordingData.bMoviX
+              AND Success then
+              begin
+
+                TransformToIso(sAviFile);
+
+                sIso    := m_RecordingData.sIsoPath + ChangeFileExt(ExtractFileName(sAviFile), '.ISO');
+                Success := (FileExists(sIso) AND (FileSizeByName(sIso) > 20808796)); //~20 MB (kernel + mplayer)
+
+                if  Success then
+                begin
+                  // jetzt könnte man hier noch automatisch BRENNEN ...
+                  Success := (FileSizeByName(sIso) <= 734003200); // <= 700 MB
+                  if ( m_RecordingData.bCDRwBurn AND Success ) then
+                  begin
+                    sCmdLine := m_RecordingData.sMoviXPath + 'cdrecord.exe';
+                    sCmdParam:= 'speed=' + m_RecordingData.sCDRwSpeed + ' dev=' + m_RecordingData.sCDRwDevId + ' -ignsize -overburn -eject ' + sIso;
+                    sCmdVerb := 'open';
+                    iCmdShow := SW_SHOWNORMAL;
+
+                    sTrace := 'burn [' + ExtractFileName(sIso) + '] on dev=' + m_RecordingData.sCDRwDevId + ' speed=' + m_RecordingData.sCDRwSpeed;
+                    DbgMsg(PChar(sTrace));
+
+                    ShellExecAndWait( sCmdLine,
+                                      sCmdParam,
+                                      sCmdVerb,
+                                      iCmdShow);
+
+                    Success := true;
+                  end else
+                  begin
+                    sTrace := '[' + ExtractFileName(sIso) + '] is ' + IntToStr(FileSizeByName(sIso)) + ' Bytes !';
+                    DbgMsg(PChar(sTrace));
+                  end;
+                end;
+              end;
             end;
           end;
-        end;
+      1:  // DVD.
+          begin
+            if FileExists(m_RecordingData.sDVDxPath) then
+            begin
+              sM2pFile := ChangeFileExt(m_RecordingData.filename, Mgeg2FileExt);
+              TransformToDvdMpeg(sM2pFile);
+            end else
+            begin
+              DbgMsg('[' + ExtractFileName(m_RecordingData.sDVDxPath) + '] nicht gefunden');
+            end;
+
+          end;
+      else
+          // ???
       end;
     finally
       DbgMsg('--- Ende Transformthread [' + ExtractFileName(sM2pFile) + '] ---');
@@ -744,13 +845,34 @@ begin
     m_Trace.DBMSG(TRACE_MIN, 'epgsubtitle=[' + m_RecordingData.epgsubtitle + ']');
     m_Trace.DBMSG(TRACE_MIN, 'epg        =[' + m_RecordingData.epg + ']');
 
-    coVcrDb.UpdateEpgInDb(m_RecordingData.epgtitle,
+    coVcrDb.InsertEpgInDb(m_RecordingData.epgtitle,
                           m_RecordingData.epgsubtitle,
                           m_RecordingData.epg);
+    coVcrDb.DeleteFromWhishes(m_RecordingData.epgtitle,
+                              m_RecordingData.epgsubtitle);
 
+    coVcrDb.Free;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
   end;
+end;
+
+function  TTransformThread.GetTargetFormat: Integer;
+var
+  coVcrDb : TVcrDb;
+  Idn     : Integer;
+begin
+  Idn:= 0;
+  try
+    coVcrDb := TVcrDb.Create(m_RecordingData.sDbConnectStr);
+    Idn     := coVcrDb.GetTimerTargetType(m_RecordingData.channel_id, m_RecordingData.epgid);
+    if Idn = -1 then Idn := 0;
+    coVcrDb.Free;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, E.Message);
+  end;
+  m_Trace.DBMSG(TRACE_MIN, 'TargetFormat = ' + IntToStr(Idn));
+  Result := Idn;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

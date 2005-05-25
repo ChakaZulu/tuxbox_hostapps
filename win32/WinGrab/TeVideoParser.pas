@@ -44,8 +44,10 @@ var
   Current                     : Integer;
 begin
   Current := 0;
-  while Current < Count do begin
-    while (Current < Count) and (OutputPos < 4) do begin
+  while Current < Count do
+  begin
+    while (Current < Count) and (OutputPos < 4) do
+    begin
       case OutputPos of
         0, 1: begin
             if InputBuffer[Current] = 0 then

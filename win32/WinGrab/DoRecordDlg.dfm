@@ -1,6 +1,6 @@
 object FrmDoRecord: TFrmDoRecord
-  Left = 271
-  Top = 198
+  Left = 243
+  Top = 170
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'neue Aufnahme'
@@ -53,7 +53,7 @@ object FrmDoRecord: TFrmDoRecord
   end
   object BtnOk: TBitBtn
     Left = 452
-    Top = 340
+    Top = 300
     Width = 97
     Height = 33
     TabOrder = 0
@@ -62,7 +62,7 @@ object FrmDoRecord: TFrmDoRecord
   end
   object BtnCancel: TBitBtn
     Left = 452
-    Top = 300
+    Top = 340
     Width = 97
     Height = 33
     TabOrder = 1

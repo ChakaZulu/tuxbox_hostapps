@@ -1,9 +1,9 @@
 object frmMain: TfrmMain
-  Left = 235
-  Top = 139
+  Left = 29
+  Top = 30
   Width = 770
   Height = 570
-  ActiveControl = btnWishesSeekDb
+  ActiveControl = btnVlcView
   AlphaBlend = True
   AutoSize = True
   BorderIcons = [biSystemMenu, biMinimize]
@@ -47,7 +47,7 @@ object frmMain: TfrmMain
       Top = 0
       Width = 752
       Height = 533
-      ActivePage = tbsWhishes
+      ActivePage = tbsWelcome
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -55,7 +55,7 @@ object frmMain: TfrmMain
       Font.Name = 'Arial'
       Font.Style = [fsBold]
       ParentFont = False
-      TabIndex = 3
+      TabIndex = 0
       TabOrder = 0
       OnChange = pclMainChange
       object tbsWelcome: TTabSheet
@@ -115,11 +115,10 @@ object frmMain: TfrmMain
           TabOrder = 1
           object lbxChannelList: TListBox
             Left = 0
-            Top = 0
+            Top = 28
             Width = 285
-            Height = 232
+            Height = 200
             Style = lbOwnerDrawVariable
-            Align = alLeft
             Font.Charset = ANSI_CHARSET
             Font.Color = clWindowText
             Font.Height = -13
@@ -170,7 +169,7 @@ object frmMain: TfrmMain
             Caption = 'plChannelProg'
             Locked = True
             TabOrder = 2
-            object lvChannelProg: TTeListView
+            object lvChannelProg: TListView
               Left = 0
               Top = 0
               Width = 716
@@ -209,6 +208,10 @@ object frmMain: TfrmMain
                 item
                   Caption = 'EPG'
                   Width = 0
+                end
+                item
+                  Caption = 'Color'
+                  Width = 0
                 end>
               Font.Charset = ANSI_CHARSET
               Font.Color = clWindowText
@@ -224,8 +227,28 @@ object frmMain: TfrmMain
               TabOrder = 0
               ViewStyle = vsReport
               OnClick = lvChannelProgClick
+              OnCustomDrawItem = lvChannelProgCustomDrawItem
               OnDblClick = lvChannelProgDblClick
             end
+          end
+          object cbxChannelList: TComboBox
+            Left = 0
+            Top = 0
+            Width = 285
+            Height = 24
+            ItemHeight = 16
+            TabOrder = 3
+            Text = '- Alle -'
+            OnChange = cbxChannelListChange
+            Items.Strings = (
+              '- Alle -'
+              'Premiere'
+              'Free TV'
+              'Musik'
+              'Nachrichten'
+              'Sport'
+              'Einkaufen'
+              'M'#252'll')
           end
         end
       end
@@ -252,7 +275,7 @@ object frmMain: TfrmMain
             TabOrder = 0
             object Timer_Splitter: TSplitter
               Left = 2
-              Top = 233
+              Top = 289
               Width = 730
               Height = 5
               Cursor = crVSplit
@@ -264,11 +287,11 @@ object frmMain: TfrmMain
               Left = 2
               Top = 2
               Width = 730
-              Height = 231
+              Height = 287
               Align = alTop
               TabOrder = 0
               ControlData = {
-                4C000000734B0000E01700000000000000000000000000000000000000000000
+                4C000000734B0000AA1D00000000000000000000000000000000000000000000
                 000000004C000000000000000000000001000000E0D057007335CF11AE690800
                 2B2E126200000000000000004C0000000114020000000000C000000000000046
                 8000000000000000000000000000000000000000000000000000000000000000
@@ -276,9 +299,9 @@ object frmMain: TfrmMain
             end
             object lvTimer: TListView
               Left = 2
-              Top = 238
+              Top = 294
               Width = 730
-              Height = 249
+              Height = 193
               Align = alClient
               Columns = <
                 item
@@ -286,14 +309,14 @@ object frmMain: TfrmMain
                   Width = 1
                 end
                 item
-                  Caption = 'Zeit'
+                  Caption = 'Start'
                   MinWidth = 130
                   Width = 130
                 end
                 item
-                  Alignment = taRightJustify
-                  Caption = 'Dauer'
-                  MinWidth = 50
+                  Caption = 'Ende'
+                  MinWidth = 60
+                  Width = 60
                 end
                 item
                   Caption = 'Titel'
@@ -302,8 +325,8 @@ object frmMain: TfrmMain
                 end
                 item
                   Caption = 'Kanal'
-                  MinWidth = 170
-                  Width = 170
+                  MinWidth = 160
+                  Width = 160
                 end>
               GridLines = True
               ReadOnly = True
@@ -330,14 +353,40 @@ object frmMain: TfrmMain
           object Recorded_DBNavigator: TDBNavigator
             Left = 8
             Top = 0
-            Width = 252
+            Width = 234
             Height = 33
             DataSource = Recorded_DataSource
-            VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbInsert, nbDelete, nbRefresh]
+            VisibleButtons = [nbFirst, nbPrior, nbNext, nbLast, nbInsert, nbDelete, nbEdit, nbPost, nbCancel]
             Flat = True
             ParentShowHint = False
             ShowHint = True
             TabOrder = 0
+          end
+          object MediaGuide_DropFiles: TPJDropFiles
+            Left = 248
+            Top = 0
+            Width = 492
+            Height = 34
+            PassThrough = False
+            ForegroundOnDrop = False
+            OnDropFiles = MediaGuide_DropFilesDropFiles
+            Options = [dfoIncFolders, dfoIncFiles]
+            object lbl_MGuide: TLabel
+              Left = 0
+              Top = 0
+              Width = 492
+              Height = 34
+              Cursor = crMultiDrag
+              Hint = 'Drop EPG-File "MGUIDE_D_F_xx_yy.txt" here ...'
+              Align = alClient
+              AutoSize = False
+              Color = clBtnFace
+              ParentColor = False
+              ParentShowHint = False
+              ShowHint = True
+              Layout = tlCenter
+              WordWrap = True
+            end
           end
         end
         object plRecorded: TTePanel
@@ -401,7 +450,7 @@ object frmMain: TfrmMain
                 item
                   Expanded = False
                   FieldName = 'Platz'
-                  Width = 49
+                  Width = 54
                   Visible = True
                 end
                 item
@@ -528,9 +577,9 @@ object frmMain: TfrmMain
             TabOrder = 0
             object Splitter2: TSplitter
               Left = 4
-              Top = 161
+              Top = 157
               Width = 721
-              Height = 5
+              Height = 8
               Cursor = crVSplit
               Align = alTop
             end
@@ -538,7 +587,7 @@ object frmMain: TfrmMain
               Left = 4
               Top = 4
               Width = 721
-              Height = 157
+              Height = 153
               Align = alTop
               DataSource = Whishes_DataSource
               Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
@@ -552,20 +601,26 @@ object frmMain: TfrmMain
                 item
                   Expanded = False
                   FieldName = 'Titel'
-                  Width = 685
+                  Width = 640
                   Visible = True
                 end
                 item
                   Expanded = False
                   FieldName = 'IDN'
                   Visible = False
+                end
+                item
+                  Expanded = False
+                  FieldName = 'Serie'
+                  Width = 42
+                  Visible = True
                 end>
             end
             object Whishes_Result: TListBox
               Left = 4
-              Top = 166
+              Top = 165
               Width = 721
-              Height = 279
+              Height = 280
               Style = lbOwnerDrawVariable
               Align = alClient
               Font.Charset = ANSI_CHARSET
@@ -1806,8 +1861,8 @@ object frmMain: TfrmMain
     end
   end
   object aclMain: TActionList
-    Left = 584
-    Top = 510
+    Left = 684
+    Top = 366
     object acGSStart: TAction
       Caption = '&Start'
     end
@@ -1815,43 +1870,43 @@ object frmMain: TfrmMain
   object StateTimer: TTimer
     Enabled = False
     OnTimer = StateTimerTimer
-    Left = 466
-    Top = 462
+    Left = 462
+    Top = 426
   end
   object VCRCommandServerSocket: TServerSocket
     Active = False
     Port = 4000
     ServerType = stNonBlocking
     OnClientRead = VCRCommandServerSocketClientRead
-    Left = 626
-    Top = 446
+    Left = 618
+    Top = 410
   end
   object VcrEpgClientSocket: TClientSocket
     Active = False
     ClientType = ctBlocking
     Port = 0
-    Left = 544
-    Top = 448
+    Left = 616
+    Top = 364
   end
   object VCR_Ping: TIdIcmpClient
     Host = '192.168.1.1'
     Port = 80
     ReceiveTimeout = 1000
     OnReply = VCR_PingReply
-    Left = 548
-    Top = 478
+    Left = 532
+    Top = 426
   end
   object RecordNowTimer: TTimer
     Enabled = False
     Interval = 60000
     OnTimer = RecordNowTimerTimer
-    Left = 461
-    Top = 438
+    Left = 457
+    Top = 382
   end
   object Whishes_DataSource: TDataSource
     DataSet = Whishes_ADOQuery
-    Left = 325
-    Top = 510
+    Left = 305
+    Top = 438
   end
   object Whishes_ADOQuery: TADOQuery
     Connection = Whishes_ADOConnection
@@ -1859,13 +1914,13 @@ object frmMain: TfrmMain
     Parameters = <>
     SQL.Strings = (
       'select * from T_Whishes order by Titel;')
-    Left = 357
-    Top = 510
+    Left = 337
+    Top = 438
   end
   object Recorded_DataSource: TDataSource
     DataSet = Recorded_ADOQuery
-    Left = 328
-    Top = 480
+    Left = 308
+    Top = 408
   end
   object Recorded_ADOQuery: TADOQuery
     Connection = Recorded_ADOConnection
@@ -1873,74 +1928,74 @@ object frmMain: TfrmMain
     AfterScroll = Recorded_ADOQueryAfterScroll
     Parameters = <>
     SQL.Strings = (
-      'select * from T_Recorded order by Titel;')
-    Left = 360
-    Top = 480
+      'select * from v_Recorded')
+    Left = 340
+    Top = 408
   end
   object Recorded_ADOConnection: TADOConnection
     LoginPrompt = False
     Mode = cmShareDenyNone
     Provider = 'Microsoft.Jet.OLEDB.4.0'
-    Left = 296
-    Top = 480
+    Left = 276
+    Top = 408
   end
   object StartupTimer: TTimer
     Enabled = False
     Interval = 5000
     OnTimer = StartupTimerTimer
-    Left = 440
-    Top = 464
+    Left = 436
+    Top = 428
   end
   object RefreshTimer: TTimer
     Enabled = False
     Interval = 600000
     OnTimer = RefreshTimerTimer
-    Left = 440
-    Top = 440
+    Left = 436
+    Top = 384
   end
   object Whishes_ADOConnection: TADOConnection
     LoginPrompt = False
     Mode = cmShareDenyNone
     Provider = 'Microsoft.Jet.OLEDB.4.0'
-    Left = 296
-    Top = 512
+    Left = 276
+    Top = 440
   end
   object Work_ADOConnection: TADOConnection
     LoginPrompt = False
     Mode = cmShareDenyNone
     Provider = 'Microsoft.Jet.OLEDB.4.0'
-    Left = 424
-    Top = 512
+    Left = 140
+    Top = 360
   end
   object Work_ADOQuery: TADOQuery
     Connection = Work_ADOConnection
     Parameters = <>
-    Left = 456
-    Top = 512
+    Left = 172
+    Top = 360
   end
   object dbRefreshTimer: TTimer
     Interval = 600000
     OnTimer = dbRefreshTimerTimer
-    Left = 488
-    Top = 440
+    Left = 484
+    Top = 384
   end
   object Planner_ADOTable: TADOTable
     Connection = Planner_ADOConnection
     TableName = 'T_Planner'
-    Left = 208
-    Top = 512
+    Left = 204
+    Top = 408
   end
   object Planner_DataSource: TDataSource
     DataSet = Planner_ADOTable
-    Left = 176
-    Top = 512
+    Left = 172
+    Top = 408
   end
   object Planner_ADOConnection: TADOConnection
     LoginPrompt = False
     Mode = cmShareDenyNone
     Provider = 'Microsoft.Jet.OLEDB.4.0'
-    Left = 144
-    Top = 512
+    Left = 140
+    Top = 408
   end
   object VcrDBoxTelnet: TIdTelnet
     OnDisconnected = VcrDBoxTelnetDisconnected
@@ -1954,7 +2009,7 @@ object frmMain: TfrmMain
     Terminal = 'dumb'
     OnConnect = VcrDBoxTelnetConnect
     OnDisconnect = VcrDBoxTelnetDisconnect
-    Left = 576
-    Top = 448
+    Left = 560
+    Top = 380
   end
 end

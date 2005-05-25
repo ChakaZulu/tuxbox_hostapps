@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: MyTrace.pas,v $
+// Revision 1.4  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.3  2004/10/15 13:39:16  thotto
 // neue Db-Klasse
 //
@@ -258,7 +261,7 @@ begin
       inherited;
     end;
 
-    if DebugLevel = TRACE_CALLSTACK then
+//    if DebugLevel = TRACE_CALLSTACK then
     begin
       if Pos('<', Msg) = 1 then
       begin
@@ -270,7 +273,7 @@ begin
     DateTimeToString(sNow, 'DD.MM.YYYY hh:nn:ss.zzz', Now);
     sTrace := Format('%s %s%s', [sNow,m_strMsgPrefix,Msg]);
 
-    if DebugLevel = TRACE_CALLSTACK then
+//    if DebugLevel = TRACE_CALLSTACK then
     begin
       if Pos('>', Msg) = 1 then
       begin

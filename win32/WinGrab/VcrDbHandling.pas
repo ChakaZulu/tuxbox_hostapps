@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrDbHandling.pas,v $
+// Revision 1.3  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.2  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -44,7 +47,6 @@ type
     procedure ExecWorkQuery(sSQL: String);
     function  CheckDbString(sPathName: String): String;
 
-
   protected
     procedure InsertEventInDb(ChannelId : String;
                               sEventId  : String;
@@ -55,7 +57,7 @@ type
                               sEpg      : String );
     procedure InsertChannelInDb( ChannelId : String;
                                  sName     : String );
-    procedure SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg : String);
+
     procedure SaveWhishesToDb(sEpgTitle : String);
     function  FindTitleInRecordset(sEpgTitle : String): Integer;
 
@@ -63,12 +65,16 @@ type
     constructor Create(strConnectString: String);
     destructor  Destroy; override;
 
+    // EpgListe
+    function  InsertEpg(sEpgTitle, sEpgSubTitle, sEpg: String) : Integer;
+
     // ArchivListe
     function  IsInRecordedList(sTitel, sSubTitle : String): Integer;
-    procedure UpdateEpgInDb(sEpgTitle, sEpgSubTitle, sEpg : String);
+    procedure InsertEpgInDb(sEpgTitle, sEpgSubTitle, sEpg : String; bNew : Boolean = true);
 
     // WhishesListe
-    function  IsInWhishesList(sEpgTitle : String): Integer;
+    function  IsInWhishesList(sEpgTitle : String; sEpgSubTitle : String = ''): Integer;
+    procedure DeleteFromWhishes(sEpgTitle, sEpgSubTitle : String);
 
     // EventListe
     function  GetDbEventEpg(ChannelId            : String;
@@ -95,12 +101,13 @@ type
     function  GetDbChannelId( sChannelName : String ) : String;
     function  GetDbChannelName( ChannelId : String ) : String;
 
+    // Timerliste
     procedure UpdateTimerInDb( ChannelId  : String;
                                sEventId   : String;
                                sStartZeit : String;
                                sEndZeit   : String;
                                sTitel     : String;
-                               sEPG       : String;
+                               EpgId      : Integer;
                                iStatus    : Integer;
                                iZielformat: Integer = 0 );
 
@@ -110,8 +117,9 @@ type
     procedure CheckTimerStart;
     procedure CheckTimerEnd;
     function  IsTimerAt(sStartZeit: String; sEndZeit: String = ''): Integer;
-
-
+    
+    function  IsInTimerList(Channelid: String; sEventId: String): Integer;
+    function  GetTimerTargetType(Channelid: String; sEventId: String): Integer;
     // .
 
   end;
@@ -150,7 +158,7 @@ begin
 
     try
       m_coRecorded_ADOQuery.SQL.Clear;
-      m_coRecorded_ADOQuery.SQL.Add('SELECT * FROM T_Recorded ORDER BY Titel;');
+      m_coRecorded_ADOQuery.SQL.Add('SELECT * FROM v_Recorded ORDER BY Titel;');
       m_coRecorded_ADOQuery.ExecSQL;
       m_coRecorded_ADOQuery.Active := true;
       m_coWhishes_ADOQuery.SQL.Clear;
@@ -237,119 +245,120 @@ end;
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//------------------------------------------------------------------------------
-//
-procedure TVcrDb.SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg : String);
+procedure TVcrDb.DeleteFromWhishes(sEpgTitle, sEpgSubTitle : String);
 var
-  sTmp    : String;
   Idn     : Integer;
 begin
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> SaveEpgToDb');
+  m_Trace.DBMSG(TRACE_CALLSTACK, '> DeleteFromWhishes');
   try
-    Idn := 0;
-    if not m_coRecorded_ADOQuery.Recordset.Eof then
-    begin
-      m_coRecorded_ADOQuery.Recordset.MoveFirst;
-      try
-        while not m_coRecorded_ADOQuery.Recordset.Eof do
-        begin
-          if sEpgTitle = VarToStr(m_coRecorded_ADOQuery.Recordset.Fields['Titel'].Value) then
-          begin
-            if sEpgSubTitle <> '' then
-            begin
-              if sEpgSubTitle = VarToStr(m_coRecorded_ADOQuery.Recordset.Fields['SubTitel'].Value) then
-              begin
-                Idn:= m_coRecorded_ADOQuery.Recordset.Fields['Idn'].Value;
-                break;
-              end;
-            end else
-            begin
-              Idn:= m_coRecorded_ADOQuery.Recordset.Fields['Idn'].Value;
-              break;
-            end;
-          end;
-          m_coRecorded_ADOQuery.Recordset.MoveNext;
-        end;
-      finally
-        m_coRecorded_ADOQuery.Recordset.MoveFirst;
-      end;
-
-      if Idn = 0 then
-      begin
-        try
-          sTmp := m_coRecorded_ADOQuery.SQL.GetText;
-          m_coRecorded_ADOQuery.Close;
-          m_coRecorded_ADOQuery.SQL.Clear;
-          m_coRecorded_ADOQuery.SQL.Add('INSERT INTO T_Recorded(Titel, SubTitel, EPG) VALUES(''' + CheckDbString(sEpgTitle) + ''', ''' + CheckDbString(sEpgSubTitle) + ''', ''' + CheckDbString(sEpg) + ''');');
-          m_coRecorded_ADOQuery.ExecSQL;
-          m_coRecorded_ADOQuery.Close;
-        except
-          on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'SaveEpgToDb/Insert INTO T_RECORDED '+E.Message);
-        end;
-      end;
-    end;
-
     Idn := IsInWhishesList(sEpgTitle);
     if Idn > 0 then
     begin
-      try
-        m_coWhishes_ADOQuery.Close;
-        m_coWhishes_ADOQuery.SQL.Clear;
-        m_coWhishes_ADOQuery.SQL.Add('DELETE FROM T_Whishes WHERE IDN='+IntToStr(Idn)+' AND Serie=0;');
-        m_coWhishes_ADOQuery.ExecSQL;
-        m_coWhishes_ADOQuery.Close;
-      except
-        on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'SaveEpgToDb/Insert INTO T_Whishes '+E.Message);
-      end;
+      ExecWorkQuery('DELETE FROM T_Whishes WHERE IDN='+IntToStr(Idn)+' AND Serie=0;');
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'SaveEpgToDb '+E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'DeleteFromWhishes '+E.Message);
   end;
-  m_Trace.DBMSG(TRACE_CALLSTACK, '< SaveEpgToDb');
+  m_Trace.DBMSG(TRACE_CALLSTACK, '< DeleteFromWhishes');
 end;
 
 //------------------------------------------------------------------------------
 //
-procedure TVcrDb.UpdateEpgInDb(sEpgTitle, sEpgSubTitle, sEpg : String);
+function TVcrDb.InsertEpg(sEpgTitle, sEpgSubTitle, sEpg : String): Integer;
 var
-  sTmp    : String;
-  Idn     : Integer;
+  sTmp,
+  sSQL   : String;
+  Count,
+  EpgId  : Integer;
 begin
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> UpdateEpgInDb');
+  m_Trace.DBMSG(TRACE_SYNC, '> InsertEpg');
+  EpgId := 0;
   try
-    sTmp := m_coRecorded_ADOQuery.SQL.GetText;
-    Idn:= IsInRecordedList(sEpgTitle, sEpgSubTitle);
-    if Idn > 0 then
+    EpgId := 0;
+    sSQL:= '';
+    sSQL:= sSQL + 'SELECT * FROM T_EPG WHERE Titel = '''+CheckDbString(sEpgTitle)+''' ';
+    if sEpgSubTitle <> '' then
+      sSQL:= sSQL + 'AND SubTitel = '''+CheckDbString(sEpgSubTitle)+''' ';
+    ExecWorkQuery(sSQL);
+    if not m_coWork_ADOQuery.Recordset.Eof then
     begin
-      try
-        m_coRecorded_ADOQuery.Close;
-        m_coRecorded_ADOQuery.SQL.Clear;
-        m_coRecorded_ADOQuery.SQL.Add('UPDATE T_Recorded SET Titel=''' +
-                                       CheckDbString(sEpgTitle) + ''' , SubTitel=''' +
-                                       CheckDbString(sEpgSubTitle) + ''' , EPG=''' +
-                                       CheckDbString(sEpg) + ''' WHERE IDN='+
-                                       IntToStr(Idn)+' ;');
-        m_coRecorded_ADOQuery.ExecSQL;
-        m_coRecorded_ADOQuery.Close;
-      except
-        on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'UpdateEpgInDb/Insert INTO T_RECORDED ['+E.Message+']');
+      EpgId:= StrToIntDef(VarToStr(m_coWork_ADOQuery.Recordset.Fields['Idn'].Value),0);
+      Count:= StrToIntDef(VarToStr(m_coWork_ADOQuery.Recordset.Fields['InstanceCount'].Value),1);
+      sTmp := VarToStr(m_coWork_ADOQuery.Recordset.Fields['EPG'].Value);
+      if Length(sTmp) < Length(sEpg) then
+      begin
+        sSQL:= 'UPDATE T_EPG SET EPG=''' +
+               CheckDbString(sEpg) + ''' WHERE IDN='+
+               IntToStr(EpgId)+' ;';
+        ExecWorkQuery(sSQL);
+        m_Trace.DBMSG(TRACE_SYNC, 'update Epg in T_EPG ' + sEpgTitle);
       end;
-      try
-        m_coRecorded_ADOQuery.SQL.Clear;
-        m_coRecorded_ADOQuery.SQL.Add(sTmp);
-        m_coRecorded_ADOQuery.ExecSQL;
-        m_coRecorded_ADOQuery.Active := true;
-      except
-        on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'UpdateEpgInDb/SELECT * T_RECORDED '+E.Message);
-      end;
+      sSQL:= 'UPDATE T_EPG SET InstanceCount='+IntToStr(Count+1)+' ' +
+             'WHERE IDN='+
+             IntToStr(EpgId)+' ;';
+      ExecWorkQuery(sSQL);
     end else
     begin
-      SaveEpgToDb(sEpgTitle, sEpgSubTitle, sEpg);
+      sSQL:= '';
+      sSQL:= sSQL + 'INSERT INTO T_EPG(Titel, SubTitel, EPG, InstanceCount) VALUES(''' + CheckDbString(sEpgTitle) + ''', ''' + CheckDbString(sEpgSubTitle) + ''', ''' + CheckDbString(sEpg) + ''',1);';
+      ExecWorkQuery(sSQL);
+      sSQL:= '';
+      sSQL:= sSQL + 'SELECT Idn FROM T_EPG WHERE Titel = '''+CheckDbString(sEpgTitle)+''' ';
+      sSQL:= sSQL + 'AND SubTitel = '''+CheckDbString(sEpgSubTitle)+''' ';
+      ExecWorkQuery(sSQL);
+      if not m_coWork_ADOQuery.Recordset.Eof then
+      begin
+        EpgId:= StrToIntDef(VarToStr(m_coWork_ADOQuery.Recordset.Fields['Idn'].Value),0);
+      end;
+    end;
+
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'InsertEpg '+E.Message);
+  end;
+  Result := EpgId;
+  m_Trace.DBMSG(TRACE_SYNC, '< InsertEpg = '+IntToStr(EpgId));
+end;
+
+procedure TVcrDb.InsertEpgInDb(sEpgTitle, sEpgSubTitle, sEpg : String; bNew : Boolean = true);
+var
+  sTmp,
+  sSQL   : String;
+  EpgId,
+  RecId  : Integer;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, '> InsertEpgInDb');
+  try
+    EpgId := InsertEpg(sEpgTitle, sEpgSubTitle, sEpg);
+
+    sSQL:= '';
+    sSQL:= sSQL + 'SELECT * FROM v_Recorded WHERE Titel = '''+CheckDbString(sEpgTitle)+''' ';
+    if sEpgSubTitle <> '' then
+      sSQL:= sSQL + 'AND SubTitel LIKE('''+CheckDbString(sEpgSubTitle)+'%'') ';
+    ExecWorkQuery(sSQL);
+    if not m_coWork_ADOQuery.Recordset.Eof then
+    begin
+      RecId:= StrToIntDef(VarToStr(m_coWork_ADOQuery.Recordset.Fields['Idn'].Value),0);
+      sSQL:= 'UPDATE T_Recorded SET EpgId=' + IntToStr(EpgId) +
+             ' WHERE IDN='+ IntToStr(RecId)+' ;';
+      ExecWorkQuery(sSQL);
+      sSQL:= 'UPDATE T_EPG SET InstanceCount=99 ' +
+             ' WHERE IDN='+ IntToStr(EpgId)+' ;';
+      ExecWorkQuery(sSQL);
+      m_Trace.DBMSG(TRACE_SYNC, 'update EpgId in T_Recorded ' + sEpgTitle);
+    end else
+    begin
+      if bNew then
+      begin
+        ExecWorkQuery('INSERT INTO T_Recorded(Titel, SubTitel, EpgId ) VALUES(''' + CheckDbString(sEpgTitle) + ''', ''' + CheckDbString(sEpgSubTitle) + ''', ' + IntToStr(EpgId) + ');');
+        sSQL:= 'UPDATE T_EPG SET InstanceCount=99 ' +
+               ' WHERE IDN='+ IntToStr(EpgId)+' ;';
+        ExecWorkQuery(sSQL);
+      end;
     end;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'UpdateEpgInDb '+E.Message);
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'InsertEpgInDb '+E.Message);
   end;
-  m_Trace.DBMSG(TRACE_CALLSTACK, '< UpdateEpgInDb');
+  m_Trace.DBMSG(TRACE_SYNC, '< InsertEpgInDb');
 end;
 
 //------------------------------------------------------------------------------
@@ -366,19 +375,20 @@ begin
   try
     m_Trace.DBMSG(TRACE_SYNC, 'IsInRecordedList sTitel="' + sTitel + '"');
 
-    sEpgTitle := sTitel + ' - ' + sSubTitle;
+    sEpgTitle := sTitel;
     if sSubTitle <> '' then
     begin
       sEpgTitle := sEpgTitle + ' - ' + sSubTitle;
     end;
 
-    sTmp := Trim(sEpgTitle);
+    sTmp := Trim(CheckDbString(sEpgTitle));
+{
     sTmp:= ReplaceSubString(sTmp, ' - ', ' ');
     sTmp:= ReplaceSubString(sTmp, ', ', ' ');
     sTmp:= ReplaceSubString(sTmp, ' ', ''',''');
-
+}
     sSQL:= '';
-    sSQL:= sSQL + 'SELECT Idn, Titel FROM T_Recorded WHERE Titel IN( '''+sTmp + ' - ' + sSubTitle+''') OR Titel LIKE(''%'+sEpgTitle+'%'')';
+    sSQL:= sSQL + 'SELECT Idn, Titel FROM v_Recorded WHERE Titel LIKE(''%'+sEpgTitle+'%'')';
     ExecWorkQuery(sSQL);
     i := FindTitleInRecordset(sEpgTitle);
     if i=0 then
@@ -388,7 +398,7 @@ begin
       sTmp:= ReplaceSubString(sTmp, ', ', ' ');
       sTmp:= ReplaceSubString(sTmp, ' ', ''',''');
       sSQL:= '';
-      sSQL:= sSQL + 'SELECT Idn, Titel FROM T_Recorded WHERE Titel IN( '''+sTmp+''') OR Titel LIKE(''%'+sTitel+'%'')';
+      sSQL:= sSQL + 'SELECT Idn, Titel FROM v_Recorded WHERE Titel IN( '''+sTmp+''') OR Titel LIKE(''%'+sTitel+'%'')';
       ExecWorkQuery(sSQL);
       i := FindTitleInRecordset(sTitel);
     end;
@@ -477,7 +487,7 @@ begin
   end;
 end;
 
-function  TVcrDb.IsInWhishesList(sEpgTitle : String): Integer;
+function  TVcrDb.IsInWhishesList(sEpgTitle : String; sEpgSubTitle : String = ''): Integer;
 var
   i    : Integer;
   sTmp,
@@ -494,12 +504,13 @@ begin
 
     m_Trace.DBMSG(TRACE_SYNC, 'IsInWhishesList sTitel="' + sEpgTitle + '"');
     sTmp := Trim(sEpgTitle);
+
     sTmp:= ReplaceSubString(sTmp, ' - ', ' ');
     sTmp:= ReplaceSubString(sTmp, ', ', ' ');
     sTmp:= ReplaceSubString(sTmp, ' ', ''',''');
 
     sSQL:= '';
-    sSQL:= sSQL + 'SELECT Idn, Titel FROM T_Whishes WHERE Titel IN( '''+sTmp+''') OR Titel LIKE(''%'+sEpgTitle+'%'')';
+    sSQL:= sSQL + 'SELECT Idn, Titel FROM T_Whishes WHERE Titel IN( '''+sTmp+''') OR Titel LIKE(''%'+sEpgTitle+'%'') ';
     ExecWorkQuery(sSQL);
     i := FindTitleInRecordset(sEpgTitle);
     Result:= i;
@@ -522,7 +533,7 @@ begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> GetDbEvent');
   try
     sSQL :=        'SELECT Epg, Titel, SubTitel, Zeit, Dauer FROM ';
-    sSQL := sSQL + 'T_Events WHERE ';
+    sSQL := sSQL + 'v_Events WHERE ';
     sSQL := sSQL + 'EventId = ''' + CheckDbString(EventId) + ''' AND ';
     sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''';';
     ExecWorkQuery(sSQL);
@@ -575,11 +586,26 @@ begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> TruncDbEvent');
   try
     sZeit := IntToStr(DateTimeToUnix(IncHour((Now - OffsetFromUTC),-3)));
+
+    sSQL :=        'DELETE * FROM ';
+    sSQL := sSQL + 'T_Epg WHERE ';
+    sSQL := sSQL + 'InstanceCount < 99 AND ';
+    sSQL := sSQL + 'IDN IN(SELECT Distinct EpgId FROM T_Events WHERE Zeit < ''' + CheckDbString(sZeit) + ''');';
+    ExecWorkQuery(sSQL);
+    DoEvents;
+
     sSQL :=        'DELETE * FROM ';
     sSQL := sSQL + 'T_Events WHERE ';
     sSQL := sSQL + 'Zeit < ''' + CheckDbString(sZeit) + ''';';
     ExecWorkQuery(sSQL);
     DoEvents;
+
+    sSQL :=        'DELETE * FROM ';
+    sSQL := sSQL + 'T_Planner WHERE ';
+    sSQL := sSQL + 'EndZeit < ''' + CheckDbString(sZeit) + ''';';
+    ExecWorkQuery(sSQL);
+    DoEvents;
+
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'TruncDbEvent '+E.Message +' SQL:'+ sSQL);
   end;
@@ -628,7 +654,8 @@ procedure TVcrDb.UpdateEventInDb( ChannelId : String;
 var
   sTmp,
   sTmpEpg,
-  sSQL : String;
+  sSQL    : String;
+  EpgId   : Integer;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> UpdateEventInDb');
   try
@@ -639,32 +666,25 @@ begin
     sSQL :=        'SELECT * FROM ';
     sSQL := sSQL + 'T_Events WHERE ';
     sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
-    sSQL := sSQL + 'Titel = ''' + CheckDbString(sTitel) + ''' AND ';
+//    sSQL := sSQL + 'Titel = ''' + CheckDbString(sTitel) + ''' AND ';
     sSQL := sSQL + 'Dauer = ''' + CheckDbString(sDauer) + ''' AND ';
     sSQL := sSQL + 'Zeit  = ''' + CheckDbString(sZeit)  + ''';';
     ExecWorkQuery(sSQL);
     if not m_coWork_ADOQuery.Recordset.Eof then
     begin
-      sTmp := VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['EventId'].Value, '0');
-      sTmpEpg := VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Epg'].Value, '');
-      if sTmp = sEventId then
+      m_coWork_ADOQuery.Recordset.MoveLast;
+      m_coWork_ADOQuery.Recordset.MoveFirst;
+      if m_coWork_ADOQuery.Recordset.RecordCount > 1 then
       begin
-        // UPDATE-Mode.
-        if Length(sEpg) > Length(sTmpEpg) then
-        begin
-          m_Trace.DBMSG(TRACE_SYNC, 'UpdateEventInDb UPDATE sTitel="' + sTitel + '"');
-          sSQL :=        'UPDATE T_Events SET ';
-          sSQL := sSQL + 'Titel = '''    + CheckDbString(sTitel) + ''', ';
-          sSQL := sSQL + 'SubTitel = ''' + CheckDbString(sSubTitel) + ''', ';
-          sSQL := sSQL + 'Epg = '''      + CheckDbString(sEpg) + ''' ';
-          sSQL := sSQL + 'WHERE ';
-          sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
-          sSQL := sSQL + 'EventId   = ''' + CheckDbString(sEventId) + ''';';
-          ExecWorkQuery(sSQL);
-          DoEvents;
-        end;
-      end else
-      begin
+        //kill the fucking duplicated EventdIds...
+        sSQL :=        'DELETE FROM ';
+        sSQL := sSQL + 'T_Events WHERE ';
+        sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
+//        sSQL := sSQL + 'Titel = ''' + CheckDbString(sTitel) + ''' AND ';
+        sSQL := sSQL + 'Dauer = ''' + CheckDbString(sDauer) + ''' AND ';
+        sSQL := sSQL + 'Zeit  = ''' + CheckDbString(sZeit)  + ''';';
+        ExecWorkQuery(sSQL);
+        //... and insert the only one.
         InsertEventInDb(ChannelId,
                         sEventId,
                         sZeit,
@@ -672,6 +692,39 @@ begin
                         sTitel,
                         sSubTitel,
                         sEpg);
+      end else
+      begin
+        sTmp := VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['EventId'].Value, '0');
+        sTmpEpg := VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Epg'].Value, '');
+        if sTmp = sEventId then
+        begin
+          // UPDATE-Mode.
+          EpgId:= InsertEpg(sTitel, sSubTitel, sEpg);
+          m_Trace.DBMSG(TRACE_SYNC, 'UpdateEventInDb UPDATE sTitel="' + sTitel + '"');
+          sSQL :=        'UPDATE T_Events SET ';
+          sSQL := sSQL + 'SubTitel = ''' + CheckDbString(sSubTitel) + ''' ';
+{
+          if Length(sEpg) > Length(sTmpEpg) then
+          begin
+            sSQL := sSQL + ',Epg = '''    + CheckDbString(sEpg) + ''' ';
+          end;
+}
+          sSQL := sSQL + ',EpgId = '      + IntToStr(EpgId) + ' ';
+          sSQL := sSQL + 'WHERE ';
+          sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
+          sSQL := sSQL + 'EventId   = ''' + CheckDbString(sEventId) + ''';';
+          ExecWorkQuery(sSQL);
+          DoEvents;
+        end else
+        begin
+          InsertEventInDb(ChannelId,
+                          sEventId,
+                          sZeit,
+                          sDauer,
+                          sTitel,
+                          sSubTitel,
+                          sEpg);
+        end;
       end;
     end else
     begin
@@ -700,8 +753,10 @@ procedure TVcrDb.InsertEventInDb( ChannelId : String;
                                   sEpg      : String );
 var
   sSQL : String;
+  EpgId: Integer;
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> InsertEventInDb');
+  EpgId:= InsertEpg(sTitel, sSubTitel, sEpg);
   try
     m_Trace.DBMSG(TRACE_SYNC, 'InsertEventInDb INSERT sTitel="' + sTitel + '"');
     sSQL :=        'INSERT INTO T_Events( ';
@@ -711,14 +766,14 @@ begin
     sSQL := sSQL + 'Dauer, ';
     sSQL := sSQL + 'Titel, ';
     sSQL := sSQL + 'SubTitel, ';
-    sSQL := sSQL + 'Epg ) VALUES (';
+    sSQL := sSQL + 'EpgId ) VALUES (';
     sSQL := sSQL + '''' + (ChannelId)     + ''', ';
     sSQL := sSQL + '''' + CheckDbString(sEventId) + ''', ';
     sSQL := sSQL + '''' + CheckDbString(sZeit)    + ''', ';
     sSQL := sSQL + '''' + CheckDbString(sDauer)   + ''', ';
     sSQL := sSQL + '''' + CheckDbString(sTitel)   + ''', ';
     sSQL := sSQL + '''' + CheckDbString(sSubTitel)+ ''', ';
-    sSQL := sSQL + '''' + CheckDbString(sEpg)     + ''');';
+    sSQL := sSQL + ''   + IntToStr(EpgId)         + ' );';
     ExecWorkQuery(sSQL);
     DoEvents;
   except
@@ -781,9 +836,9 @@ begin
     m_Trace.DBMSG(TRACE_SYNC, 'InsertChannelInDb sName="' + sName + '" ChannelId="'+ChannelId+'"');
     sSQL :=        'INSERT INTO T_Channel( ';
     sSQL := sSQL + 'ChannelId, ';
-    sSQL := sSQL + 'Name ) VALUES (';
+    sSQL := sSQL + 'Name, BouquetId ) VALUES (';
     sSQL := sSQL + '''' + ChannelId  + ''', ';
-    sSQL := sSQL + '''' + CheckDbString(sName) + ''');';
+    sSQL := sSQL + '''' + CheckDbString(sName) + ''', 99);';
     ExecWorkQuery(sSQL);
     DoEvents;
   except
@@ -858,7 +913,7 @@ var
   sSQL     : String;
 begin
   Result := '0';
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> GetDbChannelId');
+  m_Trace.DBMSG(TRACE_CALLSTACK, '> GetDbChannelId '+sChannelName);
   try
     sSQL :=        'SELECT * FROM ';
     sSQL := sSQL + 'T_Channel WHERE ';
@@ -912,10 +967,10 @@ end;
 //
 procedure TVcrDb.UpdateTimerInDb(ChannelId  : String;
                                  sEventId   : String;
-                                 sStartZeit: String;
-                                 sEndZeit  : String;
+                                 sStartZeit : String;
+                                 sEndZeit   : String;
                                  sTitel     : String;
-                                 sEPG       : String;
+                                 EpgId      : Integer;
                                  iStatus    : Integer;
                                  iZielformat: Integer = 0 );
 var
@@ -949,7 +1004,7 @@ begin
       sSQL := sSQL + 'EndZeit = '''   + sEndZeit              + ''', ';
       sSQL := sSQL + 'Status = '''    + IntToStr(iStatus)     + ''', ';
       sSQL := sSQL + 'Zielformat = '''+ IntToStr(iZielformat) + ''', ';
-      sSQL := sSQL + 'EPG = '''       + sEPG                  + ''' ';
+      sSQL := sSQL + 'EPGID = '       + IntToStr(EpgId)       + ' ';
       sSQL := sSQL + 'WHERE ';
       sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
       sSQL := sSQL + 'EventId = '''   + sEventId  + ''' AND ';
@@ -972,7 +1027,7 @@ begin
       sSQL := sSQL + 'Status, ';
       sSQL := sSQL + 'Zielformat, ';
       sSQL := sSQL + 'Titel, ';
-      sSQL := sSQL + 'EPG ';
+      sSQL := sSQL + 'EPGID ';
       sSQL := sSQL + ') VALUES ( ';
       sSQL := sSQL + '''' + sStartZeit + ''', ';
       sSQL := sSQL + '''' + sEndZeit + ''', ';
@@ -982,7 +1037,7 @@ begin
       sSQL := sSQL + '''' + IntToStr(iStatus) + ''', ';
       sSQL := sSQL + '''' + IntToStr(iZielformat) + ''', ';
       sSQL := sSQL + '''' + sTitel + ''', ';
-      sSQL := sSQL + '''' + sEPG + '''); ';
+      sSQL := sSQL + ' '  + IntToStr(EpgId) + '); ';
 
       ExecWorkQuery(sSQL);
 
@@ -1019,9 +1074,8 @@ var
 begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckTimerEnd');
   try
-    sSQL :=        'UPDATE ';
-    sSQL := sSQL + 'T_Planner SET ';
-    sSQL := sSQL + 'Status = 0 ';
+    sSQL :=        'DELETE FROM ';
+    sSQL := sSQL + 'T_Planner ';
     sSQL := sSQL + 'WHERE Status = 2';
     ExecWorkQuery(sSQL);
   except
@@ -1035,32 +1089,28 @@ var
   sSQL : String;
   i    :Integer;
 begin
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> IsTimerAt ');
+  m_Trace.DBMSG(TRACE_SYNC, '> IsTimerAt '+sStartZeit+' / '+sEndZeit);
   i:= 0;
   try
     sSQL :=        'SELECT Count(*) as C ';
-    sSQL := sSQL + 'FROM T_Planner ';
-    sSQL := sSQL + 'WHERE Status = 1 AND ';
-    sSQL := sSQL + '( ';
-    sSQL := sSQL + '(StartZeit >= '''+sStartZeit+''' ';
+    sSQL := sSQL + 'FROM v_Events ';
+    sSQL := sSQL + 'WHERE TimerStatus = 1 AND ';
+    sSQL := sSQL + '( (Zeit >= '''+sStartZeit+''' ';
     if sEndZeit <> '' then
     begin
-      sSQL := sSQL + 'AND StartZeit <= '''+sEndZeit+''') ';
+      sSQL := sSQL + 'AND Zeit <= '''+sEndZeit+''') ';
     end else
     begin
-      sSQL := sSQL + 'AND StartZeit <= '''+IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(sStartZeit)),15)))+''') ';
+      sSQL := sSQL + 'AND Zeit <= '''+IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(sStartZeit)),15)))+''') ';
     end;
-    sSQL := sSQL + 'OR ';
-    sSQL := sSQL + '(EndZeit >= '''+IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(sStartZeit)),-15)))+''' ';
+    sSQL := sSQL + ' AND ';
     if sEndZeit <> '' then
     begin
-      sSQL := sSQL + 'AND EndZeit <= '''+sEndZeit+''') ';
+      sSQL := sSQL + '(Dauer <= '''+IntToStr( StrToInt64(sEndZeit) - StrToInt64(sStartZeit) ) +''') )';
     end else
     begin
-      sSQL := sSQL + 'AND EndZeit <= '''+sStartZeit+''') ';
+      sSQL := sSQL + '(Dauer <= ''300'') )';
     end;
-    sSQL := sSQL + ') ';
-
     ExecWorkQuery(sSQL);
     if not m_coWork_ADOQuery.Recordset.Eof then
     begin
@@ -1070,16 +1120,17 @@ begin
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'IsTimerAt '+E.Message +' SQL:'+ sSQL);
   end;
   Result:= i;
-  m_Trace.DBMSG(TRACE_CALLSTACK, '< IsTimerAt ('+IntToStr(i)+')');
+  m_Trace.DBMSG(TRACE_SYNC, '< IsTimerAt ('+IntToStr(i)+')');
 end;
 
 procedure TVcrDb.CheckTimerEvent(ChannelId  : String;
                                  sStartZeit : String;
                                  sEndZeit   : String );
 var
-  sSQL     : String;
+  sSQL   : String;
+  EpgId  : Integer;
 begin
-  m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckTimerEvent');
+  m_Trace.DBMSG(TRACE_CALLSTACK, '> CheckTimerEvent Channel='+ChannelId+' Start='+sStartZeit+' End='+sEndZeit+'');
   try
     if IsTimerAt(sStartZeit, sEndZeit) > 0 then
     begin
@@ -1097,25 +1148,33 @@ begin
       // found new timer...
       m_Trace.DBMSG(TRACE_SYNC, 'TimerEvent new timer detected');
       sSQL :=        'SELECT * ';
-      sSQL := sSQL + 'FROM T_Event ';
+      sSQL := sSQL + 'FROM v_Events ';
       sSQL := sSQL + 'WHERE  ';
       sSQL := sSQL + 'ChannelId = '''+ChannelId+''' ';
-      sSQL := sSQL + 'AND StartZeit >= '''+sStartZeit+''' ';
-      sSQL := sSQL + 'AND Dauer <= '''+IntToStr(StrToInt(sEndZeit)-StrToInt(sStartZeit))+''' ';
-      sSQL := sSQL + 'AND StartZeit <= '''+IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(sEndZeit)),-15)))+''' ';
-      sSQL := sSQL + 'ORDER BY StartZeit ';
+      sSQL := sSQL + 'AND Zeit  >= '''+sStartZeit+''' ';
+//      sSQL := sSQL + 'AND Dauer <= '''+IntToStr(StrToInt(sEndZeit)-StrToInt(sStartZeit))+''' ';
+      sSQL := sSQL + 'AND Zeit  <= '''+IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(sEndZeit)),15)))+''' ';
+      sSQL := sSQL + 'ORDER BY Zeit ';
       ExecWorkQuery(sSQL);
       if not m_coWork_ADOQuery.Recordset.Eof then
       begin
         m_Trace.DBMSG(TRACE_SYNC, 'TimerEvent ['+VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Titel'].Value, '')+'] inserted');
+        EpgId := InsertEpg(VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Titel'].Value, ''),
+                           VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['SubTitel'].Value, ''),
+                           VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['EPG'].Value, ''));
+        ExecWorkQuery(sSQL);
         UpdateTimerInDb( ChannelId,
                          VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['EventId'].Value, ''),
                          sStartZeit,
                          sEndZeit,
                          VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Titel'].Value, ''),
-                         VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['EPG'].Value, ''),
+                         EpgId,
                          1,
                          0 );
+        m_Trace.DBMSG(TRACE_SYNC, '... inserted success');
+      end else
+      begin
+        m_Trace.DBMSG(TRACE_SYNC, '... event not found');
       end;
     end;
     DoEvents;
@@ -1124,6 +1183,62 @@ begin
   end;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckTimerEvent');
 end;
+
+function  TVcrDb.IsInTimerList(Channelid: String; sEventId: String): Integer;
+var
+  sSQL : String;
+  iRes : Integer;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, '> IsInTimerList');
+  iRes := 0;
+  try
+    sSQL :=        'SELECT Idn ';
+    sSQL := sSQL + 'FROM T_Planner ';
+    sSQL := sSQL + 'WHERE ';
+    sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
+    sSQL := sSQL + 'EventId = '''   + sEventId  + ''' AND ';
+    sSQL := sSQL + 'Status = 1 ';
+    ExecWorkQuery(sSQL);
+    if not m_coWork_ADOQuery.Recordset.Eof then
+    begin
+      iRes:= StrToInt(VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Idn'].Value, '0'));
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'IsInTimerList '+E.Message +' SQL:'+ sSQL);
+  end;
+  Result:= iRes;
+  m_Trace.DBMSG(TRACE_SYNC, '< IsInTimerList '+IntToStr(iRes));
+end;
+
+function  TVcrDb.GetTimerTargetType(Channelid: String; sEventId: String): Integer;
+var
+  sSQL : String;
+  i,
+  iRes : Integer;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, '> GetTimerTargetType');
+  iRes := -1;
+  try
+    begin
+      sSQL :=        'SELECT Zielformat ';
+      sSQL := sSQL + 'FROM T_Planner ';
+      sSQL := sSQL + 'WHERE ';
+      sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
+      sSQL := sSQL + 'EventId = '''   + sEventId  + ''' AND ';
+      sSQL := sSQL + 'Status = 1 ';
+      ExecWorkQuery(sSQL);
+      if not m_coWork_ADOQuery.Recordset.Eof then
+      begin
+        iRes:= StrToInt(VarToStrDef(m_coWork_ADOQuery.Recordset.Fields['Zielformat'].Value, '0'));
+      end;
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'GetTimerTargetType '+E.Message +' SQL:'+ sSQL);
+  end;
+  Result:= iRes;
+  m_Trace.DBMSG(TRACE_SYNC, '< GetTimerTargetType '+IntToStr(iRes));
+end;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //

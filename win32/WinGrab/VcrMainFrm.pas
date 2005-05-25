@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainFrm.pas,v $
+// Revision 1.7  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.6  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -210,7 +213,7 @@ type
     lbxChannelList: TListBox;
     Panel1: TPanel;
     plChannelProg: TTePanel;
-    lvChannelProg: TTeListView;
+    lvChannelProg: TListView;
     Panel2: TPanel;
     Timer_WebBrowser: TWebBrowser;
     TePanel5: TTePanel;
@@ -308,6 +311,9 @@ type
     Splitter2: TSplitter;
     lvTimer: TListView;
     gbxPowersave: TTeRadioGroup;
+    MediaGuide_DropFiles: TPJDropFiles;
+    lbl_MGuide: TLabel;
+    cbxChannelList: TComboBox;
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -403,6 +409,10 @@ type
     procedure lvTimerDblClick(Sender: TObject);
     procedure lvTimerCustomDrawItem(Sender: TCustomListView;
       Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure lvChannelProgCustomDrawItem(Sender: TCustomListView;
+      Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure MediaGuide_DropFilesDropFiles(Sender: TObject);
+    procedure cbxChannelListChange(Sender: TObject);
 
   private
     m_bInit              : Boolean;
@@ -456,9 +466,11 @@ type
     function  PingDBox(sIp: String) : Boolean;
     procedure CheckShutdown(bForce: Boolean = false);
 
+    function  CheckHtmlString(sHtmlName: String): String;
     function  CheckFileNameString(sFileName: String): String;
     function  CheckPathNameString(sPathName: String): String;
     function  CheckDbString(sPathName: String): String;
+    function  StripeTitleDuplicat(sTitel: String): String;
 
     function  CheckPath(PathEdit: TTeEdit): Boolean;
     function  BrowseForDir(const FormHandle: HWND; TitleName: string; var DirPath: string): Boolean;
@@ -497,7 +509,7 @@ type
     function  GetCurrentDbEvent(ChannelId : String): String;
 
     // KanalListe
-    procedure FillDbChannelListBox;
+    procedure FillDbChannelListBox(iBouquetId: Integer = -1);
 
     // Timerliste
     procedure UpdateTimerListView;
@@ -581,6 +593,39 @@ begin
     end;
   finally
     Free;
+  end;
+end;
+
+function  TfrmMain.CheckHtmlString(sHtmlName: String): String;
+var
+  k        : Integer;
+  sOutHtml : String;
+begin
+  try
+    sOutHtml:= sHtmlName;
+    Result := sOutHtml;
+    for k:= 1 to Length(sOutHtml) do
+    begin
+      if (sOutHtml[k] < #9) OR (sOutHtml[k] > #126) then
+      begin
+        if (sOutHtml[k] = 'ä') OR
+           (sOutHtml[k] = 'ö') OR
+           (sOutHtml[k] = 'ü') OR
+           (sOutHtml[k] = 'Ä') OR
+           (sOutHtml[k] = 'Ö') OR
+           (sOutHtml[k] = 'Ü') OR
+           (sOutHtml[k] = 'ß') then
+        begin
+          //
+        end else
+        begin
+          sOutHtml[k]:= ' ';
+        end;
+      end;
+    end;
+    Result := sOutHtml;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'CheckHtmlString '+ E.Message );
   end;
 end;
 
@@ -858,6 +903,9 @@ begin
     DoEvents;
     Sleep(100);
 
+    SendHttpCommand('/control/setmode?tv');
+    DoEvents;
+
     ////////////////
     FillDbChannelListBox;
     if lbxChannelList.ItemIndex >= 0 then
@@ -891,15 +939,12 @@ begin
       DoEvents;
       Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
       DoEvents;
-      SendHttpCommand('/control/setmode?tv');
-      DoEvents;
     end;
     VCRCommandServerSocket.Active := true;
     SendHttpCommand('/control/message?popup=streaming%20server%20started');
     DoEvents;
 
     m_Trace.DBMSG(TRACE_DETAIL, '... all Init');
-
     DoEvents;
     Sleep(100);
   finally
@@ -1244,6 +1289,7 @@ procedure TfrmMain.Whishes_ResultDblClick(Sender: TObject);
 var
   ChannelId,
   sEventId,
+  sSleepCommand,
   sTmp      : String;
   bFound    : Boolean;
   i         : Integer;
@@ -1259,21 +1305,30 @@ begin
         ChannelId := Trim(Copy(sTmp, 1,                 Pos('|||',sTmp)-1));
         sEventId  := Trim(Copy(sTmp, Pos('|||',sTmp)+3, Length(sTmp)));
 
-        sTmp := DoRecordDialog(ChannelId,sEventId, m_Recorded_dbConnectionString);
+        sTmp := DoRecordDialog(ChannelId,
+                               sEventId,
+                               m_Recorded_dbConnectionString,
+                               sSleepCommand);
+        m_Trace.DBMSG(TRACE_DETAIL,'Timer='+sTmp);
+        m_Trace.DBMSG(TRACE_DETAIL,'Sleep='+sSleepCommand);
         if Trim(sTmp) <> '' then
         begin
           DbgMsg(sTmp);
-          m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sTmp);
-          SendHttpCommand(sTmp);
-          DoEvents;
-
           if PingDBox(m_sDBoxIp) then
+          begin
+            m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sTmp);
+            SendHttpCommand(sTmp);
+            if sSleepCommand <> '' then
+            begin
+              m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sSleepCommand);
+              SendHttpCommand(sSleepCommand);
+            end;
+            DoEvents;
             Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+          end;
           DoEvents;
-
-          Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+          lbxChannelListClick(self);
         end;
-
       end;
     end;
   except
@@ -1285,6 +1340,7 @@ procedure TfrmMain.lvChannelProgDblClick(Sender: TObject);
 var
   ChannelId,
   sEventId : String;
+  sSleepCommand,
   sStartZeit,
   sEndZeit : String;
   sTmp     : String;
@@ -1296,19 +1352,29 @@ begin
     ChannelId := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
     sEventId  := lvChannelProg.Selected.Caption;
 
-    sTmp := DoRecordDialog(ChannelId,sEventId, m_Recorded_dbConnectionString);
+    sTmp := DoRecordDialog(ChannelId,
+                           sEventId,
+                           m_Recorded_dbConnectionString,
+                           sSleepCommand);
+    m_Trace.DBMSG(TRACE_DETAIL,'Timer='+sTmp);
+    m_Trace.DBMSG(TRACE_DETAIL,'Sleep='+sSleepCommand);
     if Trim(sTmp) <> '' then
     begin
       DbgMsg(sTmp);
-      m_Trace.DBMSG(TRACE_DETAIL,'Whishes_ResultDblClick send HTTP: '+ sTmp);
-      SendHttpCommand(sTmp);
-      DoEvents;
-
       if PingDBox(m_sDBoxIp) then
+      begin
+        m_Trace.DBMSG(TRACE_DETAIL,'lvChannelProgDblClick send HTTP: '+ sTmp);
+        SendHttpCommand(sTmp);
+        if sSleepCommand <> '' then
+        begin
+          m_Trace.DBMSG(TRACE_DETAIL,'lvChannelProgDblClick send HTTP: '+ sSleepCommand);
+          SendHttpCommand(sSleepCommand);
+        end;
+        DoEvents;
         Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
+      end;
+      lbxChannelListClick(self);
       DoEvents;
-
-      Timer_WebBrowser.Navigate(m_sDBoxIp + '/fb/timer.dbox2');
     end;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'lvChannelProgDblClick '+ E.Message );
@@ -1363,6 +1429,18 @@ begin
       m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> apids[1] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[1],0));
       m_Trace.DBMSG(TRACE_DETAIL, 'RecordNow> apids[2] = '    + IntToStrDef(m_RecordingThread[k].RecordingData.apids[2],0));
 
+      m_RecordingThread[k].RecordingData.epgid       := lvChannelProg.Selected.Caption;
+      m_RecordingThread[k].RecordingData.epg         := lvChannelProg.Selected.SubItems[5];
+      m_RecordingThread[k].RecordingData.epgtitle    := lvChannelProg.Selected.SubItems[4];
+
+      m_Trace.DBMSG(TRACE_DETAIL, 'channelid   = ' + m_RecordingThread[k].RecordingData.channel_id);
+      m_Trace.DBMSG(TRACE_DETAIL, 'channelname = ' + m_RecordingThread[k].RecordingData.channelname);
+      m_Trace.DBMSG(TRACE_DETAIL, 'epgid       = ' + m_RecordingThread[k].RecordingData.epgid);
+      m_Trace.DBMSG(TRACE_DETAIL, 'epgtitel    = ' + m_RecordingThread[k].RecordingData.epgtitle);
+      m_Trace.DBMSG(TRACE_DETAIL, 'epgsubtitel = ' + m_RecordingThread[k].RecordingData.epgsubtitle);
+      m_Trace.DBMSG(TRACE_DETAIL, 'epg         = ' + m_RecordingThread[k].RecordingData.epg);
+      m_Trace.DBMSG(TRACE_DETAIL, 'filename    = ' + m_RecordingThread[k].RecordingData.filename);
+
       m_RecordingThread[k].RecordingData.cmd  := CMD_VCR_RECORD;
       m_RecordingThread[k].TheadState         := Thread_Recording;
 
@@ -1389,9 +1467,9 @@ begin
 
       m_RecordingThread[k].pcoProcessManager := TTeMuxGrabManager.Create( m_sDBoxIp,
                                                                           m_RecordingThread[k].RecordingData.vpid,
-                                                                          [m_RecordingThread[k].RecordingData.apids[0],
-                                                                           m_RecordingThread[k].RecordingData.apids[1],
-                                                                           m_RecordingThread[k].RecordingData.apids[2]],
+                                                                          [m_RecordingThread[k].RecordingData.apids[1],
+                                                                           m_RecordingThread[k].RecordingData.apids[2],
+                                                                           m_RecordingThread[k].RecordingData.apids[3]],
                                                                           m_RecordingThread[k].RecordingData.filename + Mgeg2FileExt,
                                                                           SplittSize,
                                                                           MessageCallback,
@@ -1491,6 +1569,13 @@ begin
         GetPids(m_RecordingThread[k].RecordingData.vpid,
                 m_RecordingThread[k].RecordingData.apids);
 
+        m_RecordingThread[k].RecordingData.apids[2]    := 0;
+        m_RecordingThread[k].RecordingData.channel_id  := m_coVcrDb.GetDbChannelId(lbxChannelList.Items.Strings[lbxChannelList.ItemIndex]);
+        m_RecordingThread[k].RecordingData.channelname := lbxChannelList.Items.Strings[lbxChannelList.ItemIndex];
+        m_RecordingThread[k].RecordingData.epgid       := lvChannelProg.Selected.Caption;
+        m_RecordingThread[k].RecordingData.epg         := lvChannelProg.Selected.SubItems[5];
+        m_RecordingThread[k].RecordingData.epgtitle    := lvChannelProg.Selected.SubItems[4];
+
         m_Trace.DBMSG(TRACE_DETAIL, 'create folder');
         sOutPath:= RecordingCreateOutPath( k );
 
@@ -1500,6 +1585,7 @@ begin
         m_Trace.DBMSG(TRACE_DETAIL, 'build filename');
         RecordingCreateOutFileName( k, sOutPath );
 
+        m_RecordingThread[k].RecordingData.cmd         := CMD_VCR_RECORD;
         m_RecordingThread[k].RecordingData.iMuxerSyncs := 0;
         m_RecordingThread[k].RecordingData.bIsPreview  := true;
         m_RecordingThread[k].TheadState                := Thread_Recording;
@@ -2473,7 +2559,7 @@ begin
         sTmp := 'Möchten Sie die Filmbeschreibung von ' + #13#10 + '"' + sEpgTitle + ' - ' + sEpgSubTitle + '"' + #13#10 + 'jetzt in die Datenbank einfügen?';
         if Application.MessageBox(PChar(sTmp), PChar('Frage'), MB_YESNO) = IDYES then
         begin
-          m_coVcrDb.UpdateEpgInDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
+          m_coVcrDb.InsertEpgInDb(sEpgTitle, sEpgSubTitle, sEpg.Text);
         end;
       finally
         sEpg.free;
@@ -2496,6 +2582,7 @@ var
   sType,
   sStartZeit,
   sEndZeit,
+  sAvanceZeit,
   sKanal,
   ChannelId  : String;
   i          : Integer;
@@ -2516,23 +2603,47 @@ begin
           for i := 0 to Pred(TmpList.Count) do
           begin
             sLine      := TmpList.Strings[i];
-            sTmp       := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sType      := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sRep       := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sTmp       := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sStartZeit := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sEndZeit   := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            sLine      := Copy(sLine, Pos(sTmp,sLine), Length(sLine));
-            sKanal     := Copy(sLine, 1,               Pos(' ',sLine)-1);
-            ChannelId  := m_coVcrDb.GetDbChannelId(sKanal);
-            m_Trace.DBMSG(TRACE_SYNC, 'T='+sType+' S='+sStartZeit+' E='+sEndZeit+' ['+sKanal+']');
+            sTmp       := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sTmp)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'Idx='+sTmp );
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sType      := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sType)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'Type='+sType);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sRep       := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sRep)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'Rep='+sRep);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sTmp       := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sTmp)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'AT='+sTmp);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sAvanceZeit:= Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sAvanceZeit)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'ST='+sStartZeit);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sStartZeit := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sStartZeit)+1, Length(sLine)));
+//            m_Trace.DBMSG(TRACE_SYNC, 'ET='+sEndZeit);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Line['+sLine+']');
+
+            sEndZeit   := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
+            sLine      := Trim(Copy(sLine, Length(sEndZeit)+1, Length(sLine)));
+
+            sKanal     := Trim(sLine);
+//            m_Trace.DBMSG(TRACE_SYNC, 'Kanal='+sKanal);
+
+            m_Trace.DBMSG(TRACE_SYNC, 'Type='+sType+' Start='+sStartZeit+' End='+sEndZeit+' Av='+sAvanceZeit+' ['+sKanal+']');
             if sType = '5' then
             begin
+              ChannelId  := m_coVcrDb.GetDbChannelId(sKanal);
+//              m_Trace.DBMSG(TRACE_SYNC, 'ChannelId='+ChannelId);
               m_coVcrDb.CheckTimerEvent(ChannelId,sStartZeit,sEndZeit);
             end;
           end;
@@ -2593,7 +2704,9 @@ begin
           DateTimeToString(sTmp,'dd.mm.yyyy hh:nn', Datum);
           ListItem.SubItems.Add(sTmp); //Start
 
-          sTmp := IntToStr( (StrToInt(VarToStrDef(Work_ADOQuery.Recordset.Fields['EndZeit'].Value, '0')) - StrToInt(VarToStrDef(Work_ADOQuery.Recordset.Fields['StartZeit'].Value, '0'))) div 60 );
+          sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['EndZeit'].Value, '0');
+          Datum := UnixToDateTime(StrToInt64Def(sTmp,0)) + OffsetFromUTC;
+          DateTimeToString(sTmp,'hh:nn', Datum);
           ListItem.SubItems.Add(sTmp); //Dauer
 
           sTmp := VarToStrDef(Work_ADOQuery.Recordset.Fields['Titel'].Value, '');
@@ -2615,6 +2728,7 @@ begin
           end else
           begin
             // Startzeit...
+            Datum := UnixToDateTime(StrToInt64Def(VarToStrDef(Work_ADOQuery.Recordset.Fields['StartZeit'].Value, '0'),0)) + OffsetFromUTC;
             DecodeDateTime(Datum,
                            AYear,
                            AMonth,
@@ -2714,7 +2828,7 @@ begin
       begin
         // Konflikt...
         lvTimer.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clRed));
-      end;  
+      end;
       if Item.Caption = '2' then
       begin
         // "verbotene" Zeit...
@@ -2731,6 +2845,223 @@ begin
     end;
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'lvTimerCustomDrawItem '+ E.Message );
+  end;
+end;
+
+procedure TfrmMain.lvChannelProgCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+var
+  i         : Integer;
+  Channelid : String;
+  sEventId  : String;
+begin
+  try
+    if not (cdsSelected in State) then
+    begin
+      if Item.SubItems[6] = '0' then
+      begin
+        // Ziel=DivX...
+        lvChannelProg.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clOlive));
+      end;
+      if Item.SubItems[6] = '1' then
+      begin
+        // Ziel=DVD...
+        lvChannelProg.Canvas.Brush.Color := MidColor(clWindow, MidColor(clWindow, clRed));
+      end;
+    end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'lvChannelProgCustomDrawItem '+ E.Message );
+  end;
+end;
+
+procedure TfrmMain.MediaGuide_DropFilesDropFiles(Sender: TObject);
+var
+  sLine          : String;
+  sEpgTitle      : String;
+  sEpgSubTitle   : String;
+  sEpg           : String;
+  sEpgGenre      : String;
+  sEpgDauer      : String;
+  sEpgLand       : String;
+  sEpgJahr       : String;
+  sEpgRegie      : String;
+  sEpgFormat     : String;
+  sEpgDarsteller : String;
+  sTmp           : String;
+  TmpList        : TStringList;
+  i              : Integer;
+begin
+  try
+    if (Pos(UpperCase('.TXT'),       UpperCase(MediaGuide_DropFiles.FileName)) > 0) and
+       (Pos(UpperCase('MGUIDE_D_F_'),UpperCase(MediaGuide_DropFiles.FileName)) > 0) then
+    begin
+      sTmp := MediaGuide_DropFiles.FileName;
+      TmpList:= TStringList.Create;
+      lbl_MGuide.Caption := 'lese '+sTmp;
+      try
+        TmpList.LoadFromFile(sTmp);
+        i := 0;
+        while i < Pred(TmpList.Count)-1 do
+        begin
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Pos('Titel: ', sLine) > 0 then
+          begin
+            sEpgTitle:= Copy(sLine, Length('Titel: ')+1,Length(sLine));
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Pos('Episode: ', sLine) > 0 then
+          begin
+            sEpgSubTitle := Copy(sLine, Pos('Episode: ',sLine)+Length('Episode: '), Length(sLine));
+            sEpgSubTitle := Copy(sEpgSubTitle, 1, Pos('-',sEpgSubTitle)-2);
+          end;
+          if Pos('Genre: ', sLine) > 0 then
+          begin
+            sEpgGenre := Copy(sLine, Pos('Genre: ',sLine)+Length('Genre: '), Length(sLine));
+            sEpgGenre := Copy(sEpgGenre, 1, Pos('-',sEpgGenre)-2);
+          end;
+          if Pos('Länge: ', sLine) > 0 then
+          begin
+            sEpgDauer := Copy(sLine, Pos('Länge: ',sLine)+Length('Länge: '), Length(sLine));
+            sEpgDauer := Copy(sEpgDauer, 1, Pos(' ',sEpgDauer)-1);
+            sTmp := IntToStr(StrToIntDef(Copy(sEpgDauer,1,2),0)*60 + StrToIntDef(Copy(sEpgDauer,4,2),0));
+            sEpgDauer := sTmp;
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Pos('Produktionsland: ', sLine) > 0 then
+          begin
+            sEpgLand := Copy(sLine, Pos('Produktionsland: ',sLine)+Length('Produktionsland: '), Length(sLine));
+            sEpgLand := Copy(sEpgLand, 1, Pos('-',sEpgLand)-2);
+          end;
+          if Pos('Produktionsjahr: ', sLine) > 0 then
+          begin
+            sEpgJahr := Copy(sLine, Pos('Produktionsjahr: ',sLine)+Length('Produktionsjahr: '), Length(sLine));
+            sEpgJahr := Copy(sEpgJahr, 1, Pos('-',sEpgJahr)-2);
+          end;
+          if Pos('Regie: ', sLine) > 0 then
+          begin
+            sEpgRegie := Copy(sLine, Pos('Regie: ',sLine)+Length('Regie: '), Length(sLine));
+            sEpgRegie := Trim(sEpgRegie);
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Pos('Bild- und Tonformate: ', sLine) > 0 then
+          begin
+            sEpgFormat := Copy(sLine, Pos('Bild- und Tonformate: ',sLine)+Length('Bild- und Tonformate: '), Length(sLine));
+//            sEpgFormat := Copy(sEpgFormat, 1, Pos('-',sEpgFormat)-1);
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Pos('Darsteller: ', sLine) > 0 then
+          begin
+            sEpgDarsteller := Copy(sLine, Pos('Darsteller: ',sLine)+Length('Darsteller: '), Length(sLine));
+//            sEpgDarsteller := Copy(sEpgDarsteller, 1, Pos('-',sEpgDarsteller)-1);
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          //EPG-Text
+          begin
+            sEpg := '';
+            sEpg := sEpg + '<!DOCTYPE HTML PUBLIC ´-//W3C//DTD HTML 4.0 Transitional//EN´>'+#13#10;
+            sEpg := sEpg + '<HTML>'+#13#10;
+            sEpg := sEpg + '<HEAD>'+#13#10;
+            sEpg := sEpg + '<TITLE> EPG </TITLE>'+#13#10;
+            sEpg := sEpg + '<META NAME=´Author´ CONTENT=´Dirk Szymanski´>'+#13#10;
+            sEpg := sEpg + '<META NAME=´Keywords´ CONTENT=´´>'+#13#10;
+            sEpg := sEpg + '<META NAME=´Description´ CONTENT=´´>'+#13#10;
+            sEpg := sEpg + '<LINK REL=´stylesheet´ TYPE=´text/css´ HREF=´/global.css´>'+#13#10;
+            sEpg := sEpg + '</HEAD>'+#13#10;
+            sEpg := sEpg + ' '+#13#10;
+            sEpg := sEpg + '<BODY>'+#13#10;
+            sEpg := sEpg + '<table width=´100%´ border=´0´ cellspacing=´0´ cellpadding=´4´>'+#13#10;
+
+            sTmp := sEpgTitle;
+            if sEpgSubTitle <> '' then sTmp:= sTmp + ' - ' + sEpgSubTitle;
+            sEpg := sEpg + '	<tr>'+#13#10;
+            sEpg := sEpg + '		<td class=´a´><b>'+sTmp+'</b></td>'+#13#10;
+            sEpg := sEpg + '	</tr>'+#13#10;
+            if sEpgGenre <> '' then
+            begin
+              sEpg := sEpg + '	<tr>'+#13#10;
+              sEpg := sEpg + '		<td class=´bepg´><b>'+ sEpgGenre+'</b></td>'+#13#10;
+              sEpg := sEpg + '	</tr>'+#13#10;
+            end;
+            sEpg := sEpg + '	<tr>'+#13#10;
+            sEpg := sEpg + '		<td class=´bepg´>'+ sLine +'</td>'+#13#10;
+            sEpg := sEpg + '	</tr>'+#13#10;
+            if sEpgFormat <> '' then
+            begin
+              sEpg := sEpg + '	<tr>'+#13#10;
+              sEpg := sEpg + '		<td class=´bepg´>'+sEpgDauer +' Minuten - '+ sEpgFormat +'</td>'+#13#10;
+              sEpg := sEpg + '	</tr>'+#13#10;
+            end;
+            if sEpgLand <> '' then
+            begin
+              sEpg := sEpg + '	<tr>'+#13#10;
+              sEpg := sEpg + '		<td class=´bepg´>'+ sEpgLand+ ' '+sEpgJahr +'</td>'+#13#10;
+              sEpg := sEpg + '	</tr>'+#13#10;
+            end;
+            if sEpgRegie <> '' then
+            begin
+              sEpg := sEpg + '	<tr>'+#13#10;
+              sEpg := sEpg + '		<td class=´bepg´>Regie: '+ sEpgRegie+'</td>'+#13#10;
+              sEpg := sEpg + '	</tr>'+#13#10;
+            end;
+            if sEpgDarsteller <> '' then
+            begin
+              sEpg := sEpg + '	<tr>'+#13#10;
+              sEpg := sEpg + '		<td class=´bepg´>Darsteller: '+ sEpgDarsteller+'</td>'+#13#10;
+              sEpg := sEpg + '	</tr>'+#13#10;
+            end;
+
+            sEpg := sEpg + '</table>'+#13#10;
+            sEpg := sEpg + '</BODY>'+#13#10;
+            sEpg := sEpg + '</HTML>'+#13#10;
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          //Channel&Time-Text
+          begin
+            sTmp := sLine;
+          end;
+
+          sLine := TmpList.Strings[i];
+          inc(i);
+          if Trim(sLine) = '' then //empty line after the item...
+          begin
+            lbl_MGuide.Caption := sEpgTitle;
+            DoEvents;
+            m_coVcrDb.InsertEpgInDb(sEpgTitle, sEpgSubTitle, sEpg, false);
+          end;
+          DoEvents;
+
+        end;
+      finally
+        TmpList.Free;
+        lbl_MGuide.Caption := '';
+      end;
+    end;
+    lbl_MGuide.Caption := '';
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'MediaGuide_DropFiles '+ E.Message );
+  end;
+end;
+
+procedure TfrmMain.cbxChannelListChange(Sender: TObject);
+begin
+  //
+  try
+    FillDbChannelListBox(cbxChannelList.ItemIndex);
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'MediaGuide_DropFiles '+ E.Message );
   end;
 end;
 

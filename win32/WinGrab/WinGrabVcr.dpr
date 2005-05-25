@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: WinGrabVcr.dpr,v $
+// Revision 1.4  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.3  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -80,7 +83,7 @@ begin
       Application.Initialize;
       Application.Title := 'WinGrab v0.83 - VCR Edition';
       Application.CreateForm(TfrmMain, frmMain);
-  Application.Run;
+      Application.Run;
       if hMux<>0 then ReleaseMutex(hMux);
     end;
   except

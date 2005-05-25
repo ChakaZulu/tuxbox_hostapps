@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrRecord.pas,v $
+// Revision 1.5  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.4  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -214,11 +217,7 @@ begin
         // stop the grabber ...
         FreeAndNil(m_RecordingThread[k].pcoProcessManager);
         //wait to destroy all grab threads
-        for x:= 1 to 10 do
-        begin
-          Sleep(300);
-          DoEvents;
-        end;
+        DoEvents;
         ClearStateList;
 
         sTmp := 'Möchten Sie das Preview von [' + m_RecordingThread[k].RecordingData.epgtitle + '] jetzt löschen ?';
@@ -252,11 +251,7 @@ begin
       // stop the grabber ...
       FreeAndNil(m_RecordingThread[k].pcoProcessManager);
       //wait to destroy all grab threads
-      for x:= 1 to 10 do
-      begin
-        Sleep(300);
-        DoEvents;
-      end;
+      DoEvents;
       m_RecordingThread[k].TheadState := Thread_TransformStart;
       ClearStateList;
       DbgMsg( IntToStr(m_RecordingThread[k].RecordingData.iMuxerSyncs) + ' ReSyncs' );
@@ -304,16 +299,10 @@ begin
       if FileSizeByName( sFileName ) > 1048576 then
       begin
         m_Trace.DBMSG(TRACE_DETAIL, 'start transforming of [' + sFileName + ']');
-        Sleep(300);
+//        Sleep(300);
         DoEvents;
 
         RecordingLoadEpgFile( k, m_RecordingThread[k].RecordingData.filename + EpgFileExt );
-
-{        //save epg -> now in transforthread
-        SaveEpgToDb(m_RecordingThread[k].RecordingData.epgtitle,
-                    m_RecordingThread[k].RecordingData.epgsubtitle,
-                    m_RecordingThread[k].RecordingData.epg);
-}
         sTmp := ExtractFilePath( m_RecordingThread[k].RecordingData.filename );
 
         // Transform the StreamFiles to DivX ...
@@ -555,7 +544,6 @@ end;
 procedure TfrmMain.CheckShutdown(bForce: Boolean);
 var
   k           : Integer;
-  bRunning    : Boolean;
   AYear,
   AMonth,
   ADay,
@@ -573,47 +561,18 @@ begin
       exit;
     end;
 
-    bRunning := false;
-    for k:=0 to 9 do
-    begin
-      try
-        if m_RecordingThread[k].pcoTransformThread <> nil then
-        begin
-          if not m_RecordingThread[k].pcoTransformThread.Terminated then
-          begin
-            bRunning := true;
-            m_Trace.DBMSG(TRACE_DETAIL, 'CheckShutdown - work on Thread['+IntToStr(k)+'] is in progress ...' );
-            break;
-          end else
-          begin
-            // free finished TransformThread ...
-            try
-              m_RecordingThread[k].pcoTransformThread.Free;
-            finally
-              m_RecordingThread[k].pcoTransformThread := nil;
-              m_RecordingThread[k].TheadState := Thread_Idle;
-            end;
-          end;
-        end;
-        if m_RecordingThread[k].TheadState <> Thread_Idle then
-        begin
-          m_Trace.DBMSG(TRACE_DETAIL, 'CheckShutdown - work on Thread['+IntToStr(k)+'] is in progress ...' );
-          break;
-        end;
-      except
-      end;
-    end;
-
     if m_bIsEpgReading then
     begin
       m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (abort -> is already reading EPG)');
       exit;
     end;
+
     if m_coVcrDb.IsTimerAt(IntToStr(DatetimeToUnix(IncMinute(now,15)))) > 0 then
     begin
       m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown (abort -> timer found)');
       exit;
     end;
+
     GetProcessList;
     if IsFileActive(m_sDVDxPath) then
     begin
@@ -621,52 +580,50 @@ begin
       exit;
     end;
 
-    if not bRunning then
+    // This subroutine decommits the unused memory blocks.
+    QMemDecommitOverstock;
+
+    m_Trace.DBMSG(TRACE_DETAIL, 'VCR-PC is Idle ...' );
+    if bForce then
     begin
-      // This subroutine decommits the unused memory blocks.
-      QMemDecommitOverstock;
+      DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
+      DoEvents;
+      Sleep(0);
+      DoEvents;
+      m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown');
+      exit;
+    end;
 
-      m_Trace.DBMSG(TRACE_DETAIL, 'VCR-PC is Idle ...' );
-      if bForce then
+    // check the status of the DBox ...
+    if not PingDBox(m_sDBoxIp) then
+    begin
+      m_Trace.DBMSG(TRACE_DETAIL, '... and the DBox is down, also posible to hibernate the VCR-PC now.');
+      DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
+      DoEvents;
+      Sleep(0);
+      DoEvents;
+    end else
+    begin
+      DoEvents;
+      DecodeDateTime((Now),
+                     AYear,
+                     AMonth,
+                     ADay,
+                     AHour,
+                     AMinute,
+                     ASecond,
+                     AMilliSecond);
+      if (AHour > 23) OR
+         (AHour < 09) then
       begin
+        m_Trace.DBMSG(TRACE_DETAIL, '... and the night is comming, also posible to hibernate the VCR-PC now.');
         DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
         DoEvents;
         Sleep(0);
         DoEvents;
-        m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckShutdown');
-        exit;
-      end;
-
-      // check the status of the DBox ...
-      if not PingDBox(m_sDBoxIp) then
-      begin
-        m_Trace.DBMSG(TRACE_DETAIL, '... and the DBox is down, also posible to hibernate the VCR-PC now.');
-        DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
-        DoEvents;
-        Sleep(0);
-        DoEvents;
-      end else
-      begin
-        DoEvents;
-        DecodeDateTime((Now),
-                       AYear,
-                       AMonth,
-                       ADay,
-                       AHour,
-                       AMinute,
-                       ASecond,
-                       AMilliSecond);
-        if (AHour > 22) OR
-           (AHour < 09) then
-        begin
-          m_Trace.DBMSG(TRACE_DETAIL, '... and the night is comming, also posible to hibernate the VCR-PC now.');
-          DoShutdownDialog(e_ShutdownMode(gbxPowersave.ItemIndex));
-          DoEvents;
-          Sleep(0);
-          DoEvents;
-        end;
       end;
     end;
+
   except
     on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'CheckShutdown '+E.Message);
   end;

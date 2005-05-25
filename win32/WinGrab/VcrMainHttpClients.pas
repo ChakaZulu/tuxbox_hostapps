@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainHttpClients.pas,v $
+// Revision 1.6  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.5  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -98,6 +101,7 @@ end;
 
 procedure TfrmMain.RestartHttpd;
 var
+  i: Integer;
   sTmp : String;
 begin
   try
@@ -111,10 +115,13 @@ begin
     try
       if VcrDBoxTelnet.Connected then
       begin
-        //restart nhttpd
-        VcrDBoxTelnet.WriteLn('nhttpd');
-        DoEvents;
-        Sleep(300);
+        //restart dbox
+        VcrDBoxTelnet.WriteLn('reboot');
+        for i:= 1 to 1200 do
+        begin
+          DoEvents;
+          Sleep(100);
+        end;
       end;
     finally
       VcrDBoxTelnet.Disconnect;
@@ -133,16 +140,21 @@ begin
   m_Trace.DBMSG(TRACE_SYNC, 'Telnet connect ...');
 end;
 procedure TfrmMain.VcrDBoxTelnetConnected(Sender: TObject);
+var
+  i: Integer;
 begin
   m_Trace.DBMSG(TRACE_SYNC, 'Telnet connected');
   // login
   VcrDBoxTelnet.WriteLn('root');
   DoEvents;
   Sleep(300);
-  //restart nhttpd
-  VcrDBoxTelnet.WriteLn('nhttpd');
-  DoEvents;
-  Sleep(300);
+  //restart dbox
+  VcrDBoxTelnet.WriteLn('reboot');
+  for i:= 1 to 1200 do
+  begin
+    DoEvents;
+    Sleep(100);
+  end;
 end;
 procedure TfrmMain.VcrDBoxTelnetDisconnect;
 begin
@@ -204,8 +216,7 @@ begin
     sTmp   := SendHttpCommand('/fb/epg.dbox2?eventid=' + aUrl);
     if Length(sTmp) > 0 then
     begin
-      Result.Text := sTmp;
-
+      Result.Text := CheckHtmlString(sTmp);
       i:= Pos('<b>',LowerCase(sTmp));
       if i <> 0 then
       begin
@@ -214,6 +225,17 @@ begin
         if sTmp <> 'keine ausführlichen Informationen verfügbar' then
         begin
           epgsubtitel := sTmp;
+          if epgtitel = epgsubtitel then
+          begin
+            if Pos(' - ',epgtitel) > 0 then
+            begin
+              epgsubtitel := Copy(epgtitel, Pos(' - ',epgtitel)+3, Length(epgtitel));
+              epgtitel    := Copy(epgtitel, 1,                     Pos(' - ',epgtitel)-1);
+            end else
+            begin
+              epgsubtitel := '';
+            end;
+          end;
         end;
         if Length(sFilePath) > 0 then
         begin
@@ -304,7 +326,7 @@ begin
           sLine    := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
           sDauer   := Trim(Copy(sLine, 1, Pos(' ',sLine)-1));
           ////////
-          sTitel   := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
+          sTitel   := StripeTitleDuplicat(Copy(sLine, Pos(' ',sLine)+1, Length(sLine)));
           sEpg     := SaveEpgText(IntToHex(StrToInt64Ex(sEventId),10), '', sTitel, sSubTitel).Text;
           sDbg := 'GetChannelProgId eventid=' + sEventId + ' Titel=' + sTitel + ' SubTitel=' + sSubTitel;
           m_Trace.DBMSG(TRACE_SYNC, sDbg);
@@ -384,6 +406,35 @@ begin
   end;
   DoEvents;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< GetCurrentEvent = "' + sEventId +'"');
+end;
+
+function  TfrmMain.StripeTitleDuplicat(sTitel: String) : String;
+var
+  sRet,
+  sTmp   : String;
+  iOpen,
+  iClose : Integer;
+begin
+  m_Trace.DBMSG(TRACE_SYNC, '> StripeTitleDuplicat in "' + sTitel +'"');
+  sRet := sTitel;
+  try
+   iOpen  := Pos('(',sTitel);
+   iClose := Pos(')',sTitel);
+   if iOpen > 1 then
+   begin
+     sTmp := Copy(sTitel, iOpen+1, iClose-iOpen-1);
+     m_Trace.DBMSG(TRACE_SYNC, sTmp);
+     if Pos(sTmp, sTitel) < iOpen then
+     begin
+       sRet := Trim( Copy(sTitel,1, iOpen-1) );
+     end;
+   end;
+  except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'GetCurrentEvent '+E.Message);
+  end;
+  Result:= sRet;
+  DoEvents;
+  m_Trace.DBMSG(TRACE_SYNC, '< StripeTitleDuplicat out "' + sRet +'"');
 end;
 
 procedure TfrmMain.CheckChannelProg(ChannelId: String; sChannelName: String);
@@ -476,10 +527,12 @@ begin
           DateTimeToString(sDatum, 'dd.mm.yyyy', Datum);
           DateTimeToString(sUhrzeit, 'hh:nn', Datum);
           ////////
+
           sLine    := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
           sDauer   := IntToStr(StrToIntDef(Trim(Copy(sLine, 1, Pos(' ',sLine)-1)),60));
           ////////
-          sTitel   := Copy(sLine, Pos(' ',sLine)+1, Length(sLine));
+
+          sTitel   := StripeTitleDuplicat(Copy(sLine, Pos(' ',sLine)+1, Length(sLine)));
           sEpg     := SaveEpgText(IntToHex(StrToInt64Ex(sEventId),10), '', sTitel, sSubTitel).Text;
           ////////
 
@@ -814,14 +867,24 @@ begin
       sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
       vpid:= StrToIntEx(sLine);
       m_Trace.DBMSG(TRACE_DETAIL, 'vpid    =' + IntToStr(vpid));
-      i:= 0;
+      i:= 1;
       while(Length(sTmp) > 0 ) do
       begin
         sTmp  := Copy(sTmp, Pos(#10,sTmp)+1, Length(sTmp));
         sLine := Copy(sTmp, 1, Pos(#10,sTmp)-1);
-        apids[i]:= StrToIntEx(sLine);
+        apids[i]:= StrToIntEx(Copy(sLine, 1, Pos(' ',sLine)-1));
         m_Trace.DBMSG(TRACE_DETAIL, 'apids['+IntToStr(i)+']=' + IntToStr(apids[i]));
         i:= i+1;
+        if Pos(' vtxt', sLine) > 0 then
+        begin
+          apids[i]:= 0;
+          break;
+        end;
+        if Pos(' pmt', sLine) > 0 then
+        begin
+          apids[i]:= 0;
+          break;
+        end;
         if i > 2 then
           break;
       end;

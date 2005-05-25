@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrDatabase.pas,v $
+// Revision 1.5  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.4  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -55,11 +58,11 @@ begin
     try
       Recorded_ADOQuery.Close;
       Recorded_ADOQuery.SQL.Clear;
-      Recorded_ADOQuery.SQL.Add('SELECT * FROM T_Recorded ORDER BY Titel;');
+      Recorded_ADOQuery.SQL.Add('SELECT * FROM v_Recorded ORDER BY Titel;');
       Recorded_ADOQuery.ExecSQL;
       Recorded_ADOQuery.Active := true;
     except
-      on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'OpenEpgDb / open T_Recorded  '+ E.Message );
+      on E: Exception do m_Trace.DBMSG(TRACE_ERROR,'OpenEpgDb / open v_Recorded  '+ E.Message );
     end;
     try
       Whishes_ADOQuery.Close;
@@ -96,6 +99,8 @@ begin
   end;
   m_Trace.DBMSG(TRACE_CALLSTACK, '< CloseEpgDb');
 end;
+
+////////////////////////////////////////////////////////////////////////////////
 
 procedure TfrmMain.CheckDbVersion;
 var
@@ -170,11 +175,18 @@ begin
   m_Trace.DBMSG(TRACE_CALLSTACK, '< CheckDbVersion = '+sVersion);
 end;
 
+////////////////////////////////////////////////////////////////////////////////
+
 procedure TfrmMain.Recorded_DBGridTitleClick(Column: TColumn);
+var
+  sSQL: String;
 begin
   try
     Recorded_ADOQuery.SQL.Clear;
-    Recorded_ADOQuery.SQL.Add('SELECT * FROM T_Recorded ORDER BY ' + Column.FieldName + ';');
+    sSQL :=        'SELECT * FROM ';
+    sSQL := sSQL + 'v_Recorded ';
+    sSQL := sSQL + ' ORDER BY ' + Column.FieldName + ';';
+    Recorded_ADOQuery.SQL.Add(sSQL);
     Recorded_ADOQuery.ExecSQL;
     Recorded_ADOQuery.Active := true;
   except
@@ -186,7 +198,7 @@ end;
 //
 // Kanalliste
 //
-procedure TfrmMain.FillDbChannelListBox;
+procedure TfrmMain.FillDbChannelListBox(iBouquetId: Integer);
 var
   sTmp,
   sName,
@@ -198,8 +210,13 @@ begin
     lbxChannelList.Items.Clear;
     try
       Work_ADOQuery.SQL.Clear;
-      sSQL :=        'SELECT * FROM ';
-      sSQL := sSQL + 'T_Channel;';
+      if iBouquetId < 1 then
+      begin
+        sSQL := 'SELECT * FROM T_Channel WHERE BouquetId < 99 ORDER BY BouquetId, Name;';
+      end else
+      begin
+        sSQL := 'SELECT * FROM T_Channel WHERE BouquetId = '+IntToStr(iBouquetId)+' ORDER BY Name;';
+      end;
       Work_ADOQuery.SQL.Add(sSQL);
       Work_ADOQuery.Active := true;
       if not Work_ADOQuery.Recordset.Eof then
@@ -233,8 +250,12 @@ end;
 //
 procedure TfrmMain.FillDbEventListView( ChannelId : String );
 var
+  i        : Integer;
   sTmp,
-  sSQL     : String;
+  sSQL,
+  sZielformat,
+  sStatus,
+  sColor   : String;
   sEventId : String;
   sZeit    : String;
   sDatum   : String;
@@ -253,8 +274,10 @@ begin
     try
       sZeit := IntToStr(DateTimeToUnix(IncHour((Now - OffsetFromUTC),-3)));
       Work_ADOQuery.SQL.Clear;
-      sSQL :=        'SELECT * FROM ';
-      sSQL := sSQL + 'T_Events WHERE ';
+
+      sSQL :=        'SELECT ChannelId, EventId, Zeit, Dauer, Titel, SubTitel, EPG, TimerZielformat, TimerStatus ';
+      sSQL := sSQL + 'FROM v_Events ';
+      sSQL := sSQL + 'WHERE ';
       sSQL := sSQL + 'ChannelId = ''' + ChannelId + ''' AND ';
       sSQL := sSQL + 'Zeit     >= ''' + CheckDbString(sZeit) + ''' ';
       sSQL := sSQL + 'ORDER BY Zeit ;';
@@ -272,6 +295,12 @@ begin
                 sEventId  := IntToStr(StrToInt64Ex(sEventId));
             except
               on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'Error sEventId '+E.Message);
+            end;
+            try
+              sZielformat:= VarToStrDef(Work_ADOQuery.Recordset.Fields['TimerZielformat'].Value, '-1');
+              sStatus    := VarToStrDef(Work_ADOQuery.Recordset.Fields['TimerStatus'].Value, '0');
+            except
+              on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'Error sZeit '+E.Message);
             end;
             try
               sZeit     := VarToStrDef(Work_ADOQuery.Recordset.Fields['Zeit'].Value, '0');
@@ -319,7 +348,16 @@ begin
               begin
                 ListItem.SubItems.Add(sTitel);
               end;
-              ListItem.SubItems.Add(sEpg);
+              ListItem.SubItems.Add(sEpg); // = Item.SubItems[5]
+
+              if sStatus = '1' then
+              begin
+                ListItem.SubItems.Add(sZielformat); // = Item.SubItems[6]
+              end else
+              begin
+                ListItem.SubItems.Add('-1'); // = Item.SubItems[6]
+//                sColor := IntToStr(m_coVcrDb.GetTimerTargetType(ChannelId, sEventId));
+              end;
             except
               on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'Error lvChannelProg.Items... '+E.Message);
             end;
@@ -369,6 +407,7 @@ end;
 //
 procedure TfrmMain.CheckChannelsInDb;
 var
+  EpgId        : Integer;
   sDbg         : String;
   sTmp,
   sSQL         : String;
@@ -392,19 +431,19 @@ begin
     sZeit := IntToStr( DateTimeToUnix(Now() - OffsetFromUTC() ) );
     Work_ADOQuery.SQL.Clear;
     sSQL :=        'SELECT ';
-    sSQL := sSQL + 'T_Events.ChannelId, T_Events.EventId, T_Channel.Name, ';
+    sSQL := sSQL + 'ChannelId, EventId, Name, ';
     sSQL := sSQL + 'Titel, SubTitel, Zeit, Dauer, Epg ';
     sSQL := sSQL + 'FROM ';
-    sSQL := sSQL + 'T_Events, T_Channel ';
+    sSQL := sSQL + 'v_Seek ';
     sSQL := sSQL + 'WHERE ';
-    sSQL := sSQL + 'T_Channel.ChannelId = T_Events.ChannelId AND ';
-    sSQL := sSQL + 'T_Channel.FindEpg   > 0 AND ';
     sSQL := sSQL + 'Zeit > ''' + CheckDbString(sZeit) + ''' ';
-    sSQL := sSQL + 'ORDER BY Zeit ASC, T_Channel.Idn ASC ;';
+    sSQL := sSQL + 'ORDER BY Zeit ASC ;';
     Work_ADOQuery.SQL.Add(sSQL);
     Work_ADOQuery.Active := true;
     if not Work_ADOQuery.Recordset.Eof then
     begin
+      Work_ADOQuery.Recordset.MoveLast;
+      Work_ADOQuery.Recordset.MoveFirst;
       Whishes_Result.Items.Clear;
       Whishes_Result.Items.Add('Durchsuche die EPG-Datenbank nach vorgemerkten Sendungen ...');
       DoEvents;
@@ -421,6 +460,7 @@ begin
           sTmp := sTitel + ' - ' + sSubTitel
         else
           sTmp := sTitel;
+          
         try
           Datum  := UnixToDateTime(StrToInt64Def(sZeit,0)) + OffsetFromUTC;
         except
@@ -434,20 +474,20 @@ begin
         sDbg := 'CheckChannelProg '+sChannelName+' eventid=' + sEventId + ' Titel="' + sTmp  + '"';
         m_Trace.DBMSG(TRACE_SYNC, sDbg);
         DoEvents;
-
-        if m_coVcrDb.IsInWhishesList(sTmp) > 0 then
+        
+        if m_coVcrDb.IsInWhishesList(sTitel, sSubTitel) > 0 then
         begin
           sDbg:= sDatum+' '+sUhrzeit+' "'+sTmp+'" auf "'+sChannelName+'" gefunden';
           m_Trace.DBMSG(TRACE_DETAIL, sDbg);
 
           sEndZeit  := IntToStr( StrToIntDef(sZeit,0) + StrToIntDef(sDauer,0) );
-
+          EpgId:= m_coVcrDb.InsertEpg(sTitel, sSubTitel, sEpg);
           m_coVcrDb.UpdateTimerInDb( sChannelId,
                                      sEventId,
                                      sZeit,
                                      sEndZeit,
                                      sTitel,
-                                     sEPG,
+                                     EpgId,
                                      0 ); //Timer InAktiv setzen...
 
 

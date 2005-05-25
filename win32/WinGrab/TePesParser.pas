@@ -112,15 +112,16 @@ const
 begin
   Time := 0;
   Current := 0;
-  while Current < Count do begin
+  while Current < Count do
+  begin
     while
       (Current < Count) and
-      (
-      (MpegType = 0) or
-      ((MpegType = 1) and (PacketPos < 7)) or
-      ((MpegType = 2) and (PacketPos < 9))
-      ) and
-      ((PacketPos < 6) or (not IgnorePacket)) do begin
+      ( (MpegType = 0) or
+        ((MpegType = 1) and (PacketPos < 7)) or
+        ((MpegType = 2) and (PacketPos < 9))
+        ) and
+      ((PacketPos < 6) or (not IgnorePacket)) do
+    begin
       case PacketPos of
         0, 1: begin
             if InputBuffer[Current] = 0 then

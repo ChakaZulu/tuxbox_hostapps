@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: VcrMainSettings.pas,v $
+// Revision 1.4  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.3  2004/12/03 16:09:49  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -37,7 +40,7 @@ begin
     m_bInit := false;
     iOk := 0;
 
-    m_sDBoxIp := ReadString('WinGrab', 'IP', '192.168.1.100');
+    m_sDBoxIp := ReadString('WinGrab', 'IP', '192.168.0.100');
     m_Trace.DBMSG(TRACE_DETAIL, 'IP : ' + m_sDBoxIp );
     edIp.IpAddress := m_sDBoxIp;
     DoEvents;
@@ -562,7 +565,7 @@ begin
       edIp.Font.Color := clWindowText;
     end else
     begin
-      VCRCommandServerSocket.Active := false;
+//      VCRCommandServerSocket.Active := false;
       edIp.Font.Color := clRed;
     end;
     DoEvents;

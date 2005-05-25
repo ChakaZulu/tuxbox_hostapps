@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // $Log: DoRecordDlg.pas,v $
+// Revision 1.2  2005/05/25 11:23:44  thotto
+// *** empty log message ***
+//
 // Revision 1.1  2004/12/03 16:17:53  thotto
 // - Bugfixes
 // - EPG suchen überarbeitet
@@ -61,6 +64,7 @@ type
     m_sSubTitel          : String;
     m_sDauer             : String;
     m_sTimerCommand      : String;
+    m_sSleepCommand      : String;
 
   public
     { Public declarations }
@@ -68,7 +72,8 @@ type
   end;
 
 Function DoRecordDialog(sChannelId, sEventId : String;
-                        sdbConnectionString  : String) : String;
+                        sdbConnectionString  : String;
+                        var sSleepCommand    : String) : String;
 
 var
   FrmDoRecord: TFrmDoRecord;
@@ -78,7 +83,8 @@ implementation
 {$R *.dfm}
 
 Function DoRecordDialog(sChannelId, sEventId : String;
-                        sdbConnectionString  : String) : String;
+                        sdbConnectionString  : String;
+                        var sSleepCommand    : String) : String;
 var
   OldCur : TCursor;
 begin
@@ -91,7 +97,8 @@ begin
     FrmDoRecord.m_sEventId           := sEventId;
     FrmDoRecord.ShowModal;
   finally
-    Result:= FrmDoRecord.m_sTimerCommand;
+    Result       := FrmDoRecord.m_sTimerCommand;
+    sSleepCommand:= FrmDoRecord.m_sSleepCommand;
     FrmDoRecord.Free;
     Screen.Cursor:= OldCur;
   end;
@@ -108,7 +115,7 @@ begin
                        'WinGrab');
 
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'FormCreate '+ E.Message );
   end;
 end;
 
@@ -118,26 +125,35 @@ begin
     m_Trace.DBMSG_DONE;
     m_coVcrDb.Free;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'FormDestroy '+ E.Message );
   end;
 end;
 
 procedure TFrmDoRecord.BtnOkClick(Sender: TObject);
 var
   sTmp      : String;
+  EpgId,
   iOutFormat: Integer;
+  AYear,
+  AMonth,
+  ADay,
+  AHour,
+  AMinute,
+  ASecond,
+  AMilliSecond: Word;
 begin
   try
     if cb_Zielformat.Checked then iOutFormat := 1
                              else iOutFormat := 0;
     if cb_FreeTV.Checked     then m_sEndZeit := IntToStr( StrToIntDef(m_sEndZeit,0) + 300 );
 
+    EpgId:= m_coVcrDb.InsertEpg(m_sTitel, m_sSubTitel, m_sEpg);
     m_coVcrDb.UpdateTimerInDb( m_sChannelId,
                                m_sEventId,
                                m_sStartZeit,
                                m_sEndZeit,
                                m_sTitel,
-                               m_sEPG,
+                               EpgId,
                                1,   //Timer Aktiv setzen...
                                iOutFormat ); //Zielformat
 
@@ -147,10 +163,37 @@ begin
     sTmp := sTmp + '&channel_id=' + m_sChannelId + '&rs=1';
     m_sTimerCommand := sTmp;
 
+    m_sEndZeit:= IntToStr( StrToIntDef(m_sEndZeit,0) + 300 );
+    DecodeDateTime(UnixToDateTime(StrToInt64Def(m_sEndZeit,0)) + OffsetFromUTC,
+                   AYear,
+                   AMonth,
+                   ADay,
+                   AHour,
+                   AMinute,
+                   ASecond,
+                   AMilliSecond);
+    m_Trace.DBMSG(TRACE_DETAIL, 'SleepTimer Hour='+ IntToStr(AHour) );
+    if((AHour > 22) OR
+       (AHour < 09))then
+    begin
+//      if m_coVcrDb.IsTimerAt(m_sEndZeit) = 0 then
+      begin
+        sTmp := '/fb/timer.dbox2?action=new&type=1';
+        sTmp := sTmp + '&alarm=' + m_sEndZeit;
+        sTmp := sTmp + '&sbon=1&rep=0&rs=1';
+        m_sSleepCommand := sTmp;
+//      end else
+//      begin
+//        m_Trace.DBMSG(TRACE_DETAIL, 'SleepTimer IsTimerAt('+m_sEndZeit+')');
+      end;
+    end;
+    m_Trace.DBMSG(TRACE_DETAIL, 'RecordTimer Timer=['+m_sTimerCommand+'] ');
+    m_Trace.DBMSG(TRACE_DETAIL, 'SleepTimer  Sleep=['+m_sSleepCommand+'] ');
     Sleep(0);
     FrmDoRecord.Close;
     Application.HandleMessage;
   except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'BtnOkClick '+ E.Message );
   end;
 end;
 
@@ -162,6 +205,7 @@ begin
     FrmDoRecord.Close;
     Application.HandleMessage;
   except
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'BtnCancelClick '+ E.Message );
   end;
 end;
 
@@ -172,6 +216,9 @@ var
   iOverlapped : Integer;
 begin
   try
+    m_sSleepCommand:= '';
+    m_sTimerCommand:= '';
+
     m_coVcrDb  := TVcrDb.Create(m_dbConnectionString);
 
     m_sEPG     := m_coVcrDb.GetDbEvent(m_sChannelId,
@@ -203,27 +250,30 @@ begin
       lblHinweisTitel.Visible:= true;
       lblHinweis.Visible:= true;
       lblHinweis.Caption:= lblHinweis.Caption + 'Titel überschneidet sich mit einer anderen Aufnahme ';
-    end;
-    iOverlapped:= m_coVcrDb.IsTimerAt(m_sStartZeit,IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(m_sStartZeit)),15))));
-    if iOverlapped > 0 then
+    end else
     begin
-      lblHinweisTitel.Visible:= true;
-      lblHinweis.Visible:= true;
-      lblHinweis.Caption:= lblHinweis.Caption + 'am Anfang ! '+#13#10;
-    end;
-
-    iOverlapped:= m_coVcrDb.IsTimerAt(IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(m_sEndZeit)),-15))),m_sEndZeit);
-    if iOverlapped > 0 then
-    begin
-      lblHinweisTitel.Visible:= true;
-      lblHinweis.Visible:= true;
-      lblHinweis.Caption:= lblHinweis.Caption + 'am Ende ! '+#13#10;
+      iOverlapped:= m_coVcrDb.IsTimerAt(m_sStartZeit,IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(m_sStartZeit)),15))));
+      if iOverlapped > 0 then
+      begin
+        lblHinweisTitel.Visible:= true;
+        lblHinweis.Visible:= true;
+        lblHinweis.Caption:= lblHinweis.Caption + 'Titel überschneidet sich mit einer anderen Aufnahme am Anfang ! '+#13#10;
+      end else
+      begin
+        iOverlapped:= m_coVcrDb.IsTimerAt(IntToStr(DatetimeToUnix(IncMinute(UnixToDatetime(StrToInt64(m_sEndZeit)),-15))),m_sEndZeit);
+        if iOverlapped > 0 then
+        begin
+          lblHinweisTitel.Visible:= true;
+          lblHinweis.Visible:= true;
+          lblHinweis.Caption:= lblHinweis.Caption + 'Titel überschneidet sich mit einer anderen Aufnahme am Ende ! '+#13#10;
+        end;
+      end;
     end;
 
     htmlEPG.LoadFromString( m_sEpg, '' );
     DoEvents;
   except
-    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'System_Shutdown '+ E.Message );
+    on E: Exception do m_Trace.DBMSG(TRACE_ERROR, 'FormActivate '+ E.Message );
   end;
 end;
 
