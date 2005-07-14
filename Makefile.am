@@ -1,4 +1,4 @@
 AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = \
-	bmp2raw ggrab grab mkdvd mkflfs stream ucodex
+	bmp2raw checkImage ggrab grab mkdvd mkflfs stream ucodex

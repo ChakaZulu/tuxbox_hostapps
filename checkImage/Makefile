@@ -1,6 +1,6 @@
-# $Id: Makefile,v 1.1 2005/02/28 22:41:56 dirch Exp $
+# $Id: Makefile,v 1.2 2005/07/14 19:59:31 mogway Exp $
 #
-# Copyright (C) 2005 mogway <mogway@yadi.org> 
+# Copyright (C) 2005 mogway <mogway@yadi.org>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@ BINNAME			= checkImage
 SRCS			= checkImage.c
 INSTALLDIR		= /usr/local/bin
 CC			= g++
+STRIP			= strip
 CFLAGS			= -Wall -mcpu=823 -mmultiple -mstring -meabi -pipe -Os
 LDFLAGS			= -g
 OBJS 			= $(SRCS:%.cpp=%.o)
@@ -37,7 +38,11 @@ $(BINNAME): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBCRYPT) -o $@
 
 install: $(BINNAME)
+	$(STRIP) $(BINNAME)
 	cp $(BINNAME) $(INSTALLDIR)/$(BINNAME)
+
+uninstall:
+	if [ -e $(INSTALLDIR)/$(BINNAME) ]; then rm $(INSTALLDIR)/$(BINNAME); fi
 
 clean:
 	rm -f $(BINNAME) *.o
