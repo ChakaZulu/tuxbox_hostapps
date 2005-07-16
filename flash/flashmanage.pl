@@ -102,7 +102,7 @@ if ( not defined ( $operation ) )
 }
 elsif ( $operation eq "build" )
 {
-  my $out = IO::File -> new ( $image, O_CREAT | O_EXCL | O_WRONLY ) or die $!;
+  my $out = IO::File -> new ( $image, O_CREAT | O_TRUNC | O_WRONLY ) or die $!;
 
   foreach ( sort ( keys ( %partdef ) ) )
   {
