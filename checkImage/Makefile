@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2005/07/14 19:59:31 mogway Exp $
+# $Id: Makefile,v 1.3 2005/07/29 23:31:34 mogway Exp $
 #
 # Copyright (C) 2005 mogway <mogway@yadi.org>
 #
@@ -24,9 +24,11 @@ SRCS			= checkImage.c
 INSTALLDIR		= /usr/local/bin
 CC			= g++
 STRIP			= strip
-CFLAGS			= -Wall -mcpu=823 -mmultiple -mstring -meabi -pipe -Os
+CFLAGS			= -Wall -O3 -I. -g
+#CFLAGS			= -Wall -mcpu=823 -mmultiple -mstring -meabi -pipe -Os
 LDFLAGS			= -g
-OBJS 			= $(SRCS:%.cpp=%.o)
+OBJS 			= $(SRCS:%.c=%.o)
+#OBJS 			= $(SRCS:%.cpp=%.o)
 DISTFILES 		= $(SRCS)
 
 all: $(BINNAME)

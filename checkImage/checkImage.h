@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.h,v 1.1 2005/07/14 19:59:31 mogway Exp $
+   $Id: checkImage.h,v 1.2 2005/07/29 23:31:34 mogway Exp $
 
    Check images for bad magics
 
@@ -63,7 +63,7 @@ void printError(int fd, char* msg);
 void badMagic(char* msg);
 void usage(char* name);
 
-void printImageInfo(char* filename, unsigned char md5[16], int imgsize, char* fstype);
+void printImageInfo(char* filename, int imgsize, char* fstype);
 void scanBadMagic(int fd, int imgsize);
 void checkImage(char* filename);
 
