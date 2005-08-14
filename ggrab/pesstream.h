@@ -25,9 +25,9 @@ class pesstream {
 	private:
 		static int		m_st_nr;
 		int			m_nr;
-		enum S_TYPE		m_stype;
-		class CBuffer *		mp_cbuf;
-		class xlist *		mp_list;
+		S_TYPE		m_stype;
+		CBuffer *		mp_cbuf;
+		xlist *		mp_list;
 
 		pthread_t		mh_thread;
 
