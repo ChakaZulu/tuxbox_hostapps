@@ -25,7 +25,7 @@ fi;
 ### automake >= 1.7 ###
 AUTOMAKE=`which automake`
 if ( test -e  $AUTOMAKE ) then
-	echo "automake >= 1.7:          "`$AUTOMAKE --version | $GREP "automake " | $CUT -f4 -d " "`
+	echo "automake >= 1.8:          "`$AUTOMAKE --version | $GREP "automake " | $CUT -f4 -d " "`
 	else
 	echo -e "\033[37;41mautomake nicht installiert\033[37;40m"
 fi;
