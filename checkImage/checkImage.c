@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.5 2005/07/14 19:59:31 mogway Exp $
+   $Id: checkImage.c,v 1.6 2005/11/26 20:03:02 mogway Exp $
 
    Check images for bad magics
 
@@ -31,7 +31,7 @@
 
 void usage(char* name)
 {
-    fprintf(stderr, "%s - $Revision: 1.5 $\n",name);
+    fprintf(stderr, "%s - $Revision: 1.6 $\n",name);
 	fprintf(stderr, "Check images for bad magics\n\n");
 	fprintf(stderr, "Usage: %s [OPTION] <imagefile>\n\n", name);
 	fprintf(stderr, "Options:\n");
@@ -258,12 +258,15 @@ void checkImage(char* filename)
 
 	// print info
 	if (verbose || debug)
+	{
+		getFlashType(fd, imgsize);
 		if (imgsize == MAXIMAGESIZE)
 		{
 			printImageInfo(basename(filename), imgsize, "complete image");
 		} else {
 			printImageInfo(basename(filename), imgsize, getFilesystemType(fd));
 		}
+	}
 	else
 		printf("check '%s' for bad magic bytes.\n", basename(filename));
 
