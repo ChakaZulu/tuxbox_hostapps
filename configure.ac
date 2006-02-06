@@ -19,6 +19,9 @@ AC_HEADER_STDC
 AC_CHECK_LIB(crypto,PEM_write_bio,[HAVE_LIBCRYPTO="yes"],[AC_MSG_WARN([*argh*])])
 AC_CHECK_HEADER(openssl/bio.h,[HAVE_LIBCRYPTO="yes"],[AC_MSG_WARN([*argh*])])
 
+AC_CHECK_HEADER(zlib.h,,[AC_MSG_WARN([zlib.h missing, cannot compile mkfs.jffs2])])
+AC_CHECK_LIB(z,compress,,[AC_MSG_WARN([zlib missing, cannot compile mkfs.jffs2])])
+
 AC_OUTPUT([
 Makefile
 bmp2raw/Makefile
@@ -29,6 +32,7 @@ libcrypto++/Makefile
 libflashimage/Makefile
 mkdvd/Makefile
 mkflfs/Makefile
+mkfs.jffs2/Makefile
 stream/Makefile
 ucodex/Makefile
 ])
