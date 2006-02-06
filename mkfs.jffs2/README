@@ -1,0 +1,16 @@
+The content of this directory, with the exception of the Makefile.am
+and the present file, have been snarfed from the anonymous CVS archive
+at cvs.infradead.org. It represents the snapshot dated 2005-03-04.
+
+This directory consists of a subset of the the subdirectory util, some
+files from the directory fs/jffs2, together with the include
+subdirectory (complete), move into a subdirectory of this
+directory. Files not needed for building mkfs.jffs2 have been deleted
+(with the exception for mkfs.jffs2.1 :-).
+
+No, there are no tarball distributions available.
+
+To build, zlib is necessary. On my SuSE 10.0 system it was necessary
+to install the package zlib-devel.
+
+Barf 2006-02-06

@@ -1,0 +1,18 @@
+The content of this directory, with the exception of the Makefile.am
+and the present file, have been snarfed from the anonymous CVS archive
+at cvs.infradead.org. On 2006-02-03 it was checked out using the
+commands
+
+cvs -d :pserver:anoncvs@cvs.infradead.org:/home/cvs login (password: anoncvs)
+cvs -d :pserver:anoncvs@cvs.infradead.org:/home/cvs co mtd
+
+This directory consists of a subset of the the subdirectory util,
+together with the include subdirectory (complete), move into a
+subdirectory of this directory.
+
+No, there are no tarball distributions available.
+
+To build, zlib is necessary. On my SuSE 10.0 system it was necessary
+to install the package zlib-devel.
+
+Barf

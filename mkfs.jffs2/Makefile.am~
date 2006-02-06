@@ -1,0 +1,7 @@
+bin_PROGRAMS = mkfs.jffs2
+
+mkfs_jffs2_SOURCES = crc32.c compr_rtime.c mkfs.jffs2.c compr_zlib.c compr.c
+
+mkfs_jffs2_LDADD = -lz
+
+INCLUDES = -Iinclude
