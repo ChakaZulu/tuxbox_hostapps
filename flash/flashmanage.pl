@@ -65,6 +65,11 @@ sub part_write
   $in -> seek ( 0, SEEK_SET ) or die $!;
   $out -> seek ( $begin, SEEK_SET ) or die $!;
 
+  if ($insize > $size) {
+      printf STDERR "flashmanage fatal error: File " . $file . " too large\n";
+      return 0;
+  }
+
   my $buf;
 
   my $temp = $insize;
@@ -82,6 +87,7 @@ sub part_write
   {
     part_write_pad ( $out, $begin + $insize, $size - $insize );
   }
+  return 1;
 }
 
 sub part_write_pad
@@ -104,28 +110,40 @@ elsif ( $operation eq "build" )
 {
   my $out = IO::File -> new ( $image, O_CREAT | O_TRUNC | O_WRONLY ) or die $!;
 
+  my $success = 1;
   foreach ( sort ( keys ( %partdef ) ) )
   {
     if ( defined ( $parts { $partdef { $_ } -> [0] } ) )
     {
-      part_write ( $out, $parts { $partdef { $_ } -> [0] }, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
+      $success = $success && part_write ( $out, $parts { $partdef { $_ } -> [0] }, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
     }
     else
     {
       part_write_pad ( $out, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
     }
   }
+  close($out);
+  if (! $success) {
+      unlink($image);
+      exit(1);
+  }
 }
 elsif ( $operation eq "replace" )
 {
   my $out = IO::File -> new ( $image, O_WRONLY ) or die $!;
 
+  my $success = 1;
   foreach ( sort ( keys ( %partdef ) ) )
   {
     if ( defined ( $parts { $partdef { $_ } -> [0] } ) )
     {
-      part_write ( $out, $parts { $partdef { $_ } -> [0] }, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
+      $success = $success && part_write ( $out, $parts { $partdef { $_ } -> [0] }, $partdef { $_ } -> [1], $partdef { $_ } -> [2] );
     }
+  }
+  close($out);
+  if (! $success) {
+      unlink($image);
+      exit(1);
   }
 }
 elsif ( $operation eq "extract" )
