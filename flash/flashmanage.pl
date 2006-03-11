@@ -66,7 +66,7 @@ sub part_write
   $out -> seek ( $begin, SEEK_SET ) or die $!;
 
   if ($insize > $size) {
-      printf STDERR "flashmanage fatal error: File " . $file . " too large\n";
+      printf STDERR "flashmanage fatal error: File " . $file . " too large (%d > %d)\n", $insize, $size;
       return 0;
   }
 
