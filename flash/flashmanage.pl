@@ -9,6 +9,7 @@ use Pod::Usage;
 my $image;
 my $operation;
 my %parts = ();
+my $rootsize = 0;
 
 GetOptions
 (
@@ -17,6 +18,7 @@ GetOptions
   'image|i=s' => \$image,
   'operation|oper|o=s' => \$operation,
   'part=s' => \%parts,
+  'rootsize|r=s' => \$rootsize,
 );
 
 my %partdef =
@@ -102,6 +104,13 @@ sub part_write_pad
   $out -> syswrite ( $buf, $size );
 }
 
+$rootsize = oct($rootsize) if $rootsize =~ /^0/;
+if ( $rootsize > 0 ) 
+{
+    $partdef{'1'}->[2] = $rootsize;
+    $partdef{'2'}->[1] = $rootsize + $partdef{'1'}->[1];
+    $partdef{'2'}->[2] = 0x7e0000 - $partdef{'0'}->[2] - $partdef{'1'}->[2];
+}
 if ( not defined ( $operation ) )
 {
   pod2usage ( -message => "No operation given.", -exitstatus => 0, -verbose => 1 );
@@ -196,6 +205,7 @@ flashmanage [OPTIONS]
 
   -i, --image FILE      image file
   -o, --operation ARG   what to do (build, extract, replace, print)
+  -r, --rootsize=SIZE   size of the root partition (defaults to 0x660000)
       --part NAME=FILE  partition files
       --help            brief help message
       --man             full documentation
