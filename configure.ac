@@ -25,6 +25,7 @@ AC_CHECK_LIB(z,compress,,[AC_MSG_WARN([zlib missing, cannot compile mkfs.jffs2])
 AC_OUTPUT([
 Makefile
 bmp2raw/Makefile
+checkImage/Makefile
 flash/Makefile
 ggrab/Makefile
 grab/Makefile
