@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.6 2005/11/26 20:03:02 mogway Exp $
+   $Id: checkImage.c,v 1.7 2006/08/15 22:18:49 the_moon Exp $
 
    Check images for bad magics
 
@@ -28,10 +28,10 @@
 */
 
 #include "checkImage.h"
-
+#include <libgen.h>
 void usage(char* name)
 {
-    fprintf(stderr, "%s - $Revision: 1.6 $\n",name);
+    fprintf(stderr, "%s - $Revision: 1.7 $\n",name);
 	fprintf(stderr, "Check images for bad magics\n\n");
 	fprintf(stderr, "Usage: %s [OPTION] <imagefile>\n\n", name);
 	fprintf(stderr, "Options:\n");
