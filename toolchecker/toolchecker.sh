@@ -154,7 +154,7 @@ fi;
 MKSQUASHFS=`which mksquashfs`
 if ( test -e $MKSQUASHFS)
         then
-        echo "mksquashfs 2.1            "`$MKSQUASHFS -version | $GREP mksquashfs | cut -d" " -f3`
+        echo "mksquashfs 3.0         "`$MKSQUASHFS -version | $GREP mksquashfs | cut -d" " -f3`
         else
         echo -e "\033[37;41mksquashfs nicht installiert\033[37;40m"
         exit 1
