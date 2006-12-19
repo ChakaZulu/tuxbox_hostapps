@@ -150,16 +150,5 @@ if ( test -e $WGET ) then
 	echo -e "\033[37;41wget nicht installiert\033[37;40m"
 fi;
 
-### mksquashfs ###
-MKSQUASHFS=`which mksquashfs`
-if ( test -e $MKSQUASHFS)
-        then
-        echo "mksquashfs 3.0         "`$MKSQUASHFS -version | $GREP mksquashfs | cut -d" " -f3`
-        else
-        echo -e "\033[37;41mksquashfs nicht installiert\033[37;40m"
-        exit 1
-fi
-
-
 echo ""
 echo ""
