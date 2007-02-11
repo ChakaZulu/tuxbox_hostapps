@@ -544,7 +544,7 @@ void usage(char* name)
 	fprintf(stderr, "-d : enable debug log (stderr)\n");
 	fprintf(stderr, "-r : replace token <replace> with <to> at beginning of path of requested picture\n");
 	fprintf(stderr, "-s : use simple resize algorithm (instead of more complex one)\n\n");
-	fprintf(stderr, "-c : read picture prescaled (faster, but less quality.)\n\n");
+	fprintf(stderr, "-c : read picture prescaled (faster, but lower quality.)\n\n");
 	fprintf(stderr, "e.g.: %s -d -r \"/mnt,/data\" 12345\n\n", name);
 
 }
@@ -586,7 +586,7 @@ int main(int argnr, char** argv)
 			case 'c': prescale=1;
 		}
 	}
-	lprintf("Version $Id: picserver.c,v 1.9 2007/02/11 17:23:33 zwen Exp $\n");
+	lprintf("Version $Id: picserver.c,v 1.10 2007/02/11 17:30:32 zwen Exp $\n");
 
 	if(optind > argnr-1)
 	{
