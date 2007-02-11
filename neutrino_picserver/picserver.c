@@ -59,7 +59,7 @@ void print_timestamp()
 	gettimeofday(&tv, &tz);
 	struct tm *t=localtime(&tv.tv_sec);
 	fprintf(stderr, "%04d%02d%02d %02d:%02d:%02d.%02d ", t->tm_year+1900, t->tm_mon+1, t->tm_mday,
-			  t->tm_hour, t->tm_min, t->tm_sec, tv.tv_usec /10000);
+			  t->tm_hour, t->tm_min, t->tm_sec, (int) tv.tv_usec /10000);
 }
 void diep(char *s)
 {
@@ -273,10 +273,20 @@ unsigned char * to555(unsigned char * orgin,int size)
 	free(orgin);
 	return np;
 }
-void c32_15(unsigned char r, unsigned char g , unsigned char b , unsigned char* d)
+inline void c32_15(unsigned char r, unsigned char g , unsigned char b , unsigned char* d)
 {
-		*d     = ((r >> 1) & 0x7C) | (g >> 6);
-		*(d+1) = ((g << 2) & 0xE0) | (b >> 3);
+	static unsigned char r5;
+	static unsigned char g5;
+	static unsigned char b5;
+	r5 = r >> 3;
+	g5 = g >> 3;
+	b5 = b >> 3;
+	if (r < 0xF8 && ( r & 0x04 ) ) r5++;
+	if (g < 0xF8 && ( g & 0x04 ) ) g5++;
+	if (b < 0xF8 && ( b & 0x04 ) ) b5++;
+
+	*d     = ((r5 << 2) | ( g5 >> 3));
+	*(d+1) = ((g5 << 5) | b5); 
 }
 
 /*
@@ -288,10 +298,11 @@ void c32_15(unsigned char r, unsigned char g , unsigned char b , unsigned char* 
 	*/
 
 #define FS_CALC_ERROR_COMMON(color, index) \
-				p1 = p2 = (ptr[index] + (this_line_error_##color[ix]>>4)); \
-				if(p1>255)p1=255; if(p1<0)p1=0; \
-				color = (p1 & 0xF8) | 0x4; \
-				error = p2 - color; \
+				orig = ptr[index]; \
+				if (orig > 252)orig=252 ; if (orig < 4)orig=4; \
+				p = (orig + (this_line_error_##color[ix]>>4)); \
+				color = (p & 0xF8) | 0x4; \
+				error = p - color; \
 
 #define FS_CALC_ERROR_RIGHT(color, index) \
 				FS_CALC_ERROR_COMMON(color,index) \
@@ -310,8 +321,8 @@ void c32_15(unsigned char r, unsigned char g , unsigned char b , unsigned char* 
 unsigned char * to555_floyd_steinberg_err_diff(unsigned char * orgin,int x, int y)
 {
 	int odd_line=1;
-	int ix,iy, error, p1, p2;
-	unsigned char r,g,b;
+	int ix,iy, error, p;
+	unsigned char r,g,b, orig;
 	unsigned char *ptr, *dst;
 	unsigned char* np = (unsigned char*)malloc(x*y*2);
 	int *this_line_error_r;
@@ -466,10 +477,12 @@ void* ServerThread(void* socket)
 	/* resize image to desired geometry */
 	lprintf("Start resizing\n");
 	if(width!=nx && height!=ny)
+	{
 		if(do_simple_resize)
 			img=simple_resize(img, width, height, nx, ny);
 		else
 			img=color_average_resize(img, width, height, nx, ny);
+	}
 	lprintf("End resizing\n");
 
 	/* convert RGB888 (24 bit) to RGB555 (16bit) */
@@ -477,7 +490,7 @@ void* ServerThread(void* socket)
 //	img=to555(img, nx * ny);
 	img=to555_floyd_steinberg_err_diff(img, nx, ny);
 	lprintf("End downsampling\n");
-	lprintf("pic size\n",time(NULL), nx*ny*2);
+	lprintf("pic size %d\n", nx*ny*2);
 
 	/* 3. Send back final picture geometry */
 	pd.bpp=htonl(16);
@@ -573,6 +586,7 @@ int main(int argnr, char** argv)
 			case 'c': prescale=1;
 		}
 	}
+	lprintf("Version $Id: picserver.c,v 1.9 2007/02/11 17:23:33 zwen Exp $\n");
 
 	if(optind > argnr-1)
 	{
