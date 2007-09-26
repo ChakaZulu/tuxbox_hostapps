@@ -37,11 +37,10 @@
  *
  */
 
-
+#include <endian.h>
 #include <stdio.h>
 #include "mkflfs.h"
 #include <string.h>
-#include <byteswap.h>
 #include "minilzo.h"
 #include "lzoconf.h"
 
@@ -57,12 +56,15 @@ static lzo_byte out [ OUT_LEN ];
 
 static HEAP_ALLOC(wrkmem,LZO1X_1_MEM_COMPRESS);
 /*-----------------------------------------------------------------------------*/
-
+#if __BYTE_ORDER == __BIG_ENDIAN
+#define SWAP_WORD(x) (x)
+#else
 #define SWAP_WORD(x) \
  temp = x >> 8; \
  temp = temp | (x << 8 ); \
  x = temp;
-
+#include <byteswap.h>
+#endif
 
 u8 input[262144];
 u8 sector_00[131072];
@@ -412,7 +414,11 @@ void mkfile(char nahme[256],u8 *daten,unsigned int size,int dummy)
 		data_block_header0.datum=0x00;
 		for(i=0;i<4;i++)
 			data_block_header0.garbage[i]=0x00;
+#if __BYTE_ORDER == __BIG_ENDIAN
+		data_block_header0.offset_im_file=offset;
+#else
 		data_block_header0.offset_im_file=bswap_32(offset);
+#endif
 		SWAP_WORD(plen);
 		SWAP_WORD(ulen);
 		data_block_header0.ulen=ulen;
