@@ -463,7 +463,7 @@ while 1:
             debug(DEBUG_SPAM, "soname:", soname)
             base_name = so_pattern.match(library).group(1)
             # libc needs its soinit.o and sofini.o as well as the pic
-            if base_name == "libc":
+            if base_name == "libc" and "uClibc" not in ldlib:
                 # force dso_handle.os to be included, otherwise reduced libc
                 # may segfault in ptmalloc_init due to undefined weak reference
                 extra_flags = find_lib(ldlib) + " -u __dso_handle"
