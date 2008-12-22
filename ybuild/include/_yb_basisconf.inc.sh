@@ -4,14 +4,14 @@
 # Some basis configuration of ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 10:21:24 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_basisconf.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 10:21:24 $ _yb_basisconf.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -115,4 +115,30 @@ show_variables()
 	echo " -- CVS Directory..........: $cCVSDIR  ($cWORKINGDIR/$cCVSDIR)"
 	echo ""
 	echo " CVS Username..............: $CVSNAME (for anonymous: anoncvs)"
+}
+
+# -----------------------------------------------------------------------------------------------------------
+# Clean Directoty Structure
+# -----------------------------------------------------------------------------------------------------------
+clean_dirs()
+{
+	rm -frdv $CVSDIR/*
+	rm -frdv $DBOX_PREFIX/cdk
+	rm -frdv $DBOX_PREFIX/cdkflash
+	rm -frdv $DBOX_PREFIX/cdkroot
+}
+
+# -----------------------------------------------------------------------------------------------------------
+# Build Directoty Structure if not exists
+# -----------------------------------------------------------------------------------------------------------
+build_dirs()
+{
+	mkdir -p $DBOX_PREFIX
+	mkdir -p $CVSDIR
+	mkdir -p $LOGOSDIR
+	mkdir -p $UCODESDIR
+	mkdir -p $ARCHIVEDIR
+	mkdir -p $MyLOCALSDIR
+	mkdir -p $MyPATCHESDIR
+	mkdir -p $MyDBOXFILESDIR
 }
