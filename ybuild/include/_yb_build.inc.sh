@@ -4,8 +4,8 @@
 # Build/Make, Configure, CVS functions
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 10:35:22 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 #============================================================================================================
@@ -19,7 +19,7 @@
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_build.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 10:35:22 $ _yb_build.inc.sh"
 
 #============================================================================================================
 # CONFIGURE
@@ -77,11 +77,8 @@ do_configure_build_features()
 	if [ "$UPDATEHTTPPREFIX" != "" ]; then
 		flags="$flags --with-updatehttpprefix=$UPDATEHTTPPREFIX"
 	fi
-	if [ "$confccache" == "on" ]; then
+	if [ "$confccache" == "on" -a -e "$CCACHEDIR/ccache" ]; then
 		flags="$flags --enable-ccache"
-		if [ "$cCCACHEPATH" != "" ]; then
-			flags="$flags --with-ccachedir=$CCACHEDIR"
-		fi
 	fi
 }
 
