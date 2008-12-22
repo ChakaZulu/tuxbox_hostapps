@@ -4,8 +4,8 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 17:02:46 $
-# $Revision: 1.3 $
+# $Date: 2008/12/22 18:06:03 $
+# $Revision: 1.4 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
@@ -24,6 +24,7 @@ yb_debug()
 	echo "DEBUG: $1"
 	echo "DEBUG: $1" >>"$LOGYBUILDFILE"
 }
+
 # -----------------------------------------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------------------------------------
@@ -63,6 +64,7 @@ yb_debug()
 	_temp="/tmp/answer.$$"
 	dialog 2>$_temp
 	echo "yBuild " >$LOGYBUILDFILE
+	yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/22 18:06:03 $ ybstart.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Inculde Settings & modules
@@ -100,7 +102,18 @@ yb_debug()
 # -----------------------------------------------------------------------------------------------------------
 	init_variables
 	prgtitle="$l_yb_headline"
-
+	# check for dash/bash
+	have_dash=`ls -al /bin/sh|grep "dash"`
+	if [ "$have_dash" != "" ]; then
+		echo "Your Linux uses dash-shell for default."
+		echo "This is not recommend for the tuxboy-project"
+		echo "Correct this (y/n)"
+		read yesno
+		if [ "$yesno" == "y" ]; then
+			echo "you may asked for the root-password"
+			sudo ln -sf /bin/bash /bin/sh
+		fi
+	fi
 	dia=`which dialog`
 	if [ "$dia" == "" ]; then
 		echo "$l_component_not_installed"
