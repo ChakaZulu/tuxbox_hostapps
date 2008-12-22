@@ -3,14 +3,14 @@
 # Manage config file
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 17:02:46 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_configfile.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 17:02:46 $ _yb_configfile.inc.sh"
 
 # ===========================================================
 # config-files - read / write
@@ -25,13 +25,13 @@ config_editvariable()
 {
 	varname=$1
 	val=${!varname}
-    dialog --inputbox "Variable...: $1,\nDescription: $3\nDefault....: $2\nActual.....: $val" 10 52 2>$_temp
-    opt=${?}
-    if [ $opt != 0 ]; then rm $_temp; exit; fi
+	dialog --inputbox "Variable...: $1,\nDescription: $3\nDefault....: $2\nActual.....: $val" 10 52 2>$_temp
+	opt=${?}
+	if [ $opt != 0 ]; then rm $_temp; exit; fi
 	val=`cat $_temp`
 	if [ "$val" != "" ]; then
 		config_set_value_direct $yb_configfile $1 "$val"
-		eval $varname=$val
+		eval $varname='$val'
 	fi
 }
 # -----------------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ config_varset()
 	varname=$1
 	val=$2
 	config_set_value_direct $yb_configfile $varname "$val"
-	eval $varname=$val
+	eval $varname='$val'
 }
 # -----------------------------------------------------------------------------------------------------------
 # Variable (name = $1) to by toggled ("y" to "n" or otherwise) and write it to configfile
@@ -122,6 +122,6 @@ config_set_value()
 config_set_value_direct()
 {
 	config_open $1
-	config_set_value $2 $3
+	config_set_value "$2" "$3"
 	config_write $1
 }

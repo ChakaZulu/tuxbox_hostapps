@@ -4,14 +4,14 @@
 # Language File EN - English
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 17:02:46 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_language_en.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 17:02:46 $ _yb_language_en.inc.sh"
 
 
 #### TODO: Translate
@@ -181,3 +181,5 @@ l_pm_patch_result="Patchergebnis"
 # Settings & Information
 # -----------------------------------------------------------------------------------------------------------
 l_se_version_information="Version Information"
+l_se_displayname="Anzeigename"
+l_se_displayname_comment="Displayname of this ybuild Instance"

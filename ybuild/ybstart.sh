@@ -4,8 +4,8 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 16:32:06 $
-# $Revision: 1.2 $
+# $Date: 2008/12/22 17:02:46 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
@@ -52,7 +52,8 @@ yb_debug()
 	yb_plugindir=$SCRIPTDIR/plugins
 	yb_plugin_count=0
 	cLANG=${lang:=de}
-	
+	# make a copy of the conf-file
+	cp $yb_configfile ${yb_configfile}.bak
 	## TODO: Change ccache handling
 	if [ "`which ccache`" == "" ]; then
 		HAVE_CCACHE="ccache not installed"
@@ -90,7 +91,10 @@ yb_debug()
 			. $plugin
 		done < /tmp/plugins.txt
 	fi
-
+	# view ybuild instance name (for multiple ybuilds)
+	if [ "$cYBUILDNAME" != "" ]; then
+		l_yb_headline="$l_yb_headline ($cYBUILDNAME)"
+	fi
 # -----------------------------------------------------------------------------------------------------------
 # MAIN
 # -----------------------------------------------------------------------------------------------------------

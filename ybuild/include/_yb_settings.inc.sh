@@ -4,14 +4,14 @@
 # Settings & Info
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 17:02:46 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_settings.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 17:02:46 $ _yb_settings.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -33,6 +33,7 @@ settings_menu()
 		p "$l_de_show_patch_logfile"\
 		"" ""\
 		l "${l_yb_choose_language} ..."\
+		n "$l_se_displayname ... ($cYBUILDNAME)"\
 		"" ""\
 		z "$l_back" 2>$_temp
 }
@@ -70,6 +71,7 @@ settings()
 						DEBUG=0
 					fi
 					;;
+				n)	config_editvariable "cYBUILDNAME" "Standard" "$l_se_displayname_comment" ;;
 
 				z)	settings_doquit="true"	;;
 			esac
