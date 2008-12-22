@@ -4,14 +4,14 @@
 # bootstraping, first checkout to get full ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 09:56:00 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 10:05:22 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 
 	CVSNAME="anoncvs"
 	ybuildDIR=`pwd`
-	ybuildDIR="$ybuildDIR/yuild"
+	ybuildDIR="$ybuildDIR/ybuild"
 	mkdir -p $ybuildDIR
 
 	clear
