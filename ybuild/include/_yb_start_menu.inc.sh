@@ -4,8 +4,8 @@
 # Startmenue
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 16:32:47 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 #============================================================================================================
@@ -19,7 +19,7 @@
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_start_menu.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 16:32:47 $ _yb_start_menu.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Main Menu
@@ -36,9 +36,9 @@ start_menu()
 	fi
 
 	# dialog
-    dialog --backtitle "$prgtitle" --title " $l_main_menu "\
-    	--cancel-label "$l_exit"\
-    	--ok-label "$l_choose"\
+	dialog --backtitle "$prgtitle" --title " $l_main_menu "\
+		--cancel-label "$l_exit"\
+		--ok-label "$l_choose"\
 		--menu "$l_use_arrow_keys_and_enter" 24 66 19 \
 		c "$l_checkout_comlete" \
 		u "$l_checkout_update" \
@@ -54,9 +54,9 @@ start_menu()
 		"" ""\
 		d "$l_configuration_and_developmenttools ..." \
 		e "${l_settings_and_information} ..."\
+		0 "${l_plugins} ..."\
 		"" ""\
 		x "$l_exit" 2>$_temp
-#TODO:		0 "${l_plugins} ..." \ 
 }
 
 # -----------------------------------------------------------------------------------------------------------
@@ -69,11 +69,11 @@ start()
 	while [ "$doquit" == "false" ]
 	do
 		start_menu
-	    opt=${?}
-	    if [ $opt != 0 ]; then rm $_temp; exit; fi
-	    cmd=`cat $_temp`
+		opt=${?}
+		if [ $opt != 0 ]; then rm $_temp; exit; fi
+		cmd=`cat $_temp`
 		case "$cmd" in
-	 		c)	cvs_checkout_all ;;
+			c)	cvs_checkout_all ;;
 			u)	cvs_checkout_update ;;
 			f)	do_configure_flash ;;
 			y)	do_configure_yadd ;;

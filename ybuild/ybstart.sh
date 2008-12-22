@@ -4,8 +4,8 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/22 16:32:06 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
@@ -24,7 +24,6 @@ yb_debug()
 	echo "DEBUG: $1"
 	echo "DEBUG: $1" >>"$LOGYBUILDFILE"
 }
-
 # -----------------------------------------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------------------------------------
@@ -37,6 +36,7 @@ yb_debug()
 	else
 		SCRIPTDIR=$HOME/tuxbox/ybuild
 	fi
+	export SCRIPTDIR
 	[ "$SDEBUG" != "0" ] && echo "SCRIPTDIR: $SCRIPTDIR"
 	
 	# define filenames & directories
@@ -49,7 +49,8 @@ yb_debug()
 	LOGYBUILDFILE=$SCRIPTDIR/ybuild.log
 	yb_templatedir=$SCRIPTDIR/templates
 	complete_diff="all.diff"
-
+	yb_plugindir=$SCRIPTDIR/plugins
+	yb_plugin_count=0
 	cLANG=${lang:=de}
 	
 	## TODO: Change ccache handling
@@ -81,6 +82,14 @@ yb_debug()
 	. $SCRIPTDIR/include/_yb_customize_menu.inc.sh
 	. $SCRIPTDIR/include/_yb_settings.inc.sh
 	. $SCRIPTDIR/include/_yb_plugins.inc.sh
+	# include plugins
+	if [ -e $yb_plugindir ]; then
+		find "$yb_plugindir" -name "*.plugin.sh" >/tmp/plugins.txt
+		while read plugin
+		do
+			. $plugin
+		done < /tmp/plugins.txt
+	fi
 
 # -----------------------------------------------------------------------------------------------------------
 # MAIN
