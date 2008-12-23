@@ -4,14 +4,14 @@
 # Some basis configuration of ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.4 $
+# $Date: 2008/12/23 15:12:36 $
+# $Revision: 1.5 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/23 09:00:00 $ _yb_basisconf.inc.sh"
+yb_log_fileversion "\$Revision: 1.5 $ \$Date: 2008/12/23 15:12:36 $ _yb_basisconf.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -80,7 +80,7 @@ init_variables()
 	#------------------------------------------
 	# Default Directory Structure 
 	#------------------------------------------
-	SCRIPTDIR=$cWORKINGDIR/$cSCRIPTDIR
+	#SCRIPTDIR=$cWORKINGDIR/$cSCRIPTDIR
 	MYFILESDIR=$cWORKINGDIR/$cMYFILESDIR
 	LOGOSDIR=$cWORKINGDIR/$cMYFILESDIR/$cLOGOSDIR
 	UCODESDIR=$cWORKINGDIR/$cMYFILESDIR/$cUCODESDIR
@@ -96,6 +96,7 @@ init_variables()
 	# other Settings
 	#------------------------------------------
 	export CVS_RSH=ssh
+	echo "SCRIPTDIR=$SCRIPTDIR" >$MyLOCALSDIR/scriptdir.inc.sh
 }
 # -----------------------------------------------------------------------------------------------------------
 # Show variables (for debug issues)
