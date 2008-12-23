@@ -4,14 +4,14 @@
 # Language File DE - German
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 17:02:46 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 15:11:34 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 17:02:46 $ _yb_language_de.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 15:11:34 $ _yb_language_de.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Common
@@ -141,7 +141,7 @@ l_cm_install_development_tools="Entwicklungstools installieren"
 l_cm_really_install_development_tools="Wirklich alle Entwicklungstools installieren?"
 l_cm_summary="Zusammenfassung : 1 = installiert ok, 0 = nicht installiert"
 l_cm_end_of_installation="Ende der Installation. Prüfe auf Fehler!!"
-
+l_cm_scripts_found="Skripte gefunden"
 
 # -----------------------------------------------------------------------------------------------------------
 # yBuild

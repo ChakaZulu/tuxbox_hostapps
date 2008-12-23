@@ -4,39 +4,41 @@
 # Customizing Scripts
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.3 $
+# $Date: 2008/12/23 15:11:34 $
+# $Revision: 1.4 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_customize_menu.inc.sh"
+yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/23 15:11:34 $ _yb_customize_menu.inc.sh"
+inx="0123456789abcdefghijklmnopqrstuvwxyABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
 # -----------------------------------------------------------------------------------------------------------
 customizeconf_menu()
 {
-	c="$CVSDIR/cdk"
-
 	[ "$SDEBUG" != "0" ] && echo "DEBUG: Enter for next Menu" && read dummy
 
-	dialog --backtitle "$prgtitle" --title " $l_customizing_scripts "\
+	dia='dialog --backtitle "$prgtitle" --title " $l_customizing_scripts "\
 		--cancel-label "$l_back"\
 		--ok-label "$l_choose"\
-		--menu "$l_use_arrow_keys_and_enter" 20 66 15\
-		0 "$l_cm_copy_scripts." \
-		"" ""\
-		1 "yadd-neutrino-local ($yne)"\
-		2 "yadd-none-local ($yno)"\
-		3 "yadd-enigma-local ($ye)"\
-		4 "root-local.sh ($r)"\
-		5 "root-neutrino.jffs2-local.sh ($rnj)"\
-		6 "root-neutrino.squashfs-local.sh ($rns)"\
-		7 "neutrino-jffs2.img2x-local.sh ($nj2)"\
-		"" ""\
-		z "$l_back" 2>$_temp
+		--menu "$l_use_arrow_keys_and_enter\n$locales_count $l_cm_scripts_found" 20 66 15\
+		"" ""'
+	# build locale menu
+	i=0
+	while [ $i -lt $locales_count ]
+	do
+		nr=${inx:$i:1}
+		eval pn=locale_${nr}
+		bn=`basename ${!pn}`
+		dia="$dia $nr \"$bn\""
+		i=`expr $i + 1`
+	done
+	dia="$dia \"z\" \"$l_back\" 2>$_temp"
+	
+	eval "$dia"
 }
 
 # -----------------------------------------------------------------------------------------------------------
@@ -44,45 +46,36 @@ customizeconf_menu()
 # -----------------------------------------------------------------------------------------------------------
 customizeconf()
 {
-	c="$CVSDIR/cdk"
+	c="$MyLOCALSDIR"
+	customizeconf_refresh
 	customizeconf_doquit=false
 	while [ "$customizeconf_doquit" == "false" ]
 	do
-		[ -e "$c/yadd-neutrino-local.sh" ] && yne="$l_cm_installed"
-		[ -e "$c/yadd-none-local.sh" ] && yno="$l_cm_installed"
-		[ -e "$c/yadd-enigma-local" ] && ye="$l_cm_installed"
-		[ -e "$c/root-local.sh" ] && r="$l_cm_installed"
-		[ -e "$c/root-neutrino.jffs2-local.sh" ] && rnj="$l_cm_installed"
-		[ -e "$c/root-neutrino.squashfs-local.sh" ] && rns="$l_cm_installed"
-		[ -e "$c/neutrino-jffs2.img2x-local.sh" ] && nj2="$l_cm_installed"
-		[ -e "$c/my-customizing.inc" ] && mc="$l_cm_installed"
-		[ -e "$c/my-delete-files.inc" ] && mdf="$l_cm_installed"
 		customizeconf_menu
 		opt=${?}
 		if [ $opt == 0 ]; then 
 			cmd=`cat $_temp`
-			case "$cmd" in
-			0)
-				cp -v $MyLOCALSDIR/*local.sh $CVSDIR/cdk
-				chmod -v u+x $CVSDIR/cdk/*local.sh
-				cp -v $MyLOCALSDIR/mkversion $CVSDIR/cdk
-				chmod -v u+x $CVSDIR/cdk/mkversion
-				echo "$l_ready_press_enter"
-				read dummy
-				;;
-			1)	[ "$yne" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/yadd-neutrino-local.sh" 30 80 ;;
-			2)	[ "$yno" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/yadd-none-local.sh" 30 80 ;;
-			3)	[ "$ye" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/yadd-enigma-local" 30 80 ;;
-			4)	[ "$r" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/root-local.sh" 30 80 ;;
-			5)	[ "$rnj" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/root-neutrino.jffs2-local.sh" 30 80 ;;
-			6)	[ "$rns" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/root-neutrino.squashfs-local.sh" 30 80 ;;
-			7)	[ "$nj2" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/neutrino-jffs2.img2x-local.sh" 30 80 ;;
-			8)	[ "$mc" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/my-customizing.inc" 30 80 ;;
-			9)	[ "$mdf" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/my-delete-files.inc" 30 80 ;;
-			z)	customizeconf_doquit="true" ;;
-			esac
+			if [ "$cmd" != "z" ]; then
+				eval pn=locale_${cmd}
+				dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " \
+				--textbox "${!pn}" 30 80
+			else
+				customizeconf_doquit="true"
+			fi
 		else
 			customizeconf_doquit=true
 		fi
 	done
+}
+# -----------------------------------------------------------------------------------------------------------
+customizeconf_refresh()
+{
+	locales_count=0
+	find "$MyLOCALSDIR" -name "*-local.sh" >/tmp/locals.txt
+	while read alocal
+	do
+		nr=${inx:$locales_count:1}
+		eval locale_${nr}='$alocal'
+		locales_count=`expr $locales_count + 1`
+	done < /tmp/locals.txt
 }
