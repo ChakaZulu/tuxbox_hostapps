@@ -4,14 +4,14 @@
 # Some basis configuration of ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 10:21:24 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 08:32:12 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 10:21:24 $ _yb_basisconf.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 08:32:12 $ _yb_basisconf.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -20,9 +20,9 @@ basisconf_menu()
 {
 	[ "$SDEBUG" != "0" ] && echo "DEBUG: Enter for next Menu" && read dummy
 
-    dialog --backtitle "$prgtitle" --title " $l_de_basis_configuration "\
-       	--cancel-label "$l_back"\
-    	--ok-label "$l_choose"\
+	dialog --backtitle "$prgtitle" --title " $l_de_basis_configuration "\
+		--cancel-label "$l_back"\
+		--ok-label "$l_choose"\
 		--menu "$l_use_arrow_keys_and_enter" 23 80 17\
 	0 "Working Directory.....: $cWORKINGDIR" \
 	1 "Custom Directory......: $cMYFILESDIR  ($cWORKINGDIR/$cMYFILESDIR)"\
@@ -49,9 +49,9 @@ basisconf()
 	while [ "$basisconf_doquit" == "false" ]
 	do
 		basisconf_menu
-	    opt=${?}
-    	if [ $opt == 0 ]; then 
-		    cmd=`cat $_temp`
+		opt=${?}
+		if [ $opt == 0 ]; then 
+			cmd=`cat $_temp`
 			case "$cmd" in	
 				0)	config_editvariable "cWORKINGDIR" "[/home/<username>/tuxbox]" "Working Directory" ;;
 				1)	config_editvariable "cMYFILESDIR" "Private" "Custom Files Directory" ;;
@@ -67,9 +67,9 @@ basisconf()
 				c)	config_editvariable "cCCACHEDIR" "cdk/bin" "where is ccache relative to dbox2-dir" ;;
 				z)	basisconf_doquit="true"	;;
 			esac
-    	else
+		else
 			basisconf_doquit=true
-    	fi
+		fi
 	done
 }
 # -----------------------------------------------------------------------------------------------------------
@@ -113,8 +113,8 @@ show_variables()
 	echo " -- DBOX Directory.........: $cDBOX_PREFIX  ($cWORKINGDIR/$cDBOX_PREFIX)"
 	echo " -- ARCHIVE Directory......: $cARCHIVEDIR  ($cWORKINGDIR/$cARCHIVEDIR)"
 	echo " -- CVS Directory..........: $cCVSDIR  ($cWORKINGDIR/$cCVSDIR)"
-	echo ""
 	echo " CVS Username..............: $CVSNAME (for anonymous: anoncvs)"
+	echo " ccache path...............: $cCCACHEDIR ($cWORKINGDIR/$cDBOX_PREFIX/$cCCACHEDIR)"
 }
 
 # -----------------------------------------------------------------------------------------------------------
