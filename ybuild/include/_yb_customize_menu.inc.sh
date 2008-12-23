@@ -4,22 +4,14 @@
 # Customizing Scripts
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 08:28:16 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
-
-#============================================================================================================
-# yBuild V3 working note (delete after release)
-# languagefile:	ok
-# updated:		ok
-# tested:		
-# issues:		expand for all cust files
-#============================================================================================================
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 08:28:16 $ _yb_customize_menu.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_customize_menu.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -87,7 +79,7 @@ customizeconf()
 			7)	[ "$nj2" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/neutrino-jffs2.img2x-local.sh" 30 80 ;;
 			8)	[ "$mc" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/my-customizing.inc" 30 80 ;;
 			9)	[ "$mdf" != "" ] && dialog --backtitle "$prgtitle" --title " $l_customizing_scripts " --textbox "$c/my-delete-files.inc" 30 80 ;;
-			z)	customizeconf_doquit="true"	;;
+			z)	customizeconf_doquit="true" ;;
 			esac
 		else
 			customizeconf_doquit=true

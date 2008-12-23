@@ -4,14 +4,14 @@
 # configure standard build (build selected)
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 14:00:58 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/21 14:00:58 $ _yb_buildconf.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_buildconf.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -20,9 +20,9 @@ buildconf_menu()
 {
 	[ "$SDEBUG" != "0" ] && echo "DEBUG: Enter for next Menu" && read dummy
 
-    dialog --backtitle "$prgtitle" --title " $l_build_configuration "\
-       	--cancel-label "$l_back"\
-    	--ok-label "$l_choose"\
+	dialog --backtitle "$prgtitle" --title " $l_build_configuration "\
+		--cancel-label "$l_back"\
+		--ok-label "$l_choose"\
 		--menu "$l_use_arrow_keys_and_enter" 13 66 7\
 		0 "${l_bt_build_target}: $cBuildTARGET"\
 		1 "${l_bt_gui}: $cBuildGUI"\
@@ -43,8 +43,8 @@ buildconf()
 	do
 		buildconf_menu
 		opt=${?}
-    	if [ $opt == 0 ]; then 
-		    dcmd=`cat $_temp`		
+		if [ $opt == 0 ]; then
+			dcmd=`cat $_temp`
 
 			case "$dcmd" in
 				0)	dialog --backtitle "$prgtitle" --title "$l_bt_yadd_or_flash"  --no-cancel --default-item "$cBuildTARGET"\
@@ -54,7 +54,7 @@ buildconf()
 					cBuildTARGET=`cat $_temp`
 					config_set_value_direct $yb_configfile cBuildTARGET "$cBuildTARGET"
 					;;
-	
+
 				1)	dialog --backtitle "$prgtitle" --title "$l_bt_choose_gui" --no-cancel --default-item "$cBuildGUI"\
 						--menu "$l_use_arrow_keys_and_enter" 13 40 8 \
 						neutrino "neutrino"\
@@ -77,8 +77,8 @@ buildconf()
 						2>$_temp
 					cBuildFS=`cat $_temp`
 					config_set_value_direct $yb_configfile cBuildFS "$cBuildFS"
-					;;	
-	
+					;;
+
 				3)	dialog --backtitle "$prgtitle" --title "$l_bt_choose_chips" --no-cancel --default-item "$cBuildCHIPS"\
 						--menu "$l_use_arrow_keys_and_enter" 13 40 8 \
 						1x "1x"\
@@ -87,11 +87,11 @@ buildconf()
 						2>$_temp
 					cBuildCHIPS=`cat $_temp`
 					config_set_value_direct $yb_configfile cBuildCHIPS "$cBuildCHIPS"
-					;;	
+					;;
 				z)	buildconf_doquit="true" ;;
 			esac
-    	else
+		else
 			buildconf_doquit="true"
-    	fi
+		fi
 	done
 }

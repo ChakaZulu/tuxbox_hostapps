@@ -4,22 +4,14 @@
 # Build/Make, Configure, CVS functions
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 10:35:22 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
-
-#============================================================================================================
-# yBuild V3 working note (delete after release)
-# languagefile:	partitial
-# updated:		ok
-# tested:		ok
-# issues:		no
-#============================================================================================================
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 10:35:22 $ _yb_build.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_build.inc.sh"
 
 #============================================================================================================
 # CONFIGURE
@@ -97,7 +89,7 @@ _do_configure_flash()
 	else
 		m="$l_cb_really_configure"
 	fi
-    dialog --backtitle "$prgtitle" --title " $l_configure_flash "\
+	dialog --backtitle "$prgtitle" --title " $l_configure_flash "\
 		--yesno "$m" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then
@@ -148,7 +140,7 @@ _do_configure_yadd()
 	else
 		m="$l_cb_really_configure"
 	fi
-    dialog --backtitle "$prgtitle" --title " $l_configure_yadd "\
+	dialog --backtitle "$prgtitle" --title " $l_configure_yadd "\
 		--yesno "$m" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then
@@ -262,7 +254,7 @@ _cvs_checkout_all()
 		cvs_debug="-n -t"
 	fi
 
-    dialog --backtitle "$prgtitle" --title " checkout "\
+	dialog --backtitle "$prgtitle" --title " checkout "\
 		--yesno "Wirklich ALLE files neu auschecken?" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then
@@ -321,7 +313,7 @@ _cvs_checkout_update()
 	if [ "$DEBUG" == "1" ]; then
 		cvs_debug="-n -t"
 	fi
-    dialog --backtitle "$prgtitle" --title " checkout "\
+	dialog --backtitle "$prgtitle" --title " checkout "\
 		--yesno "$l_cb_really_checkout_updated_files" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then

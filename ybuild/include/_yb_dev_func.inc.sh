@@ -4,14 +4,14 @@
 # Install and configure develoment tools/packages
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_dev_func.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_dev_func.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Install all needed Packages for YADD booting. configure xinetd
@@ -19,7 +19,7 @@ yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_dev_func
 install_yadd()
 {
 	yabort=false
-    dialog --backtitle "$prgtitle" --title " $l_de_install_yadd_server "\
+	dialog --backtitle "$prgtitle" --title " $l_de_install_yadd_server "\
 		--yesno "$l_de_really_install_yadd_server" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then
@@ -36,11 +36,11 @@ install_yadd()
 		# inst & conf xinet.d
 		#------------------------------------------------------------------------------------------------
 		check_inst_pkg "tftp Daemon" "in.tftpd" "tftpd"
-		tftp=$?		
+		tftp=$?
 
 		check_inst_pkg "xinetd Daemon" "xinetd" "xinetd"
-		xinetd=$?		
-		
+		xinetd=$?
+
 		x=`which xinetd`
 		if [ "$xinetd" == 1 ]; then
 			echo "xinetd.............: ${l_cm_create} tftp-configfile (${l_cm_password_needed})"
@@ -59,7 +59,7 @@ install_yadd()
 		#------------------------------------------------------------------------------------------------
 		if [ "$yabort" != "true" ]; then
 			check_inst_pkg "NFS Server" "exportfs" "nfs-kernel-server"  #customize your package here
-			nfsd=$?		
+			nfsd=$?
 			if [ "$nfsd" == 1 ]; then
 				echo "nsfd...............: Command: sudo exportfs -o sync -o rw -o no_root_squash $cSetupDboxIP:$DBOX_PREFIX/cdkroot"
 				sudo exportfs -o sync -o rw -o no_root_squash "$cSetupDboxIP:$DBOX_PREFIX/cdkroot"
@@ -75,7 +75,7 @@ install_yadd()
 		#------------------------------------------------------------------------------------------------
 		if [ "$yabort" != "true" ]; then
 			check_inst_pkg "NFS Server" "dhcpd3" "dhcp3-server"  #customize your package here
-			dhcpd=$?		
+			dhcpd=$?
 			if [ "$dhcpd" == 1 ]; then
 				echo "dhcpd..............: ${l_cm_create} configfile (${l_cm_password_needed})"
 
@@ -119,19 +119,19 @@ check_inst_pkg()
 	echo "======================================================================"
 	echo "${l_cm_check_and_install}: $1"
 	echo "======================================================================"
-	if [ "$4" == "" ]; then	
+	if [ "$4" == "" ]; then
 		d=`which $2`
 	else
 		d=`find $2`
 	fi
-	
+
 	if [ "$d" == "" ]; then
 		echo "$1..............: $l_not_found"
 		echo "$1..............: ${l_cm_install} $3 (${l_cm_password_needed})"
 #		sudo apt-get -s -y install $3
 		sudo apt-get install $3
 	fi
-	if [ "$4" == "" ]; then	
+	if [ "$4" == "" ]; then
 		d=`which $2`
 	else
 		d=`find $2`
@@ -151,7 +151,7 @@ check_inst_pkg()
 install_devtools()
 {
 	yabort=false
-    dialog --backtitle "$prgtitle" --title " $l_cm_install_development_tools "\
+	dialog --backtitle "$prgtitle" --title " $l_cm_install_development_tools "\
 		--yesno "$l_cm_really_install_development_tools" 10 40
 	opt=${?}
 	if [ $opt == 0 ];then
@@ -234,7 +234,7 @@ install_devtools()
 		echo "=============================================================="
 		echo "$l_cm_end_of_installation"
 		echo "=============================================================="
-		
+
 		echo "$l_ready_press_enter"
 		read dummy
 	fi

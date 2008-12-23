@@ -4,22 +4,14 @@
 # Startmenue
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 16:32:47 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
-
-#============================================================================================================
-# yBuild V3 working note (delete after release)
-# languagefile:	ok
-# updated:		
-# tested:		
-# issues:		plugin handling
-#============================================================================================================
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 16:32:47 $ _yb_start_menu.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_start_menu.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Main Menu
@@ -90,11 +82,11 @@ start()
 				;;
 			s)	do_build $cBuildTARGET $cBuildGUI $cBuildFS $cBuildCHIPS ;;
 			m)	maketargets	;;
-			a) 	customizeconf ;;
+			a)	customizeconf ;;
 			d)	devconf	;;
-			b)  ybuildconf ;;
-			e)  settings ;;
-			0)  yb_plugins ;;
+			b)	ybuildconf ;;
+			e)	settings ;;
+			0)	yb_plugins ;;
 			x)	doquit="true" ;;
 		esac
 	done

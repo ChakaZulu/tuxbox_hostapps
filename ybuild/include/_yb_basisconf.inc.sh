@@ -4,14 +4,14 @@
 # Some basis configuration of ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 08:32:12 $
-# $Revision: 1.3 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.4 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 08:32:12 $ _yb_basisconf.inc.sh"
+yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/23 09:00:00 $ _yb_basisconf.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -50,9 +50,9 @@ basisconf()
 	do
 		basisconf_menu
 		opt=${?}
-		if [ $opt == 0 ]; then 
+		if [ $opt == 0 ]; then
 			cmd=`cat $_temp`
-			case "$cmd" in	
+			case "$cmd" in
 				0)	config_editvariable "cWORKINGDIR" "[/home/<username>/tuxbox]" "Working Directory" ;;
 				1)	config_editvariable "cMYFILESDIR" "Private" "Custom Files Directory" ;;
 				2)	config_editvariable "cLOGOSDIR" "Logos" "Logos Directory" ;;
@@ -65,7 +65,7 @@ basisconf()
 				9)	config_editvariable "cCVSDIR" "tuxbox-cvs" "CVS Directory" ;;
 				u)	config_editvariable "CVSNAME" "anoncvs" "CVS Username" ;;
 				c)	config_editvariable "cCCACHEDIR" "cdk/bin" "where is ccache relative to dbox2-dir" ;;
-				z)	basisconf_doquit="true"	;;
+				z)	basisconf_doquit="true" ;;
 			esac
 		else
 			basisconf_doquit=true
@@ -91,7 +91,7 @@ init_variables()
 	DBOX_PREFIX=$cWORKINGDIR/$cDBOX_PREFIX
 	ARCHIVEDIR=$cWORKINGDIR/$cARCHIVEDIR
 	CCACHEDIR=$cWORKINGDIR/$cDBOX_PREFIX/$cCCACHEDIR
-	
+
 	#------------------------------------------
 	# other Settings
 	#------------------------------------------

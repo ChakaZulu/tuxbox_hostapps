@@ -3,21 +3,21 @@
 # Manage config file
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 17:02:46 $
-# $Revision: 1.2 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/22 17:02:46 $ _yb_configfile.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_configfile.inc.sh"
 
 # ===========================================================
 # config-files - read / write
 # (row layout: VarName=VarValue)
 # ===========================================================
 # -----------------------------------------------------------------------------------------------------------
-# variable given by varname ($1) prompt for value, update var and write to conffile 
+# variable given by varname ($1) prompt for value, update var and write to conffile
 # $1=Variable name, $2=Default value, $3=Description
 # Return in $basisconf_editvalue
 # -----------------------------------------------------------------------------------------------------------

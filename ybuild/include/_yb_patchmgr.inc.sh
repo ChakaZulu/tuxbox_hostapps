@@ -4,8 +4,8 @@
 # Patch Management
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/21 13:20:07 $
-# $Revision: 1.1 $
+# $Date: 2008/12/23 09:00:00 $
+# $Revision: 1.2 $
 # -----------------------------------------------------------------------------------------------------------
 
 #============================================================================================================
@@ -19,7 +19,7 @@
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.1 $ \$Date: 2008/12/21 13:20:07 $ _yb_patchmgr.inc.sh"
+yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_patchmgr.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -33,9 +33,9 @@ patchmgr_menu()
 	else
 		isback="$l_no"
 	fi
-    dialog --backtitle "$prgtitle" --title " $l_de_patch_manager "\
-       	--cancel-label "$l_back"\
-    	--ok-label "$l_choose"\
+	dialog --backtitle "$prgtitle" --title " $l_de_patch_manager "\
+		--cancel-label "$l_back"\
+		--ok-label "$l_choose"\
 		--menu "$l_use_arrow_keys_and_enter\nPatch Directory:$MyPATCHESDIR\n${l_pm_backup_directory_exists}: $isback" 20 80 15\
 		s "$l_pm_list_all_patches"\
 		a "$l_pm_apply_all_patches"\
@@ -56,9 +56,9 @@ patchmgr()
 	while [ "$patchmgr_doquit" == "false" ]
 	do
 		patchmgr_menu
-	    opt=${?}
-    	if [ $opt == 0 ]; then 
-		    cmd=`cat $_temp`
+		opt=${?}
+		if [ $opt == 0 ]; then
+			cmd=`cat $_temp`
 			case "$cmd" in
 				s)	dialog --title "$l_pm_list_of_patches" --textbox $MyPATCHESDIR/patches.txt 40 80 ;;
 				a)	patchmgr_patch
@@ -93,7 +93,7 @@ patchmgr()
 #				"?")	more ./help/_yb_patchmgr.help.txt 
 #					;;
 			esac
-    	else
+		else
 			patchmgr_doquit="true"
 		fi
 	done
