@@ -4,12 +4,12 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 18:06:03 $
-# $Revision: 1.4 $
+# $Date: 2008/12/25 07:53:42 $
+# $Revision: 1.5 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
-# $1: Versioninformation
+# register each include-file. Should be first line ($1: Versioninformation)
 # -----------------------------------------------------------------------------------------------------------
 yb_log_fileversion()
 {
@@ -17,7 +17,7 @@ yb_log_fileversion()
 	echo "$1" >>"$LOGYBUILDFILE"
 }
 # -----------------------------------------------------------------------------------------------------------
-# $1: Information
+# Write Debuginformation ybuilg-log ($1: Information)
 # -----------------------------------------------------------------------------------------------------------
 yb_debug()
 {
@@ -28,20 +28,25 @@ yb_debug()
 # -----------------------------------------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------------------------------------
-	SDEBUG=${1:-0} 		# Script debug: use yb_start 1 to start in debug mode
-	DEBUG=0				# DEBUG: debug configure and cvs using cvs simulation
-	FILEVERSIONLOG=""	# Log of ybuild-Fileversions	
+	SDEBUG=${1:-0} 							# Script debug: use yb_start 1 to start in debug mode
+	DEBUG=0									# DEBUG: debug configure and cvs using cvs simulation
+	FILEVERSIONLOG=""						# Log of ybuild-Fileversions
+	yb_plugin_count=0						# init number of plugins
+	tmp_LD_LIBRARY_PATH=$LD_LIBRARY_PATH	# Backup LD_LIBRARY_PATH
+	unset LD_LIBRARY_PATH					# Cleat LD_LIBRARY_PATH
+	_temp="/tmp/answer.$$"					# name for return variable for dialog handling
+	dialog 2>$_temp							# init return variable for dialog handling
 
-	if [ -e ./yb_globals.conf ]; then
+	tmp=`dirname $0`						# determine foldername with ybuild scripts
+	if [ "$tmp" == "." ]; then
 		SCRIPTDIR=`pwd`
 	else
-		SCRIPTDIR=$HOME/tuxbox/ybuild
+		SCRIPTDIR=`pwd`"/$tmp"
 	fi
 	export SCRIPTDIR
 	[ "$SDEBUG" != "0" ] && echo "SCRIPTDIR: $SCRIPTDIR"
-	
-	# define filenames & directories
-	yb_configfile=$SCRIPTDIR/yb_globals.conf
+
+	yb_configfile=$SCRIPTDIR/yb_globals.conf # define filenames & directories
 	LOGFILE=$SCRIPTDIR/build.log
 	LOGCVSFILE=$SCRIPTDIR/checkout.log
 	LOGDISTFILE=$SCRIPTDIR/distribution.log
@@ -49,27 +54,28 @@ yb_debug()
 	LOGPATCHFILE=$SCRIPTDIR/patching.log
 	LOGYBUILDFILE=$SCRIPTDIR/ybuild.log
 	yb_templatedir=$SCRIPTDIR/templates
-	complete_diff="all.diff"
 	yb_plugindir=$SCRIPTDIR/plugins
-	yb_plugin_count=0
-	cLANG=${lang:=de}
-	# make a copy of the conf-file
-	cp $yb_configfile ${yb_configfile}.bak
+	complete_diff="all.diff"				# name for diff against cvs 'all'
+
 	## TODO: Change ccache handling
 	if [ "`which ccache`" == "" ]; then
 		HAVE_CCACHE="ccache not installed"
 	else
 		HAVE_CCACHE="ccache installed"
 	fi
-	_temp="/tmp/answer.$$"
-	dialog 2>$_temp
-	echo "yBuild " >$LOGYBUILDFILE
-	yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/22 18:06:03 $ ybstart.sh"
+# -----------------------------------------------------------------------------------------------------------
+# Initialization
+# -----------------------------------------------------------------------------------------------------------
+	cp $yb_configfile ${yb_configfile}.bak 	# make a backup of the conf-file
+	echo "yBuild " >$LOGYBUILDFILE			# start ybuild-logfile
+	yb_log_fileversion "\$Revision: 1.5 $ \$Date: 2008/12/25 07:53:42 $ ybstart.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Inculde Settings & modules
 # -----------------------------------------------------------------------------------------------------------
 	. $yb_configfile
+	cLANG=${lang:=de}						# set default language
+	
 	. $SCRIPTDIR/include/_yb_language_${cLANG}.inc.sh
 	. $SCRIPTDIR/include/_yb_configfile.inc.sh
 	. $SCRIPTDIR/include/_yb_build.inc.sh
@@ -85,7 +91,9 @@ yb_debug()
 	. $SCRIPTDIR/include/_yb_customize_menu.inc.sh
 	. $SCRIPTDIR/include/_yb_settings.inc.sh
 	. $SCRIPTDIR/include/_yb_plugins.inc.sh
-	# include plugins
+	init_variables							# init directory name expansion
+
+	# include plugins (*.plugin.sh)
 	if [ -e $yb_plugindir ]; then
 		find "$yb_plugindir" -name "*.plugin.sh" >/tmp/plugins.txt
 		while read plugin
@@ -100,10 +108,9 @@ yb_debug()
 # -----------------------------------------------------------------------------------------------------------
 # MAIN
 # -----------------------------------------------------------------------------------------------------------
-	init_variables
 	prgtitle="$l_yb_headline"
-	# check for dash/bash
-	have_dash=`ls -al /bin/sh|grep "dash"`
+
+	have_dash=`ls -al /bin/sh|grep "dash"`	# check for dash/bash
 	if [ "$have_dash" != "" ]; then
 		echo "Your Linux uses dash-shell for default."
 		echo "This is not recommend for the tuxboy-project"
@@ -114,11 +121,18 @@ yb_debug()
 			sudo ln -sf /bin/bash /bin/sh
 		fi
 	fi
-	dia=`which dialog`
+
+	dia=`which dialog`						# check for package dialog
 	if [ "$dia" == "" ]; then
 		echo "$l_component_not_installed"
 		echo "$l_install_dialog_component"
 		check_inst_pkg "dialog" "dialog" "dialog"
 	else
-		start
+		start								# start ybuild dialogs
 	fi
+
+# -----------------------------------------------------------------------------------------------------------
+# clean up
+# -----------------------------------------------------------------------------------------------------------
+	LD_LIBRARY_PATH=$tmp_LD_LIBRARY_PATH
+	
