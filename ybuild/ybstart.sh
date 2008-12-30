@@ -4,8 +4,8 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/25 07:53:42 $
-# $Revision: 1.5 $
+# $Date: 2008/12/30 15:59:18 $
+# $Revision: 1.6 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
@@ -68,14 +68,15 @@ yb_debug()
 # -----------------------------------------------------------------------------------------------------------
 	cp $yb_configfile ${yb_configfile}.bak 	# make a backup of the conf-file
 	echo "yBuild " >$LOGYBUILDFILE			# start ybuild-logfile
-	yb_log_fileversion "\$Revision: 1.5 $ \$Date: 2008/12/25 07:53:42 $ ybstart.sh"
+	yb_log_fileversion "\$Revision: 1.6 $ \$Date: 2008/12/30 15:59:18 $ ybstart.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Inculde Settings & modules
 # -----------------------------------------------------------------------------------------------------------
 	. $yb_configfile
-	cLANG=${lang:=de}						# set default language
-	
+	if [ "$cLANG" == "" ]; then						# set default language
+		cLANG="de"
+	fi
 	. $SCRIPTDIR/include/_yb_language_${cLANG}.inc.sh
 	. $SCRIPTDIR/include/_yb_configfile.inc.sh
 	. $SCRIPTDIR/include/_yb_build.inc.sh

@@ -4,14 +4,14 @@
 # Settings & Info
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.3 $
+# $Date: 2008/12/30 15:59:17 $
+# $Revision: 1.4 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_settings.inc.sh"
+yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2008/12/30 15:59:17 $ _yb_settings.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -58,6 +58,7 @@ settings()
 						en "English" 2>$_temp
 					cLANG=`cat $_temp`
 					config_set_value_direct $yb_configfile cLANG "$cLANG"
+					. $SCRIPTDIR/include/_yb_language_${cLANG}.inc.sh
 					;;
 				b)	dialog --title "Build Logfile" --textbox $LOGFILE 40 80 ;;
 				c)	dialog --title "Configure Logfile" --textbox $LOGCONFFILE 40 80 ;;
