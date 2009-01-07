@@ -4,8 +4,8 @@
 # bootstraping, first checkout to get full ybuild
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/22 10:05:22 $
-# $Revision: 1.2 $
+# $Date: 2009/01/07 16:53:21 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 
@@ -22,16 +22,22 @@
 	read yesno
 	if [ "$yesno" == "s" ]; then 
 		# Checkout if CVS-User is anonymous
+		t=`which cvs`
+		if [ "$t" == "" ]; then
+			echo "Install cvs needed. Install now. Password needed!"
+			sudo apt-install cvs
+		fi
 		cd "$ybuildDIR"
-		set CVS_RSH=ssh && cvs $cvs_debug -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -f  -P hostapps/ybuild
-	
+		export CVS_RSH=ssh
+		cvs -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -f  -P hostapps/ybuild
+
 		# rearrage directories
 		mv ./hostapps/ybuild/* .
 		rm -r hostapps
 
+		echo "after complete checkout of ybuild, please use ybuild in tuxbox-cvs/hostapps/ybuild"
 		echo "ready ... press enter to start ybuild"
 		read dummy
 		./ybstart.sh	
 	fi
-	
-			
+
