@@ -4,14 +4,14 @@
 # Development Environment
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.2 $
+# $Date: 2009/01/13 20:02:06 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_dev_menu.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2009/01/13 20:02:06 $ _yb_dev_menu.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -35,10 +35,9 @@ devconf_menu()
 		"" ""\
 		x "$l_de_dhcp_start"\
 		y "$l_de_dhcp_stop"\
+		c "${l_de_clear_compiler_cache} ($HAVE_CCACHE)"\
 		"" ""\
 		z "$l_back" 2>$_temp
-
-## TODO: 		c "${l_de_clear_compiler_cache} ($HAVE_CCACHE)"\
 }
 
 # -----------------------------------------------------------------------------------------------------------
@@ -72,7 +71,7 @@ devconf()
 					echo "$l_ready_press_enter"
 					read dummy
 					;;
-				c)	ccache -c
+				c)	$CCACHEPAPTH -c
 					echo "$l_ready_press_enter"
 					read dummy
 					;;

@@ -4,14 +4,14 @@
 # Build/Make, Configure, CVS functions
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.3 $
+# $Date: 2009/01/13 20:02:06 $
+# $Revision: 1.4 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2008/12/23 09:00:00 $ _yb_build.inc.sh"
+yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2009/01/13 20:02:06 $ _yb_build.inc.sh"
 
 #============================================================================================================
 # CONFIGURE
@@ -45,6 +45,7 @@ _do_configure_build_features2()
 		flag="--disable-$3"
 	fi
 }
+
 # -----------------------------------------------------------------------------------------------------------
 # Build Configure String for Options
 # $1=FLASH | YADD
@@ -69,7 +70,7 @@ do_configure_build_features()
 	if [ "$UPDATEHTTPPREFIX" != "" ]; then
 		flags="$flags --with-updatehttpprefix=$UPDATEHTTPPREFIX"
 	fi
-	if [ "$confccache" == "on" -a -e "$CCACHEDIR/ccache" ]; then
+	if [ "$confccache" == "on" ]; then
 		flags="$flags --enable-ccache"
 	fi
 }
@@ -266,15 +267,15 @@ _cvs_checkout_all()
 		if [ "$CVSNAME" == "anoncvs" ];then
 		# Checkout if CVS-User is anonymous
 			echo "--------------------------------------------------------------"
-			echo "Checkout newmake anonymous"
+			echo "Checkout anonymous"
 			echo "--------------------------------------------------------------"
 			cd "$CVSDIR"
-			set CVS_RSH=ssh && cvs $cvs_debug -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -f -r newmake -P .
+			set CVS_RSH=ssh && cvs $cvs_debug -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -P .
 		else
 		# Checkout if CVS-User is a registred user
 			cd "$CVSDIR"
 			echo "--------------------------------------------------------------"
-			echo "Checkout HEAD registred"
+			echo "Checkout HEAD"
 			echo "--------------------------------------------------------------"
 			echo "${l_pm_cvs_registered_user1}: $CVSNAME ${l_pm_cvs_registered_user2}"
 			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" co -P .
@@ -282,17 +283,7 @@ _cvs_checkout_all()
 				echo "No cdk dir found in $CVSDIR. STOP"
 				exit
 			fi
-			echo "--------------------------------------------------------------"
-			echo "Checkout newmake registred"
-			echo "--------------------------------------------------------------"
-			cd "$CVSDIR"
-			echo "${l_pm_cvs_registered_user1}: $CVSNAME ${l_pm_cvs_registered_user2}"
-			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" co -r newmake -P cdk/newmake.files
-			cd "$CVSDIR"
-			echo "${l_pm_cvs_registered_user1}: $CVSNAME ${l_pm_cvs_registered_user2}"
-			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" co -f -r newmake `cat cdk/newmake.files`
 		fi
-		rm $CVSDIR/cdk/root/etc/init.d/rcS $CVSDIR/cdk/root/etc/init.d/rcS.insmod
 		echo "$l_ready_press_enter"
 		read dummy
 	fi
@@ -324,26 +315,18 @@ _cvs_checkout_update()
 		if [ "$CVSNAME" == "anoncvs" ];then
 		# Checkout if CVS-User is anonymous
 			echo "--------------------------------------------------------------"
-			echo "Checkout newmake anonymous"
+			echo "Checkout anonymous"
 			echo "--------------------------------------------------------------"
 			cd "$CVSDIR"
-			set CVS_RSH=ssh && cvs $cvs_debug -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -f -r newmake -P .
+			set CVS_RSH=ssh && cvs $cvs_debug -d anoncvs@cvs.tuxbox.org:/cvs/tuxbox -z3 co -P .
 		else
 		# Checkout if CVS-User is a registred user
 			cd "$CVSDIR"
 			echo "--------------------------------------------------------------"
-			echo "Checkout HEAD registred"
+			echo "Checkout HEAD"
 			echo "--------------------------------------------------------------"
-			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" up -dP
-			echo "--------------------------------------------------------------"
-			echo "Checkout newmake registred"
-			echo "--------------------------------------------------------------"
-			cd "$CVSDIR"
-			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" co -r newmake -P cdk/newmake.files
-			cd "$CVSDIR"
-			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" co -f -r newmake `cat cdk/newmake.files`
+			cvs -z3 $cvs_debug -d "$CVSNAME@cvs.tuxbox.org:/cvs/tuxbox" up -dP			
 		fi
-		rm $CVSDIR/cdk/root/etc/init.d/rcS $CVSDIR/cdk/root/etc/init.d/rcS.insmod
 		echo "$l_ready_press_enter"
 		read dummy
 	fi

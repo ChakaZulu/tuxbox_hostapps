@@ -4,8 +4,8 @@
 # Start Script
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/30 15:59:18 $
-# $Revision: 1.6 $
+# $Date: 2009/01/13 20:02:04 $
+# $Revision: 1.7 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
@@ -57,18 +57,12 @@ yb_debug()
 	yb_plugindir=$SCRIPTDIR/plugins
 	complete_diff="all.diff"				# name for diff against cvs 'all'
 
-	## TODO: Change ccache handling
-	if [ "`which ccache`" == "" ]; then
-		HAVE_CCACHE="ccache not installed"
-	else
-		HAVE_CCACHE="ccache installed"
-	fi
 # -----------------------------------------------------------------------------------------------------------
 # Initialization
 # -----------------------------------------------------------------------------------------------------------
 	cp $yb_configfile ${yb_configfile}.bak 	# make a backup of the conf-file
 	echo "yBuild " >$LOGYBUILDFILE			# start ybuild-logfile
-	yb_log_fileversion "\$Revision: 1.6 $ \$Date: 2008/12/30 15:59:18 $ ybstart.sh"
+	yb_log_fileversion "\$Revision: 1.7 $ \$Date: 2009/01/13 20:02:04 $ ybstart.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Inculde Settings & modules
@@ -106,6 +100,7 @@ yb_debug()
 	if [ "$cYBUILDNAME" != "" ]; then
 		l_yb_headline="$l_yb_headline ($cYBUILDNAME)"
 	fi
+
 # -----------------------------------------------------------------------------------------------------------
 # MAIN
 # -----------------------------------------------------------------------------------------------------------
