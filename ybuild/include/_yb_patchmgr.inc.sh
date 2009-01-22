@@ -4,8 +4,8 @@
 # Patch Management
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.2 $
+# $Date: 2009/01/22 20:03:52 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 #============================================================================================================
@@ -19,7 +19,7 @@
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_patchmgr.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2009/01/22 20:03:52 $ _yb_patchmgr.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu
@@ -160,7 +160,8 @@ _patchmgr_patch()
 			if [ "$1" == "" -o "$1" == "$j" ]; then
 				echo "Info: patch $patch_file at path: $patch_path slashes: $patch_num_slashes"
 				echo "Info: patch -d $CVSDIR/$patch_path -b -B $MyPATCHESDIR/backup/$patch_path/ -p$patch_num_slashes <$MyPATCHESDIR/$patch_file"
-				patch -d $CVSDIR/$patch_path -b -B $MyPATCHESDIR/backup/$patch_path/ -p$patch_num_slashes <$MyPATCHESDIR/$patch_file				echo "$i" >>$MyPATCHESDIR/backup/done_patches.txt
+				patch -d $CVSDIR/$patch_path -b -B $MyPATCHESDIR/backup/$patch_path/ -p$patch_num_slashes <$MyPATCHESDIR/$patch_file
+				echo "$i" >>$MyPATCHESDIR/backup/done_patches.txt
 			fi
 		else
 			break;
