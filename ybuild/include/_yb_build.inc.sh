@@ -4,14 +4,14 @@
 # Build/Make, Configure, CVS functions
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2009/01/13 20:02:06 $
-# $Revision: 1.4 $
+# $Date: 2009/03/03 16:31:16 $
+# $Revision: 1.5 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.4 $ \$Date: 2009/01/13 20:02:06 $ _yb_build.inc.sh"
+yb_log_fileversion "\$Revision: 1.5 $ \$Date: 2009/03/03 16:31:16 $ _yb_build.inc.sh"
 
 #============================================================================================================
 # CONFIGURE
@@ -45,7 +45,20 @@ _do_configure_build_features2()
 		flag="--disable-$3"
 	fi
 }
-
+# -----------------------------------------------------------------------------------------------------------
+# Build Configure String for filesystem Options
+# $1=var-prefix $3=feature
+# -----------------------------------------------------------------------------------------------------------
+_do_configure_build_features_filesystem()
+{
+	varname="conf$1"_"$2"
+	val=${!varname}
+	if [ "$val" == "on" ]; then
+		flag="$3"
+	else
+		flag=""
+	fi
+}
 # -----------------------------------------------------------------------------------------------------------
 # Build Configure String for Options
 # $1=FLASH | YADD
@@ -54,11 +67,27 @@ do_configure_build_features()
 {
 	flags=""
 	# Build option individually for Flash or Yadd
-	for f in "ide" "lirc" "ext3" "xfs" "nfsserver" "sambaserver" "cdkVcInfo" "dosfstools" "upnp" "flac"
+	for f in "ide" "mmc" "lirc" "nfsserver" "sambaserver" "cdkVcInfo" "dosfstools" "upnp" "flac"
 	do
 		_do_configure_build_features $f $1 $f
 		flags="$flags $flag"
 	done
+	# Build filesystemoption individually for Flash or Yadd
+	fs=""
+	for f in "extfs" "xfs" "nfs" "cifs" "vfat" "smbfs" "lufs"
+	do
+		_do_configure_build_features_filesystem $f $1 $f
+		if [ "$flag" != "" ]; then
+			if [ "$fs" == "" ]; then
+				fs=" -with-filesystems=$flag"
+			else
+				fs="$fs,$flag"
+			fi
+		fi
+	done
+	if [ "$fs" != "" ]; then
+		flags="$flags $fs"
+	fi
 	# general Build options
 	for f in "uclibc" "lzma" "kernel26"
 	do

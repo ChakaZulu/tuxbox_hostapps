@@ -4,14 +4,14 @@
 # Settings for "configure"
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.2 $
+# $Date: 2009/03/03 16:31:16 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_configureconfinc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2009/03/03 16:31:16 $ _yb_configureconfinc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Menu: Configure Values
@@ -63,32 +63,44 @@ configureconf_menu_flags()
 		--separate-output\
 		--checklist "$l_cc_choose_option" 30 50 26 \
 		if "Flash: IDE support" $confide_FLASH\
-		ef "Flash: ext2/3 Filesystem" $confext3_FLASH\
-		xf "Flash: XFS Filesystem" $confxfs_FLASH\
-		nf "Flash: nfs-server" $confnfsserver_FLASH\
+		mf "Flash: MMC support" $confmmc_FLASH\
+		ef "Flash: Filesystem: ext2/3" $confextfs_FLASH\
+		xf "Flash: Filesystem: XFS" $confxfs_FLASH\
+		yf "Flash: Filesystem: nfs" $confnfs_FLASH\
+		cf "Flash: Filesystem: cifs" $confcifs_FLASH\
+		tf "Flash: Filesystem: vfat" $confvfat_FLASH\
+		bf "Flash: Filesystem: smbfs" $confsmbfs_FLASH\
+		uf "Flash: Filesystem: lufs" $conflufs_FLASH\
+		nf "Flash: NFS Server" $confnfsserver_FLASH\
 		sf "Flash: Samba Server" $confsambaserver_FLASH\
 		df "Flash: DOSFS tools" $confdosfstools_FLASH\
 		lf "Flash: lirc" $conflirc_FLASH\
 		vf "Flash: cdkVcInfo" $confcdkVcInfo_FLASH\
 		gf "Flash: german-keymaps" $confgermankeymaps_FLASH\
-		uf "Flash: upnp client" $confupnp_FLASH\
+		pf "Flash: upnp client" $confupnp_FLASH\
 		ff "Flash: flac" $confflac_FLASH\
 		af "Flash: patch before configure (autom.)" $confautopatch_FLASH\
 		"" "" off\
 		iy "YADD: IDE support" $confide_YADD\
-		ey "YADD: ext2/3 Filesystem" $confext3_YADD\
-		xy "YADD: XFS Filesystem" $confxfs_YADD\
-		ny "YADD: nfs-server" $confnfsserver_YADD\
+		my "YADD: MMC support" $confmmc_YADD\
+		ey "YADD: Filesystem: ext2/3" $confextfs_YADD\
+		xy "YADD: Filesystem: XFS" $confxfs_YADD\
+		yy "YADD: Filesystem: nfs" $confnfs_YADD\
+		cy "YADD: Filesystem: cifs" $confcifs_YADD\
+		ty "YADD: Filesystem: vfat" $confvfat_YADD\
+		by "YADD: Filesystem: smbfs" $confsmbfs_YADD\
+		uy "YADD: Filesystem: lufs" $conflufs_YADD\
+		ny "YADD: NFS Server" $confnfsserver_YADD\
 		sy "YADD: Samba Server" $confsambaserver_YADD\
 		dy "YADD: DOSFS tools" $confdosfstools_YADD\
 		ly "YADD: lirc" $conflirc_YADD\
 		vy "YADD: cdkVcInfo" $confcdkVcInfo_YADD\
 		gy "YADD: german-keymaps" $confgermankeymaps_YADD\
-		uy "YADD: upnp client" $confupnp_YADD\
+		py "YADD: upnp client" $confupnp_YADD\
 		fy "YADD: flac" $confflac_YADD\
 		ay "YADD: patch before configure (autom.)" $confautopatch_YADD\
 		"" "" off\
-		c "use ccache" $confccache\
+		0 "use ccache" $confccache\
 		1 "use uclibc" $confuclibc\
 		6 "Build kernel 2.6"  $confkernel26\
 		2 "Build Image LZMA" $conflzma\
@@ -102,15 +114,30 @@ configureconf_loop()
 	configureconf_doquit=false
 	while [ "$configureconf_doquit" == "false" ]
 	do
+		# init not defined variables
+		for i in "ide" "mmc" "extfs" "xfs" "nfs" "cifs" "vfat" "smbfs" "lufs" "nfsserver" "sambaserver"\
+		"dosfstools" "lirc" "cdkVcInfo" "germankeymaps" "upnp" "flac"
+		do
+			varname="conf${i}_FLASH"
+			val=${!varname}
+			if [ "$val" == "" ]; then
+				eval $varname='off'
+			fi
+			varname="conf${i}_YADD"
+			val=${!varname}
+			if [ "$val" == "" ]; then
+				eval $varname='off'
+			fi
+		done
 		configureconf_menu_flags
 		opt=${?}
 		dcmd=`cat $_temp`
 		if [ "$opt" == "0" -a "$dcmd" != "z" ]; then
 			dialog --backtitle "$prgtitle" --title " $l_save "\
 				--infobox "$l_save" 5 20 
-			for i in "if" "ef" "xf" "nf" "sf" "df" "lf" "vf" "gf" "af" "uf" "ff"\
-					"iy" "ey" "xy" "ny" "sy" "dy" "ly" "vy" "gy" "ay" "uy" "fy"\
-					"c" "1" "6" "2" 
+			for i in "if" "ef" "xf" "nf" "sf" "df" "lf" "vf" "gf" "af" "uf" "ff" "yf" "cf" "tf" "bf" "pf"\
+					"iy" "ey" "xy" "ny" "sy" "dy" "ly" "vy" "gy" "ay" "uy" "fy" "yy" "cy" "ty" "by" "py"\
+					"0" "1" "6" "2" 
 			do
 				first=${i:0:1}
 				second=${i:1:1}
@@ -118,18 +145,24 @@ configureconf_loop()
 				setting2=""
 				case "$first" in
 					i)	setting="confide" ;;
+					m)	setting="confmmc" ;;
 					l)	setting="conflirc" ;;
 					v)	setting="confcdkVcInfo" ;;
 					g)	setting="confgermankeymaps" ;;
-					e)	setting="confext3" ;;
+					e)	setting="confextfs" ;;
 					x)	setting="confxfs" ;;
+					y)	setting="confnfs" ;;
+					c)	setting="confcifs" ;;
+					t)	setting="confvfat" ;;
+					b)	setting="confsmbfs" ;;
+					u)	setting="conflufs" ;;
 					n)	setting="confnfsserver" ;;
 					s)	setting="confsambaserver" ;;
 					d)	setting="confdosfstools" ;;
 					a)	setting="confautopatch" ;;
-					u)	setting="confupnp" ;;
+					p)	setting="confupnp" ;;
 					f)	setting="confflac" ;;
-					c)	setting2="confccache" ;;
+					0)	setting2="confccache" ;;
 					1)	setting2="confuclibc" ;;
 					6)	setting2="confkernel26" ;;
 					2)	setting2="conflzma" ;;
