@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-
 use Getopt::Long;
 use IO::File;
 use Pod::Usage;
@@ -71,6 +70,11 @@ sub part_write
       printf STDERR "flashmanage fatal error: File " . $file . " too large (%d > %d)\n", $insize, $size;
       return 0;
   }
+else
+{
+printf "flashmanage: File " . $file . " (%d <= %d)\n", $insize, $size;
+
+}
 
   my $buf;
 
