@@ -1,5 +1,5 @@
 /*
-   $Id: checkImage.c,v 1.7 2006/08/15 22:18:49 the_moon Exp $
+   $Id: checkImage.c,v 1.8 2009/03/07 18:28:03 rhabarber1848 Exp $
 
    Check images for bad magics
 
@@ -31,7 +31,7 @@
 #include <libgen.h>
 void usage(char* name)
 {
-    fprintf(stderr, "%s - $Revision: 1.7 $\n",name);
+    fprintf(stderr, "%s - $Revision: 1.8 $\n",name);
 	fprintf(stderr, "Check images for bad magics\n\n");
 	fprintf(stderr, "Usage: %s [OPTION] <imagefile>\n\n", name);
 	fprintf(stderr, "Options:\n");
@@ -250,7 +250,7 @@ void checkImage(char* filename)
 	if (imgsize > MAXIMAGESIZE )
 	{
 		printf("check '%s' \n", basename(filename));
-		printf("%s!!! Flash size exeedet, if you flash this image you may get 'no system' !!!%s\n",ANSI_BGRED, ANSI_NORM);
+		printf("%s!!! Flash size exceeded, if you flash this image you may get 'no system' !!!%s\n",ANSI_BGRED, ANSI_NORM);
 		putchar('\a');
 		close(fd);
 		exit(3);
