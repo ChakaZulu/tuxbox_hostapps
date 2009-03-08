@@ -31,7 +31,7 @@
  * provisions above, a recipient may use your version of this file
  * under either the RHEPL or the GPL.
  *
- * $Id: compr_zlib.c,v 1.1 2006/02/06 19:04:46 barf Exp $
+ * $Id: compr_zlib.c,v 1.2 2009/03/08 16:55:24 seife Exp $
  *
  */
 
@@ -74,7 +74,7 @@ int jffs2_zlib_compress(unsigned char *data_in, unsigned char *cpage_out,
 	strm.next_out = cpage_out;
 	strm.total_out = 0;
 
-	while (strm.total_out < *dstlen - STREAM_END_SPACE && strm.total_in < *sourcelen) {
+	while (strm.total_out + STREAM_END_SPACE < *dstlen && strm.total_in < *sourcelen) {
 		strm.avail_out = *dstlen - (strm.total_out + STREAM_END_SPACE);
 		strm.avail_in = min((unsigned)(*sourcelen-strm.total_in), strm.avail_out);
 		ret = deflate(&strm, Z_PARTIAL_FLUSH);

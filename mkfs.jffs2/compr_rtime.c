@@ -7,7 +7,7 @@
  *
  * For licensing information, see the file 'LICENCE' in this directory.
  *
- * $Id: compr_rtime.c,v 1.1 2006/02/06 19:04:46 barf Exp $
+ * $Id: compr_rtime.c,v 1.2 2009/03/08 16:55:24 seife Exp $
  *
  *
  * Very simple lz77-ish encoder.
@@ -33,12 +33,12 @@ static int jffs2_rtime_compress(unsigned char *data_in, unsigned char *cpage_out
 	int outpos = 0;
 	int pos=0;
 
-	memset(positions,0,sizeof(positions)); 
-	
- 	while (pos < (*sourcelen) && outpos <= (*dstlen)-2) {
+	memset(positions,0,sizeof(positions));
+
+	while (pos < (*sourcelen) && outpos+2 <= *dstlen) {
 		int backpos, runlen=0;
 		unsigned char value;
-		
+
 		value = data_in[pos];
 
 		cpage_out[outpos++] = data_in[pos++];
