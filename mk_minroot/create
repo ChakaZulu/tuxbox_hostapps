@@ -159,7 +159,7 @@ sub copyDir
 
 sub copyFile
 {
-	$dir = substr( $_[0], 0, rindex($_[0], "/"));
+	$dir = substr( $_[0], 0, strrchr($_[0], "/"));
 	$command = "cp -a " . $cdkdir . $_[0] . " " . $releasedir . $dir;
         #print "copy file: " . $_[0] .  " - >" . $command . "<\n";
 	execCommand( $command );
