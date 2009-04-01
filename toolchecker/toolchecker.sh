@@ -54,14 +54,6 @@ if ( test -e $MAKE ) then
 	echo -e "\033[37;41mmake nicht installiert\033[37;40m"
 fi;
 
-### makeinfo (texinfo) ###
-MAKEINFO=`which makeinfo`
-if ( test -e $MAKEINFO ) then
-	echo "makeinfo:                 "`$MAKEINFO --version | $GREP makeinfo | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mmakeinfo nicht installiert\033[37;40m"
-fi;
-
 ### tar ###
 TAR=`which tar`
 if ( test -e $TAR ) then

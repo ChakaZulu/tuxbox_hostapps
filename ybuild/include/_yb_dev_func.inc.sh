@@ -4,14 +4,14 @@
 # Install and configure develoment tools/packages
 #
 # Started by yjogol (yjogol@online.de)
-# $Date: 2008/12/23 09:00:00 $
-# $Revision: 1.2 $
+# $Date: 2009/04/01 19:38:37 $
+# $Revision: 1.3 $
 # -----------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------
 # INIT
 # -----------------------------------------------------------------------------------------------------------
-yb_log_fileversion "\$Revision: 1.2 $ \$Date: 2008/12/23 09:00:00 $ _yb_dev_func.inc.sh"
+yb_log_fileversion "\$Revision: 1.3 $ \$Date: 2009/04/01 19:38:37 $ _yb_dev_func.inc.sh"
 
 # -----------------------------------------------------------------------------------------------------------
 # Install all needed Packages for YADD booting. configure xinetd
@@ -179,8 +179,6 @@ install_devtools()
 		cvs=$?
 		check_inst_pkg "tar" "tar" "tar"
 		tar=$?
-		check_inst_pkg "Texinfo/Makeinfo" "makeinfo" "texinfo"
-		makeinfo=$?
 		check_inst_pkg "Make" "make" "make"
 		make=$?
 		check_inst_pkg "Autoconf" "autoconf" "autoconf"
@@ -217,7 +215,6 @@ install_devtools()
 		echo "cvs.......: $cvs"
 		echo "flex......: $flex"
 		echo "tar.......: $tar"
-		echo "makeinfo..: $makeinfo"
 		echo "make......: $make"
 		echo "autoconf..: $autoconf"
 		echo "automake..: $automake"
