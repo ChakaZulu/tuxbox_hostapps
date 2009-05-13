@@ -447,7 +447,7 @@ while 1:
             if not is_weak and symbol not in unneeded_symbols:
     		unresolved_non_weak.append(symbol)
 	if len(unresolved_non_weak):
-		raise "%d unresolved non weak symbols: %s" %(len(unresolved_non_weak), `unresolved_non_weak`)
+		print "WARNING: %d unresolved non weak symbols: %s" %(len(unresolved_non_weak), `unresolved_non_weak`)
         break
 
     previous_pass_unresolved = unresolved
