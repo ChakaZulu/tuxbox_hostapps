@@ -7,7 +7,7 @@
  * For licensing information, see the file 'LICENCE' in this directory
  * in the jffs2 directory.
  *
- * $Id: compr.c,v 1.1 2006/02/06 19:04:46 barf Exp $
+ * $Id: compr.c,v 1.2 2009/07/26 19:32:31 rhabarber1848 Exp $
  *
  */
 
@@ -471,6 +471,9 @@ int jffs2_compressors_init(void)
 #ifdef CONFIG_JFFS2_ZLIB
         jffs2_zlib_init();
 #endif
+#ifdef CONFIG_JFFS2_LZMA
+        jffs2_lzma_init();
+#endif
 #ifdef CONFIG_JFFS2_RTIME
         jffs2_rtime_init();
 #endif
@@ -496,6 +499,9 @@ int jffs2_compressors_exit(void)
 #endif
 #ifdef CONFIG_JFFS2_ZLIB
         jffs2_zlib_exit();
+#endif
+#ifdef CONFIG_JFFS2_LZMA
+        jffs2_lzma_exit();
 #endif
         return 0;
 }

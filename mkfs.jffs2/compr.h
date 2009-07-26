@@ -7,7 +7,7 @@
  * For licensing information, see the file 'LICENCE' in the 
  * jffs2 directory.
  *
- * $Id: compr.h,v 1.1 2006/02/06 19:04:46 barf Exp $
+ * $Id: compr.h,v 1.2 2009/07/26 19:32:31 rhabarber1848 Exp $
  *
  */
 
@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include "linux/jffs2.h"
 
+#define CONFIG_JFFS2_LZMA
 #define CONFIG_JFFS2_ZLIB
 #define CONFIG_JFFS2_RTIME
 #define CONFIG_JFFS2_LZARI
@@ -26,6 +27,7 @@
 #define JFFS2_LZARI_DISABLED
 #define JFFS2_LZO_DISABLED
 
+#define JFFS2_LZMA_PRIORITY      70
 #define JFFS2_RUBINMIPS_PRIORITY 10
 #define JFFS2_DYNRUBIN_PRIORITY  20
 #define JFFS2_LZARI_PRIORITY     30
@@ -124,6 +126,10 @@ void jffs2_lzari_exit(void);
 #ifdef CONFIG_JFFS2_LZO
 int jffs2_lzo_init(void);
 void jffs2_lzo_exit(void);
+#endif
+#ifdef CONFIG_JFFS2_LZMA
+int jffs2_lzma_init(void);
+void jffs2_lzma_exit(void);
 #endif
 
 #endif /* __JFFS2_COMPR_H__ */
