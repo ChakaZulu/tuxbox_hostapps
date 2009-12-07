@@ -1,7 +1,5 @@
 #!/bin/sh
-# $Id: toolchecker.sh,v 1.8 2009/12/03 20:43:45 dbt Exp $
-#
-#
+# $Id: toolchecker.sh,v 1.9 2009/12/07 10:25:53 striper Exp $
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,151 +17,162 @@
 # Inc., 675 Mass Ave, Cambridge MA 02139, USA.
 #
 #
-# -------------------------------------------------------
-#
-#! /bin/bash
+
+echo "Tool Checker for Tuxbox-CVS"
+echo ""
 
 CUT=`which cut`
 GREP=`which grep`
 
+#---------------------------------------------#
+AUTOMAKE=`which automake 2>/dev/null`
+if [ $AUTOMAKE ] && [ $AUTOMAKE != " " ]; then
+	echo "automake    >=1.7    : Installed! (Version: `$AUTOMAKE --version | grep automake | cut -f4 -d " "`)"
+else
+	echo "automake    >=1.7    : Missing!"
+fi
+#---------------------------------------------#
+AUTOCONF=`which autoconf 2>/dev/null`
+if [ $AUTOCONF ] && [ $AUTOCONF != " " ]; then
+	echo "autoconf    >=2.50   : Installed! (Version: `$AUTOCONF --version | grep autoconf | cut -f4 -d " "`)"
+else
+	echo "autoconf    >=2.50   : Missing!"
+fi
+#---------------------------------------------#
+MYCVS=`which cvs 2>/dev/null`
+if [ $MYCVS ] && [ $MYCVS != " " ]; then
+	echo "cvs                  : Installed!"
+else
+	echo "cvs                  : Missing!"
+fi
+#---------------------------------------------#
+MYSVN=`which svn 2>/dev/null`
+if [ $MYSVN ] && [ $MYSVN != " " ]; then
+	echo "svn                  : Installed!"
+else
+	echo "svn                  : Missing! (only needed for Coolstream build)"
+fi
+#---------------------------------------------#
+LIBTOOL=`which libtool 2>/dev/null`
+if [ $LIBTOOL ] && [ $LIBTOOL != " " ]; then
+	echo "libtool     >=1.4.2  : Installed! (Version: `$LIBTOOL --version | $GREP libtool | $CUT -f4 -d " "`)"
+else
+	echo "libtool     >=1.4.2  : Missing!"
+fi
+#---------------------------------------------#
+MAKE=`which make 2>/dev/null`
+if [ $MAKE ] && [ $MAKE != " " ]; then
+	echo "make        >=3.79   : Installed! (Version: `$MAKE --version | $GREP Make | $CUT -f3 -d " "`)"
+else
+	echo "make        >=3.79   : Missing!"
+fi
+#---------------------------------------------#
+GETTEXT=`which gettext 2>/dev/null`
+if [ $GETTEXT ] && [ $GETTEXT != " " ]; then
+	echo "gettext     >=0.12.1 : Installed! (Version: `$GETTEXT --version | $GREP gettext | $CUT -f4 -d " "`)"
+else
+	echo "gettext     >=0.12.1 : Missing!"
+fi
+#---------------------------------------------#
+MAKEINFO=`which makeinfo 2>/dev/null`
+if [ $MAKEINFO ] && [ $MAKEINFO != " " ]; then
+	echo "makeinfo             : Installed!"
+else
+	echo "makeinfo             : Missing!"
+fi
+#---------------------------------------------#
+TAR=`which tar 2>/dev/null`
+if [ $TAR ] && [ $TAR != " " ]; then
+	echo "tar                  : Installed!"
+else
+	echo "tar                  : Missing!"
+fi
+#---------------------------------------------#
+BUNZIP2=`which bunzip2 2>/dev/null`
+if [ $BUNZIP2 ] && [ $BUNZIP2 != " " ]; then
+	echo "bunzip2              : Installed!"
+else
+	echo "bunzip2              : Missing!"
+fi
+#---------------------------------------------#
+GUNZIP=`which gunzip 2>/dev/null`
+if [ $GUNZIP ] && [ $GUNZIP != " " ]; then
+	echo "gunzip               : Installed!"
+else
+	echo "gunzip               : Missing!"
+fi
+#---------------------------------------------#
+PATCH=`which patch 2>/dev/null`
+if [ $PATCH ] && [ $PATCH != " " ]; then
+	echo "patch                : Installed!"
+else
+	echo "patch                : Missing!"
+fi
+#---------------------------------------------#
+INFOCMP=`which infocmp 2>/dev/null`
+if [ $INFOCMP ] && [ $INFOCMP != " " ]; then
+	echo "infocmp              : Installed!"
+else
+	echo "infocmp              : Missing!"
+fi
+#---------------------------------------------#
+CCC=`which g++ 2>/dev/null`
+if [ $CCC ] && [ $CCC != " " ]; then
+	echo "g++         >=3.0    : Installed! (Version: `$CCC -dumpversion`)"
+else
+	echo "g++         >=3.0    : Missing!"
+fi
+#---------------------------------------------#
+BISON=`which bison 2>/dev/null`
+if [ $BISON ] && [ $BISON != " " ]; then
+	echo "bison                : Installed!"
+else
+	echo "bison                : Missing!"
+fi
+#---------------------------------------------#
+FLEX=`which flex 2>/dev/null`
+if [ $FLEX ] && [ $FLEX != " " ]; then
+	echo "flex                 : Installed!"
+else
+	echo "flex                 : Missing!"
+fi
+#---------------------------------------------#
+PKGCONFIG=`which pkg-config 2>/dev/null`
+if [ $PKGCONFIG ] && [ $PKGCONFIG != " " ]; then
+	echo "pkg-config           : Installed!"
+else
+	echo "pkg-config           : Missing!"
+fi
+#---------------------------------------------#
+PYTHON=`which python 2>/dev/null`
+if [ $PYTHON ] && [ $PYTHON != " " ]; then
+	echo "python               : Installed!"
+else
+	echo "python               : Missing!"
+fi
+#---------------------------------------------#
+WGET=`which wget 2>/dev/null`
+if [ $WGET ] && [ $WGET != " " ]; then
+	echo "wget                 : Installed!"
+else
+	echo "wget                 : Missing!"
+fi
+#---------------------------------------------#
+YACC=`which yacc 2>/dev/null`
+if [ $YACC ] && [ $YACC != " " ]; then
+	echo "yacc                 : Installed!"
+else
+	echo "yacc                 : Missing!"
+fi
+#---------------------------------------------#
+if [ -e "/usr/include/zlib.h" ]; then
+	echo "zlib-devel           : Installed!"
+else
+	echo "zlib-devel           : Missing!"
+fi
+#---------------------------------------------#
 echo ""
+echo "In case of missing packages use your package manager (eg. apt, yum or yast) to install them!"
+echo "Otherwise your build will most likely fail."
 echo ""
-
-### cvs ###
-CVS=`which cvs`
-if ( test -e $CVS ) then
-	echo "cvs:                      "`$CVS --version | $GREP Concurrent | $CUT -f5 -d " "`
-	else
-	echo -e "\033[37;41mcvs nicht installiert\033[37;40m"
-fi;
-
-### autoconf >= 2.57a ###
-AUTOCONF=`which autoconf`
-if ( test -e $AUTOCONF ) then
-	echo "autoconf >= 2.57a:        "`$AUTOCONF --version | $GREP "autoconf " | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mautoconf nicht installiert\033[37;40m"
-fi;
-
-### automake >= 1.7 ###
-AUTOMAKE=`which automake`
-if ( test -e  $AUTOMAKE ) then
-	echo "automake >= 1.8:          "`$AUTOMAKE --version | $GREP "automake " | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mautomake nicht installiert\033[37;40m"
-fi;
-
-### libtool >= 1.4.2 ###
-LIBTOOL=`which libtool`
-if ( test -e $LIBTOOL ) then
-	echo "libtool >= 1.4.2:         "`$LIBTOOL --version | $GREP "libtool)" | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mlibtool nicht installiert\033[37;40m"
-fi;
-
-### gettext >= 0.12.1 ###
-GETTEXT=`which gettext`
-if ( test -e $GETTEXT ) then
-	echo "gettext >= 0.12.1:        "`$GETTEXT --version | $GREP gettext | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mgettext nicht installiert\033[37;40m"
-fi;
-
-### make >= 3.79 ###
-MAKE=`which make`
-if ( test -e $MAKE ) then
-	echo "make >= 3.79:             "`$MAKE --version | $GREP Make | $CUT -f3 -d " "`
-	else
-	echo -e "\033[37;41mmake nicht installiert\033[37;40m"
-fi;
-
-### tar ###
-TAR=`which tar`
-if ( test -e $TAR ) then
-	echo "tar:                      "`$TAR --version | $GREP tar | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mtar nicht installiert\033[37;40m"
-fi;
-
-### bunzip2 (bzip2) ###
-BUNZIP2=`which bunzip2`
-if ( test -e $BUNZIP2 ) then
-	echo "bunzip2:                  "`bunzip2 --help 2> btmp; $GREP Version < btmp | $CUT -c 50-54; rm btmp`
-	else
-	echo -e "\033[37;41mbunzip2 nicht installiert\033[37;40m"
-fi;
-
-### gunzip (gzip) ###
-GUNZIP=`which gunzip`
-if ( test -e $GUNZIP ) then
-	echo "gunzip:                   "`$GUNZIP --version | $GREP gunzip | $CUT -f2 -d " "`
-	else
-	echo -e "\033[37;41mgunzip nicht installiert\033[37;40m"
-fi;
-
-### patch ###
-PATCH=`which patch`
-if ( test -e $PATCH ) then
-	echo "patch:                    "`$PATCH --version | $GREP "patch " | $CUT -f2 -d " "`
-	else
-	echo -e "\033[37;41mpatch nicht installiert\033[37;40m"
-fi;
-
-### infocmp (ncurses-bin / ncurses-devel) ###
-INFOCMP=`which infocmp`
-if ( test -e $INFOCMP ) then
-	echo "infocmp:                  "`$INFOCMP -V | $GREP ncurses | $CUT -f2 -d " "`
-	else
-	echo -e "\033[37;41minfocmp nicht installiert\033[37;40m"
-fi;
-
-### gcc 2.95 or >= 3.0 ###
-GCC=`which gcc`
-if ( test -e $GCC ) then
-	echo "gcc 2.95 or >= 3.0:       "`$GCC --version | $GREP gcc | $CUT -f3 -d " "`
-	else
-	echo -e "\033[37;41mgcc nicht installiert\033[37;40m"
-fi;
-
-### g++ 2.95 or >= 3.0 ###
-CCC=`which g++`
-if ( test -e $CCC ) then
-	echo "g++ 2.95 or >= 3.0:       "`$CCC --version | $GREP g++ | $CUT -f3 -d " "`
-	else
-	echo -e "\033[37;41mg++ nicht installiert\033[37;40m"
-fi;
-
-### flex ###
-FLEX=`which flex`
-if ( test -e $FLEX ) then
-	echo "flex:                     "`$FLEX --version | $GREP flex | $CUT -f2 -d " "`
-	else
-	echo -e "\033[37;41mflex nicht installiert\033[37;40m"
-fi;
-
-### bison ###
-BISON=`which bison`
-if ( test -e $BISON ) then
-	echo "bison:                    "`$BISON --version | $GREP Bison | $CUT -f4 -d " "`
-	else
-	echo -e "\033[37;41mbison nicht installiert\033[37;40m"
-fi;
-
-### pkg-config ###
-PKGCONFIG=`which pkg-config`
-if ( test -e $PKGCONFIG ) then
-	echo "pkg-config:               "`$PKGCONFIG --version | $GREP .`
-	else
-	echo -e "\033[37;41mpkg-config nicht installiert\033[37;40m"
-fi;
-
-### wget ###
-WGET=`which wget`
-if ( test -e $WGET ) then
-	echo "wget:                     "`$WGET --version | $GREP Wget | $CUT -f3 -d " "`
-	else
-	echo -e "\033[37;41wget nicht installiert\033[37;40m"
-fi;
-
-echo ""
-echo ""
+exit
